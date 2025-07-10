@@ -7,7 +7,9 @@ on:
 jobs:
   change-base:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.base.ref == 'main'
+    if: >
+      github.event.pull_request.base.ref == 'main' &&
+      !contains(github.event.pull_request.title, '[MAIN]')
 
     steps:
       - name: Change base to dev

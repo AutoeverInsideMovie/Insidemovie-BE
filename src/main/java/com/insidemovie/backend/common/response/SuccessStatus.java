@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public enum SuccessStatus {
     /** 200 SUCCESS */
-    SEND_SAMPLE_SUCCESS(HttpStatus.OK,"샘플 조회 성공"),
+    SEND_REGISTER_SUCCESS(HttpStatus.OK,"회원가입 성공"),
+    SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
+    SEND_TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
 
     /** 201 CREATED */
     CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),

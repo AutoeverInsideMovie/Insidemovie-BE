@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.member.dto;
 
+import com.insidemovie.backend.api.constant.Authority;
 import com.insidemovie.backend.api.member.entity.Member;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -43,6 +44,7 @@ public class MemberSignupRequestDto {
                 .socialType("NORMAL")
                 .socialId(null)
                 .reportCount(0)
+                .authority(Authority.ROLE_USER)
                 .build();
     }
 }

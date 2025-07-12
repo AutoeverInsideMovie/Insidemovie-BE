@@ -30,7 +30,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 로그인, 회원가입 요청은 JWT 검사 안 함
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/api/v1/member/login") || requestURI.equals("/api/v1/member/signup")) {
+        if (requestURI.equals("/api/v1/member/login") || requestURI.equals("/api/v1/member/signup") ||
+                requestURI.equals("/api/v1/member/kakao-accesstoken") ||   // 추가
+                requestURI.equals("/api/v1/member/kakao-login")) {
             filterChain.doFilter(request, response);
             return;
         }

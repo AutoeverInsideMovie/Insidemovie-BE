@@ -40,8 +40,6 @@ public class JwtProvider {
                 .collect(Collectors.joining(","));
 
         // 현재 시간과 토큰 만료 시간 계산
-//        long now = (new Date()).getTime();
-//        Date accessTokenExpiresIn = new Date(now + 30 * 60 * 1000); // 30분
         Date accessTokenExpiresIn = new Date(System.currentTimeMillis() + 30 * 60 * 1000);  // 30분
 
         // Access Token 생성
@@ -59,8 +57,6 @@ public class JwtProvider {
 
     // RefreshToken 생성 메서드
     public String generateRefreshToken(String email) {
-//        long now = System.currentTimeMillis();
-//        Date refreshTokenExpiresIn = new Date(now + 7 * 24 * 60 * 60 * 1000L); // 7일
         Date refreshTokenExpiresIn = new Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000L); // 7일
 
         return Jwts.builder()

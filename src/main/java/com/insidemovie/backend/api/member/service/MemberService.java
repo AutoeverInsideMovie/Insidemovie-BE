@@ -10,9 +10,13 @@ import com.insidemovie.backend.common.exception.BadRequestException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +32,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final OAuthService oAuthService;
+
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -111,7 +116,20 @@ public class MemberService {
             throw new BadRequestException(ErrorStatus.PASSWORD_MISMATCH_EXCEPTION.getMessage());
         }
         // 인증 객체 생성 (Spring Security용)
-        Authentication authentication = memberLoginRequestDto.toAuthentication();
+        //Authentication authentication = memberLoginRequestDto.toAuthentication();
+        // 2) 권한 컬렉션 생성
+        List<GrantedAuthority> authorities = List.of(
+                new SimpleGrantedAuthority(member.getAuthority().name())
+        );
+        // 3) 인증 후 토큰 생성
+        Authentication authentication =
+                new UsernamePasswordAuthenticationToken(
+                        member,                   // principal: UserDetails
+                        null,                   // credentials: 이미 검사했으니 null
+                        authorities  // 권한 목록
+                );
+
+
 
         // JWT 토큰 발급
         String accessToken = jwtProvider.generateAccessToken(authentication);

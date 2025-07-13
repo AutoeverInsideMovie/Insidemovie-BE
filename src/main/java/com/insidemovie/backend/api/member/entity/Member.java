@@ -31,7 +31,9 @@ public class Member extends BaseTimeEntity {
 
     // jwt
     @Enumerated(EnumType.STRING)
+    @Column(nullable=false)
     private Authority authority;
+
 
     @Builder
     public Member(String email, String password, String nickname, Authority authority) {

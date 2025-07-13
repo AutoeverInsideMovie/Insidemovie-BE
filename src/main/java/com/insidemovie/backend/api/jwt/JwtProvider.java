@@ -46,7 +46,8 @@ public class JwtProvider {
         String accessToken =
                 Jwts.builder()
                         .setSubject(authentication.getName()) // 사용자명 설정, 이메일이 들어 있음
-                        .claim(AUTHORITIES_KEY, "ROLE_USER")  // 권한 정보 저장, 일단 ROLE_USER
+                        //.claim(AUTHORITIES_KEY, "ROLE_USER")  // 권한 정보 저장, 일단 ROLE_USER
+                        .claim(AUTHORITIES_KEY, authorities)
                         .setExpiration(accessTokenExpiresIn)  // 만료 시간 설정
                         .signWith(key, SignatureAlgorithm.HS512) // 서명 방식 설정
                         .compact();

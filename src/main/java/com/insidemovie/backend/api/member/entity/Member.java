@@ -24,8 +24,8 @@ public class Member extends BaseTimeEntity {
     private String socialType;  //  로그인한 소셜 타입의 식별자 값
     private String socialId;
 
-    @Builder.Default
-    private Integer reportCount = 0;
+    private Integer reportCount;
+    private String dominantEmotion;  // 대표 감정
 
     private String refreshToken;  // 리프레시 토큰
 

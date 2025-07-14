@@ -1,6 +1,7 @@
 package com.insidemovie.backend.api.member.entity;
 
 import com.insidemovie.backend.api.constant.Authority;
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,8 +25,11 @@ public class Member extends BaseTimeEntity {
     private String socialType;  //  로그인한 소셜 타입의 식별자 값
     private String socialId;
 
-    @Builder.Default
     private Integer reportCount = 0;
+
+    @Column(name = "main_emotion")
+    @Enumerated(EnumType.STRING)
+    private EmotionType mainEmotion;
 
     private String refreshToken;  // 리프레시 토큰
 
@@ -36,11 +40,12 @@ public class Member extends BaseTimeEntity {
 
 
     @Builder
-    public Member(String email, String password, String nickname, Authority authority) {
+    public Member(String email, String password, String nickname, Authority authority, EmotionType mainEmotion) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.authority = authority;
+        this.mainEmotion = mainEmotion;
     }
 
     // 리프레시 토큰 업데이트

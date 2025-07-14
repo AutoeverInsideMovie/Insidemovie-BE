@@ -46,7 +46,7 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByMovie(
             @PathVariable Long movieId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         String userEmail = (userDetails != null) ? userDetails.getUsername() : null;

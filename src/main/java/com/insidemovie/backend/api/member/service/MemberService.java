@@ -172,5 +172,43 @@ public class MemberService {
         return new UsernamePasswordAuthenticationToken(email, password);
     }
 
+    // 닉네임 변경
+    @Transactional
+    public void updateNickname(String email, NicknameUpdateRequestDTO nicknameUpdateRequestDTO) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        String newNickname = nicknameUpdateRequestDTO.getNickname();
+
+        // 닉네임 중복 체크
+        if (memberRepository.existsByNickname(newNickname)) {
+            throw new BadRequestException("이미 사용 중인 닉네임입니다.");
+        }
+
+        member.updateNickname(newNickname);
+    }
+
+    // 메인 감정 변경
+    @Transactional
+    public void updateMainEmotion(String email, MainEmotionUpdateRequestDTO mainEmotionUpdateRequestDTO) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        member.updateMainEmotion(mainEmotionUpdateRequestDTO.getMainEmotion());
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public void updatePassword(String email, PasswordUpdateRequestDTO dto) {
+        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
+            throw new BadRequestException(ErrorStatus.PASSWORD_MISMATCH_EXCEPTION.getMessage());
+        }
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        String encoded = passwordEncoder.encode(dto.getPassword());
+        member.updatePassword(encoded);
+    }
 
 }

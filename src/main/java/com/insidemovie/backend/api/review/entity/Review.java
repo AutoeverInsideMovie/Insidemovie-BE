@@ -31,6 +31,9 @@ public class Review extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    private long likeCount;
+    private boolean modify;
+
     private LocalDateTime watchedAt;
     private boolean spoiler;
 
@@ -48,6 +51,12 @@ public class Review extends BaseTimeEntity {
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewLike> likes = new ArrayList<>();
 
+    public void modify(String content, double rating, boolean spoiler, LocalDateTime watchedAt) {
+        this.content = content;
+        this.rating = rating;
+        this.spoiler = spoiler;
+        this.watchedAt = watchedAt;
+        this.modify = true;  // 수정됨
+    }
 
-    // 관리자 나중에 추가
 }

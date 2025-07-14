@@ -109,7 +109,7 @@ public class MemberService {
 
         // 회원 조회
         Member member = memberRepository.findByEmail(memberLoginRequestDto.getEmail())
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBER_EXCEPTION.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 비밀번호 일치 확인
         if (!passwordEncoder.matches(memberLoginRequestDto.getPassword(), member.getPassword())) {
@@ -124,7 +124,7 @@ public class MemberService {
         // 3) 인증 후 토큰 생성
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(
-                        member,                   // principal: UserDetails
+                        member.getEmail(),                   // principal: UserDetails
                         null,                   // credentials: 이미 검사했으니 null
                         authorities  // 권한 목록
                 );

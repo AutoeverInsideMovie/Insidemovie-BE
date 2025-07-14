@@ -22,6 +22,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 특정 회원이 특정 영화에 작성한 리뷰
     Optional<Review> findByMemberAndMovie(Member member, Movie movie);
 
+    Page<Review> findByMember(Member member, Pageable pageable);
+
     // 리뷰 좋아요 수 증가
     @Modifying
     @Transactional

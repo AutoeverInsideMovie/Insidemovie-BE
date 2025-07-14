@@ -136,6 +136,34 @@ public class ReviewService {
             boolean myLike = (userId != null &&
                     reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), userId));
 
+            Optional<Emotion> optEmotion = emotionRespository.findByReviewId(review.getId());
+            EmotionDTO emotionDTO = null;
+            if (optEmotion.isPresent()) {
+                Emotion e = optEmotion.get();
+
+                Map<String, Double> probs = Map.of(
+                        "anger", e.getAnger(),
+                        "fear", e.getFear(),
+                        "joy", e.getJoy(),
+                        "neutral", e.getNeutral(),
+                        "sadness", e.getSadness()
+                );
+
+                String rep = probs.entrySet().stream()
+                        .max(Map.Entry.comparingByValue())
+                        .map(Map.Entry::getKey)
+                        .orElse("neutral"); // 최대값이 없는 경우 neutral로 설정
+
+                emotionDTO = EmotionDTO.builder()
+                        .anger(probs.get("anger"))
+                        .fear(probs.get("fear"))
+                        .joy(probs.get("joy"))
+                        .neutral(probs.get("neutral"))
+                        .sadness(probs.get("sadness"))
+                        .repEmotion(rep)
+                        .build();
+            }
+
             return ReviewResponseDTO.builder()
                     .reviewId(review.getId())
                     .content(review.getContent())
@@ -148,6 +176,7 @@ public class ReviewService {
                     .myReview(myReview)
                     .modify(review.isModify())
                     .myLike(myLike)
+                    .emotion(emotionDTO)
                     .build();
         });
     }

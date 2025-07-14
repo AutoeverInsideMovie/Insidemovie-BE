@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.review.controller;
 
+import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
 import com.insidemovie.backend.api.review.dto.ReviewCreateDTO;
 import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
 import com.insidemovie.backend.api.review.dto.ReviewUpdateDTO;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,9 +29,6 @@ public class ReviewController {
 
     @Operation(
             summary = "리뷰 등록 API", description = "새로운 리뷰를 등록합니다.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 등록 성공")
-    })
     @PostMapping
     public ResponseEntity<ApiResponse<Long>> createReview(@RequestBody ReviewCreateDTO reviewCreateDTO, @AuthenticationPrincipal UserDetails userDetails){
 
@@ -39,9 +38,6 @@ public class ReviewController {
 
     @Operation(
             summary = "리뷰 목록 조회 API", description = "특정 영화에 대한 리뷰 목록을 조회합니다.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "리뷰 목록 조회 성공")
-    })
     @GetMapping("/{movieId}")
     public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByMovie(
             @PathVariable Long movieId,
@@ -58,9 +54,6 @@ public class ReviewController {
 
     @Operation(
             summary = "리뷰 수정 API", description = "리뷰를 수정 합니다.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공")
-    })
     @PutMapping
     public ResponseEntity<ApiResponse<Void>> modifyArticle(@RequestBody ReviewUpdateDTO articleUpdateDTO, @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -70,13 +63,38 @@ public class ReviewController {
 
     @Operation(
             summary = "리뷰 삭제 API", description = "리뷰를 삭제 합니다.")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "리뷰 삭제 성공")
-    })
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable Long reviewId, @AuthenticationPrincipal UserDetails userDetails) {
 
         reviewService.deleteReview(reviewId, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.DELETE_REVIEW_SUCCESS);
     }
+
+    @Operation(
+            summary = "리뷰 좋아요 토글 API",
+            description = "리뷰에 좋아요 또는 좋아요 취소를 합니다."
+    )
+    @PostMapping("/like/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> toggleReviewLike(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        reviewService.toggleReviewLike(reviewId, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.SEND_REVIEW_LIKE_SUCCESS);
+    }
+
+    @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
+    @GetMapping("/my-review")
+    public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviews(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MyReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), pageable);
+
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
+    }
+
+
 }

@@ -27,7 +27,6 @@ public class Review extends BaseTimeEntity {
     private Long id;
 
     private double rating;
-    private String title;
 
     @Column(columnDefinition = "TEXT")
     private String content;

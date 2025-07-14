@@ -23,7 +23,7 @@ public class Emotion {
     private double sadness;
     private double anger;
     private double fear;
-    private double disgust;
+    private double neutral;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id", nullable = false)

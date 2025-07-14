@@ -1,6 +1,7 @@
 package com.insidemovie.backend.api.member.dto;
 
 import com.insidemovie.backend.api.constant.Authority;
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.member.entity.Member;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -35,15 +36,16 @@ public class MemberSignupRequestDto {
     @Size(min = 2, max = 20, message = "닉네임 2-20자 사이로 입력해주세요.")
     private String nickname;
 
+    private EmotionType mainEmotion;
 
     public Member toEntity(String encodedPassword) {
         return Member.builder()
                 .email(email)
                 .password(encodedPassword)
                 .nickname(nickname)
+                .mainEmotion(mainEmotion)
                 .socialType("NORMAL")
                 .socialId(null)
-                .reportCount(0)
                 .authority(Authority.ROLE_USER)
                 .build();
     }

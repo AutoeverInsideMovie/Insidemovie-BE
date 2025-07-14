@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.entity;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -62,4 +63,9 @@ public class Movie {
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MovieLike> movieLikes = new ArrayList<>();
+
+    @Column(name = "dominant_emotion")
+    @Enumerated(EnumType.STRING)
+    private EmotionType dominantEmotion;  // 영화 대표 감정
+
 }

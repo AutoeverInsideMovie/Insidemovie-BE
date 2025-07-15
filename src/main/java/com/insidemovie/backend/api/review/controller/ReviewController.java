@@ -82,19 +82,4 @@ public class ReviewController {
         reviewService.toggleReviewLike(reviewId, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.SEND_REVIEW_LIKE_SUCCESS);
     }
-
-    @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
-    @GetMapping("/my-review")
-    public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviews(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<MyReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), pageable);
-
-        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
-    }
-
-
 }

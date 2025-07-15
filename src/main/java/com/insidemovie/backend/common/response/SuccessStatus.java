@@ -15,6 +15,8 @@ public enum SuccessStatus {
     SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
     SEND_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 목록 조회 성공"),
+    SEND_DAILY_BOXOFFICE_SUCCESS(HttpStatus.OK, "일간 박스오피스 순위 조회 성공"),
+    SEND_WEEKLY_BOXOFFICE_SUCCESS(HttpStatus.OK, "주간 박스오피스 순위 조회 성공"),
     MODIFY_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 수정 성공"),
     DELETE_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 삭제 성공"),
     UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 수정 성공"),

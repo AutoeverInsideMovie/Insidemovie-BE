@@ -38,4 +38,5 @@ out/
 
 *.properties
 
+application-key.yml
 .env

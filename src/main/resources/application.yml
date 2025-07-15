@@ -1,14 +1,16 @@
 spring:
   profiles:
     active: local
+  config:
+    import: "classpath:application-key.yml"
 
   security:
     oauth2:
       client:
         registration:
           kakao:
-            client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-id: ${kakao.client.id}
+            client-secret: ${kakao.client.secret}
             client-name: kakao
             authorization-grant-type: authorization_code
             redirect-uri: http://localhost:8080/api/v1/member/kakao-accesstoken
@@ -39,7 +41,7 @@ springdoc:
 tmdb:
   api:
     # TMDB API 키
-    key: ${TMDB_API_KEY}
+    key: ${tmdb.api.key}
     # TMDB 베이스 URL
     base-url: https://api.themoviedb.org/3
     # 응답 언어 설정 (한국어)
@@ -48,6 +50,6 @@ tmdb:
 kobis:
   api:
     #영화진흥원 API 키
-    key: ${KOBIS_API_KEY}
+    key: ${kobis.api.key}
     # 베이스 URL
     base-url: http://www.kobis.or.kr/kobisopenapi/webservice/rest

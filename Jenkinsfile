@@ -19,6 +19,7 @@ pipeline {
                 checkout scm
                     docker.image("${GRADLE_IMAGE}").inside {
                         sh './gradlew clean build -x test'
+                }
             }
         }
 

@@ -31,7 +31,7 @@ public class Report extends BaseTimeEntity {
     @JoinColumn(name = "member_id")
     private Member member;  // 신고한 사용자
 
-    @Builder.Default
+    @Column(name = "is_processed")
     private boolean isProcessed = false;  // 신고 처리 여부 (기본값 false)
 
 }

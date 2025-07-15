@@ -16,7 +16,7 @@ public class WebClientConfig {
     @Bean
     public RestTemplate kobisRestTemplate(
             RestTemplateBuilder builder,
-            @Value("${kobis.api.url}") String kobisApiUrl
+            @Value("${kobis.api.base-url}") String kobisApiUrl
     ) {
         return builder.rootUri(kobisApiUrl).build();
     }

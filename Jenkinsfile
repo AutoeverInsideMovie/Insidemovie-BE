@@ -10,13 +10,15 @@ pipeline {
         TAG = 'be'
         CONTAINER_NAME = 'backend'
         DOCKER_CREDENTIALS_ID = 'movie'
+        GRADLE_IMAGE = 'gradle:8.5-jdk17'
     }
 
     stages {
         stage('Build') {
             steps {
                 checkout scm
-                sh './gradlew build -x test'
+                    docker.image("${GRADLE_IMAGE}").inside {
+                        sh './gradlew clean build -x test'
             }
         }
 

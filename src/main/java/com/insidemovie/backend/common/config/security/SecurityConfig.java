@@ -65,7 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/member/signup", "/api/v1/member/reissue", "/api/v1/member/login", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue").permitAll() // 회원가입, 로그인 인증 허용
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/review/**").permitAll() // 영화에 대한 리뷰 목록 요청 허용
-                        .requestMatchers(HttpMethod.GET, "/api/v1/boxOffice/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/boxoffice/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)

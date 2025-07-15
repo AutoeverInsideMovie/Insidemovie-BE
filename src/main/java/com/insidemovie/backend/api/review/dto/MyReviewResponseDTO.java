@@ -7,11 +7,11 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class ReviewCreateDTO {
+public class MyReviewResponseDTO {
+
+    private Long reviewId;
+    private String content;
+    private LocalDateTime createdAt;
 
     private Long movieId;
-    private String content;
-    private double rating;
-    private boolean spoiler;
-    private LocalDateTime watchedAt;
 }

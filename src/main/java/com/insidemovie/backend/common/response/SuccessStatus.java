@@ -20,6 +20,9 @@ public enum SuccessStatus {
     UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 수정 성공"),
     UPDATE_EMOTION_SUCCESS(HttpStatus.OK, "메인 감정 수정 성공"),
     UPDATE_PASSWORD_SUCCESS(HttpStatus.OK, "비밀번호 수정 성공"),
+    SEND_REVIEW_LIKE_SUCCESS(HttpStatus.OK, "리뷰 좋아요 토글 성공"),
+    SEND_MY_REVIEW_SUCCESS(HttpStatus.OK, "내 리뷰 목록 조회 성공"),
+    REPORT_CREATE_SUCCESS(HttpStatus.OK, "신고 접수 성공"),
 
     /** 201 CREATED */
     CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),

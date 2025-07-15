@@ -1,19 +1,24 @@
 package com.insidemovie.backend.api.movie.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.insidemovie.backend.api.movie.dto.*;
+import com.insidemovie.backend.api.movie.dto.BoxOfficeListDTO;
+import com.insidemovie.backend.api.movie.dto.BoxOfficeRequestDTO;
+import com.insidemovie.backend.api.movie.dto.DailyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.WeeklyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
 import com.insidemovie.backend.api.movie.repository.WeeklyBoxOfficeRepository;
+import com.insidemovie.backend.common.exception.BaseException;
+import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
@@ -41,25 +46,29 @@ public class BoxOfficeService {
     // 일간 박스오피스 조회 및 저장
     @Transactional
     public BoxOfficeListDTO<DailyBoxOfficeResponseDTO> getDailyBoxOffice(BoxOfficeRequestDTO req) {
-        LocalDate date = LocalDate.parse(req.getTargetDt(), FMT);
-        log.info("[Service] DailyBoxOffice for {}", date);
+        // 어제 날짜 계산
+        LocalDate date = LocalDate.now().minusDays(1);
+        String targetDt = date.format(FMT);
 
         // 기존 데이터 삭제
         dailyRepo.deleteByTargetDate(date);
 
-        // API 호출 후 엔티티 변환
-        List<DailyBoxOfficeEntity> entities = fetchDailyFromApi(req, date);
+        // --- 변경된 호출 ---
+        List<DailyBoxOfficeEntity> entities = fetchDailyFromApi(date, req.getItemPerPage());
 
-        // 저장
+        // 저장·DTO 변환·예외 처리
         dailyRepo.saveAll(entities);
-
-        // DTO 변환
         List<DailyBoxOfficeResponseDTO> items = entities.stream()
             .map(DailyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());
+        if (items.isEmpty()) {
+            throw new BaseException(
+                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
+                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
+            );
+        }
 
-        // 응답 래퍼
-        String showRange = date + "~" + date;
+        String showRange = targetDt + "~" + targetDt;
         return BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
             .boxofficeType("일별")
             .showRange(showRange)
@@ -68,12 +77,17 @@ public class BoxOfficeService {
     }
 
     // 외부 API 호출하여 일간 엔티티 목록 생성
-    private List<DailyBoxOfficeEntity> fetchDailyFromApi(BoxOfficeRequestDTO req, LocalDate date) {
+    private List<DailyBoxOfficeEntity> fetchDailyFromApi
+    (
+        LocalDate date,
+        int itemPerPage
+    ) {
+        String targetDt = date.format(FMT);
         RestTemplate rest = new RestTemplate();
         String uri = UriComponentsBuilder.fromHttpUrl(DAILY_URL_JSON)
             .queryParam("key", kobisApiKey)
-            .queryParam("targetDt", req.getTargetDt())
-            .queryParam("itemPerPage", req.getItemPerPage())
+            .queryParam("targetDt", targetDt)
+            .queryParam("itemPerPage", itemPerPage)
             .toUriString();
 
         JsonNode listNode = rest.getForObject(uri, JsonNode.class)
@@ -81,7 +95,7 @@ public class BoxOfficeService {
             .path("dailyBoxOfficeList");
 
         return StreamSupport.stream(listNode.spliterator(), false)
-            .limit(req.getItemPerPage())
+            .limit(itemPerPage)
             .map(node -> DailyBoxOfficeEntity.builder()
                 .targetDate(date)
                 .rnum(node.path("rnum").asText())
@@ -108,44 +122,61 @@ public class BoxOfficeService {
     // 주간 박스오피스 조회 및 저장
     @Transactional
     public BoxOfficeListDTO<WeeklyBoxOfficeResponseDTO> getWeeklyBoxOffice(BoxOfficeRequestDTO req) {
-        LocalDate date = LocalDate.parse(req.getTargetDt(), FMT);
-        log.info("[Service] WeeklyBoxOffice for {} (weekGb={})", date, req.getWeekGb());
+        // 1) 어제 대신 '지난주' 날짜 구하기
+        LocalDate lastWeekDate = LocalDate.now().minusWeeks(1);
+        String targetDt = lastWeekDate.format(FMT);
 
-        // 주차 계산
+        // 2) ISO 주차 기준으로 '년+주차' 문자열 생성 (예: 2025IW28)
         WeekFields wf = WeekFields.ISO;
-        int week = date.get(wf.weekOfWeekBasedYear());
-        int year = date.get(wf.weekBasedYear());
+        int week = lastWeekDate.get(wf.weekOfWeekBasedYear());
+        int year = lastWeekDate.get(wf.weekBasedYear());
         String yearWeek = String.format("%04dIW%02d", year, week);
 
-        // 기존 데이터 삭제
+        log.info("[Service] WeeklyBoxOffice for last week {} (yearWeek={})", targetDt, yearWeek);
+
+        // 3) 기존 DB 삭제
         weeklyRepo.deleteByYearWeekTime(yearWeek);
 
-        // API 호출 후 엔티티 변환
-        List<WeeklyBoxOfficeEntity> entities = fetchWeeklyFromApi(req, yearWeek);
+        // 4) API 호출 (지난주 targetDt, req.getWeekGb(), req.getItemPerPage(), yearWeek 사용)
+        List<WeeklyBoxOfficeEntity> entities =
+            fetchWeeklyFromApi(lastWeekDate, req.getWeekGb(), req.getItemPerPage(), yearWeek);
 
-        // 저장
+        // 5) 저장·DTO 변환
         weeklyRepo.saveAll(entities);
-
-        // DTO 변환
         List<WeeklyBoxOfficeResponseDTO> items = entities.stream()
             .map(WeeklyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());
 
-        // 응답 래퍼
+        if (items.isEmpty()) {
+            throw new BaseException(
+                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getMessage()
+            );
+        }
+
+        // 6) 응답
         return BoxOfficeListDTO.<WeeklyBoxOfficeResponseDTO>builder()
             .boxofficeType("주간")
+            .showRange(yearWeek)
             .items(items)
             .build();
     }
 
     // 외부 API 호출하여 주간 엔티티 목록 생성
-    private List<WeeklyBoxOfficeEntity> fetchWeeklyFromApi(BoxOfficeRequestDTO req, String yearWeek) {
+    private List<WeeklyBoxOfficeEntity> fetchWeeklyFromApi(
+            LocalDate date,
+            String weekGb,
+            int itemPerPage,
+            String yearWeek
+    ) {
+        String targetDt = date.format(FMT);
         RestTemplate rest = new RestTemplate();
-        String uri = UriComponentsBuilder.fromHttpUrl(WEEKLY_URL_JSON)
+        String uri = UriComponentsBuilder
+            .fromHttpUrl(WEEKLY_URL_JSON)
             .queryParam("key", kobisApiKey)
-            .queryParam("targetDt", req.getTargetDt())
-            .queryParam("weekGb", req.getWeekGb())
-            .queryParam("itemPerPage", req.getItemPerPage())
+            .queryParam("targetDt", targetDt)    // 지난 주 기준 날짜
+            .queryParam("weekGb", weekGb)        // 요청으로 넘어온 대로 사용
+            .queryParam("itemPerPage", itemPerPage)
             .toUriString();
 
         JsonNode listNode = rest.getForObject(uri, JsonNode.class)
@@ -153,9 +184,9 @@ public class BoxOfficeService {
             .path("weeklyBoxOfficeList");
 
         return StreamSupport.stream(listNode.spliterator(), false)
-            .limit(req.getItemPerPage())
+            .limit(itemPerPage)
             .map(node -> WeeklyBoxOfficeEntity.builder()
-                .yearWeekTime(yearWeek)
+                .yearWeekTime(yearWeek)                // DB에 저장할 연주차
                 .rnum(node.path("rnum").asText())
                 .rank(node.path("rank").asText())
                 .rankInten(node.path("rankInten").asText())
@@ -174,7 +205,8 @@ public class BoxOfficeService {
                 .audiAcc(node.path("audiAcc").asText())
                 .scrnCnt(node.path("scrnCnt").asText())
                 .showCnt(node.path("showCnt").asText())
-                .build())
+                .build()
+            )
             .collect(Collectors.toList());
     }
 }

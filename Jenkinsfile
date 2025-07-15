@@ -4,7 +4,7 @@ pipeline {
     options {
         skipDefaultCheckout(true)
     }
-    
+
     environment {
         IMAGE_NAME = 'ssafysong/inside-movie'
         TAG = 'be'
@@ -14,11 +14,19 @@ pipeline {
     }
 
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
                     docker.image("${GRADLE_IMAGE}").inside {
                         sh './gradlew clean build -x test'
+                    }
+                }
             }
         }
 

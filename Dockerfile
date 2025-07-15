@@ -2,7 +2,7 @@ FROM openjdk:17-jdk-alpine
 WORKDIR /movie
 
 COPY ./build/libs/*.jar app.jar
-# COPY build/libs/application-API-KEY.properties application-API-KEY.properties
+ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar", "--spring.profiles.active=prod"]

@@ -38,6 +38,8 @@ public class Member extends BaseTimeEntity {
     @Column(nullable=false)
     private Authority authority;
 
+    @Column(nullable = false)
+    private boolean isBanned = false;  // 정지
 
     @Builder
     public Member(String email, String password, String nickname, Authority authority, EmotionType mainEmotion) {
@@ -66,6 +68,11 @@ public class Member extends BaseTimeEntity {
     // 비밀번호 변경
     public void updatePassword(String newPassword) {
         this.password = newPassword;
+    }
+
+    // 회원 정지
+    public void setBanned(boolean banned) {
+        this.isBanned = banned;
     }
 
 

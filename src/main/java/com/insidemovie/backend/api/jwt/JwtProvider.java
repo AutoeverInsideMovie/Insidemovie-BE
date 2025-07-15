@@ -18,6 +18,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -35,9 +36,9 @@ public class JwtProvider {
     // 토큰 생성 메서드
     public String generateAccessToken(Authentication authentication) {
         // 인증 객체에서 권한 정보 추출
-        String authorities = authentication.getAuthorities().stream()
+        List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.toList());
 
         // 현재 시간과 토큰 만료 시간 계산
         Date accessTokenExpiresIn = new Date(System.currentTimeMillis() + 30 * 60 * 1000);  // 30분
@@ -47,7 +48,7 @@ public class JwtProvider {
                 Jwts.builder()
                         .setSubject(authentication.getName()) // 사용자명 설정, 이메일이 들어 있음
                         //.claim(AUTHORITIES_KEY, "ROLE_USER")  // 권한 정보 저장, 일단 ROLE_USER
-                        .claim(AUTHORITIES_KEY, authorities)
+                        .claim(AUTHORITIES_KEY, roles)
                         .setExpiration(accessTokenExpiresIn)  // 만료 시간 설정
                         .signWith(key, SignatureAlgorithm.HS512) // 서명 방식 설정
                         .compact();
@@ -72,10 +73,11 @@ public class JwtProvider {
         Claims claims = parseClaims(token);
 
         // 권한 정보 추출
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
+        List<String> roles = claims.get(AUTHORITIES_KEY, List.class);
+
+        Collection<? extends GrantedAuthority> authorities = roles.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
 
         // 인증 객체 생성 후 반환
         User principal = new User(claims.getSubject(), "", authorities);

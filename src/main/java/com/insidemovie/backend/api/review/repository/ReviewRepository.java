@@ -24,6 +24,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Page<Review> findByMember(Member member, Pageable pageable);
 
+    long countByMember(Member member);
+
     // 리뷰 좋아요 수 증가
     @Modifying
     @Transactional

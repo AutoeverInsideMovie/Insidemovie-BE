@@ -1,0 +1,23 @@
+package com.insidemovie.backend.api.movie.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
+
+import java.util.List;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+public class TmdbResponse {
+    private int page;
+
+    //Json의 "results"배열을 List<TmdbMovieDto>로 매핑
+    private List<TmdbMovieDto> results;
+
+    @JsonProperty("total_pages")
+    private int totalPages;
+
+    @JsonProperty("total_results")
+    private int totalResults;
+}

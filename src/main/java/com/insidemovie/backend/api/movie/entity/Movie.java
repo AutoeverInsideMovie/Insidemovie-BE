@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.insidemovie.backend.api.constant.EmotionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -55,10 +56,12 @@ public class Movie {
     private String posterPath; // 포스터 이미지 경로
     private String backdropPath; // 배경 이미지 경로
 
-    private Float voteAverage; // 평균 평점
+    private Double voteAverage; // 평균 평점
     private Integer voteCount; // 평점 투표 수
 
-    private String original_language; //국가
+    @Column(name = "original_language")
+    private String originalLanguage; //국가
+
     private String actors; //출연진
 
     private Double rating;
@@ -66,9 +69,12 @@ public class Movie {
 
     private LocalDateTime cachedAt;     // 언제 가져왔는지
 
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Genre> genres = new ArrayList<>();
+//    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @Builder.Default
+//    private List<Genre> genres = new ArrayList<>();
+
+    @Column(name = "genre_ids")
+    private List<Integer> genreIds; //장르
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -89,8 +95,30 @@ public class Movie {
         this.overview = overview;
     }
 
+    // 포스터 수정
+    public void updatePosterPath(String posterPath) {
+        this.posterPath = posterPath;
+    }
+    // 배경이미지 수정
+    public void updateBackDropPath(String backdropPath) {
+        this.backdropPath = backdropPath;
+    }
+    // 평균평점 수정
+    public void updateVoteAverage(Double voteAverage) {
+        this.voteAverage = voteAverage;
+    }
+    // 장르 수정
+    public void updateGenreIds(List<Integer> genreIds) {
+        this.genreIds = genreIds;
+    }
+    // 국가 수정
+    public void updateOriginalLanguage(String originalLanguage) {
+        this.originalLanguage = originalLanguage;
+    }
+
     // 개봉일 수정
     public void updateReleaseDate(LocalDate date) {
         this.releaseDate = date;
     }
+
 }

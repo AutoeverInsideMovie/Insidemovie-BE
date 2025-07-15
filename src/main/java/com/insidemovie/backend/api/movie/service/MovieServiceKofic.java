@@ -44,6 +44,31 @@ public class MovieServiceKofic {
                 .bodyToMono(MovieListResponse.class);
     }
 
+    public Mono<MovieListResponse> searchMovieList(String curPage, String itemPerPage){
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/movie/searchMovieList.json")
+                        .queryParam("key", apiKey)
+                        .queryParam("curPage", curPage)
+                        .queryParam("itemPerPage", itemPerPage)
+                        .build()
+                )
+                .retrieve()
+                .onStatus(status -> status.value() == 401,
+                        resp -> {
+                            // 에러 바디 로깅
+                            return resp.bodyToMono(String.class)
+                                    .flatMap(body -> {
+                                        System.err.println("401 에러 바디: " + body);
+                                        return Mono.error(new RuntimeException("인증 실패: API 키를 확인하세요"));
+                                    });
+                        })
+                .onStatus(status -> status.is4xxClientError(),
+                        resp -> Mono.error(new RuntimeException("잘못된 요청")))
+                .onStatus(status -> status.is5xxServerError(),
+                        resp -> Mono.error(new RuntimeException("서버 에러")))
+                .bodyToMono(MovieListResponse.class);
+    }
     /**
      * 블로킹 방식으로 동기 호출이 필요할 때 사용
      */

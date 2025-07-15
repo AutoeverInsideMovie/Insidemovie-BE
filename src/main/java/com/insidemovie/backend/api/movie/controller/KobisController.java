@@ -36,4 +36,8 @@ public class KobisController {
     public MovieListResponse getMoviesBlocking(@RequestParam("name") String name) {
         return movieServiceKofic.searchMovieBlocking(name);
     }
+    @GetMapping(value = "/movies/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<MovieListResponse> getMoviesList(@RequestParam("curPage") String curPage,@RequestParam("itemPerPage") String itemPerPage) {
+        return movieServiceKofic.searchMovieList(curPage,itemPerPage);
+    }
 }

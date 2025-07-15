@@ -7,6 +7,7 @@ import com.insidemovie.backend.api.movie.dto.TmdbResponse;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,11 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 public class MoviesService {
     private final RestTemplate restTemplate;
@@ -43,53 +43,109 @@ public class MoviesService {
 
     @Transactional
     public void fetchAndSaveAllMovies() {
+        List<TmdbMovieDto> allDtos = new ArrayList<>();
         for (int page = 1; page <= 5; page++) {
-            List<TmdbMovieDto> dtos = fetchFromTmdb(page);
-            dtos.forEach(this::upsertMovie);
+            allDtos.addAll(fetchFromTmdb(page));
         }
+        Map<Long, TmdbMovieDto> dtoMap = allDtos.stream()
+                .collect(Collectors.toMap(
+                        TmdbMovieDto::getId,
+                        Function.identity(),
+                        (dto1,dto2)->dto1
+                ));
+        List<Long> ids = new ArrayList<>(dtoMap.keySet());
+        List<Movie> existing = movieRepository.findAllByTmdbMovieIdIn(ids);
+        Map<Long, Movie> existingMap = existing.stream()
+                .collect(Collectors.toMap(Movie::getTmdbMovieId,Function.identity()));
+
+        existingMap.forEach((tmdbId, movie)->{
+            TmdbMovieDto dto = dtoMap.get(tmdbId);
+            movie.updateTitle(dto.getTitle());
+            movie.updateOverview(dto.getOverview());
+            movie.updatePosterPath(dto.getPosterPath());
+            movie.updateBackDropPath(dto.getBackDropPath());
+            movie.updateVoteAverage(dto.getVoteAverage());
+            movie.updateReleaseDate(dto.getReleaseDate());
+            movie.updateGenreIds(dto.getGenreIds());
+            movie.updateOriginalLanguage(dto.getOriginalLanguage());
+        });
+        List<Movie> newMovies = dtoMap.entrySet().stream()
+                .filter(e -> !existingMap.containsKey(e.getKey()))
+                .map(e -> {
+                    TmdbMovieDto dto = e.getValue();
+                    Movie m = Movie.builder()
+                            .tmdbMovieId(dto.getId())
+                            .build();
+                    // 역시 updateXxx 호출
+                    m.updateTitle(dto.getTitle());
+                    m.updateOverview(dto.getOverview());
+                    // ... 나머지 updateXxx
+                    return m;
+                })
+                .toList();
+
+        // 6) 신규 영화만 한 번에 저장
+        movieRepository.saveAll(newMovies);
+
     }
     private List<TmdbMovieDto> fetchFromTmdb(int page) {
-        String url = String.format(
-                "%s/movie/popular?api_key=%s&language=%s&page=%d",
-                baseUrl, apiKey, language, page
-        );
-        ResponseEntity<TmdbResponse> resp =
-                restTemplate.getForEntity(url, TmdbResponse.class);
+        List<TmdbMovieDto> all = new ArrayList<>();
+        String[] categories ={
+                "popular",
+                "now_playing",
+                "top_rated",
+                "upcoming"
+        };
+        for (String cat : categories) {
+            String url = String.format(
+                    "%s/movie/%s?api_key=%s&language=%s&page=%d",
+                    baseUrl, cat, apiKey, language, page
+            );
+            ResponseEntity<TmdbResponse> resp =
+                    restTemplate.getForEntity(url, TmdbResponse.class);
 
-        if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
-            return resp.getBody().getResults();  // DTO 리스트 반환
-        } else {
-            // 실패 시 빈 리스트 반환 또는 예외 처리
-            return Collections.emptyList();
+            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                //return resp.getBody().getResults();  // DTO 리스트 반환
+                all.addAll(resp.getBody().getResults());
+            } else {
+                // 실패 시 빈 리스트 반환 또는 예외 처리
+                //return Collections.emptyList();
+                log.warn("TMDB {} page {} 호출 실패: {}", cat, page, resp.getStatusCode());
+            }
         }
+       return all.stream()
+                .collect(Collectors.toMap(
+                        TmdbMovieDto::getId,
+                        Function.identity(),
+                        (existing, replacement) -> existing))
+                .values()
+                .stream()
+                .toList();
 
     }
-    @Transactional
-    public void upsertMovie(TmdbMovieDto dto) {
-        Movie movie = movieRepository
-                .findByTmdbMovieId(dto.getId())
-                .orElseGet(() -> Movie.builder()
-                        .tmdbMovieId(dto.getId())
-                        .build());
+//    private Movie upsertMovie(TmdbMovieDto dto) {
+//        Movie movie = movieRepository
+//                .findByTmdbMovieId(dto.getId())
+//                .map(entity -> {
+//                    return movieRepository.save(entity);
+//                })
+//                .orElseGet(() -> Movie.builder()
+//                        .tmdbMovieId(dto.getId())
+//                        .build());
+//
+//        // 엔티티의 update 메서드를 호출해서 필드 갱신
+//        movie.updateTitle(dto.getTitle());
+//        movie.updateOverview(dto.getOverview());
+//        movie.updatePosterPath(dto.getPosterPath());
+//        movie.updateBackDropPath(dto.getBackDropPath());
+//        movie.updateVoteAverage(dto.getVoteAverage());
+//        movie.updateReleaseDate(dto.getReleaseDate());
+//        movie.updateGenreIds(dto.getGenreIds());
+//        movie.updateOriginalLanguage(dto.getOriginalLanguage());
+//
+//        return movie;
+//    }
 
-        // 엔티티의 update 메서드를 호출해서 필드 갱신
-        movie.updateTitle(dto.getTitle());
-        movie.updateOverview(dto.getOverview());
-        movie.updateReleaseDate(dto.getReleaseDate());
-        // …필요한 다른 필드도
-
-        movieRepository.save(movie);
-    }
-    private Movie toEntity(TmdbMovieDto dto) {
-        return Movie.builder()
-                .id(dto.getId())             // TMDB movie id 를 엔티티의 PK 로 사용
-                .title(dto.getTitle())
-                .posterPath(dto.getPosterPath())
-                .rating(dto.getVoteAverage())
-                .releaseDate(dto.getReleaseDate())
-                .cachedAt(LocalDateTime.now())
-                .build();
-    }
 //
 //    public MoviesService(RestTemplate restTemplate,
 //                         @Value("${tmdb.api.key}") String apiKey,

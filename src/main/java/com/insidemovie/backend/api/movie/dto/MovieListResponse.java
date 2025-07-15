@@ -25,7 +25,12 @@ public class MovieListResponse {
         //private String showTm; //상영시간
         private String openDt; //개봉일
         private String nationAlt; //제작국가
-        private String peopleNm; //감독
+        private String peopleNm; //감독이름
+        //영화연령
+        //        러닝타임
+       // 관객수
+
+        //출연진
     }
 
 }

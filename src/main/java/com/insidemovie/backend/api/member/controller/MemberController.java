@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,4 +79,38 @@ public class MemberController {
         Map<String, Object> result = memberService.kakaoLogin(token);
         return ApiResponse.success(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS, result);
     }
+
+    // 닉네임 변경
+    @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
+    @PutMapping("/nickname")
+    public ResponseEntity<ApiResponse<Void>> updateNickname(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid NicknameUpdateRequestDTO nicknameUpdateRequestDTO) {
+
+        memberService.updateNickname(userDetails.getUsername(), nicknameUpdateRequestDTO);
+        return ApiResponse.success_only(SuccessStatus.UPDATE_NICKNAME_SUCCESS);
+    }
+
+    // 메인 감정 변경
+    @Operation(summary = "메인 감정 변경 API", description = "사용자의 메인 감정을 수정합니다.")
+    @PutMapping("/emotion")
+    public ResponseEntity<ApiResponse<Void>> updateMainEmotion(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid MainEmotionUpdateRequestDTO requestDto) {
+
+        memberService.updateMainEmotion(userDetails.getUsername(), requestDto);
+        return ApiResponse.success_only(SuccessStatus.UPDATE_EMOTION_SUCCESS);
+    }
+
+    // 비밀번호 변경
+    @Operation(summary = "비밀번호 변경 API", description = "사용자의 비밀번호를 변경합니다.")
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> updatePassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid PasswordUpdateRequestDTO requestDto) {
+
+        memberService.updatePassword(userDetails.getUsername(), requestDto);
+        return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
+    }
+
 }

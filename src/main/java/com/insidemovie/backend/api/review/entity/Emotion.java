@@ -26,6 +26,6 @@ public class Emotion {
     private double neutral;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "review_id", nullable = false)
+    @JoinColumn(name = "review_id", nullable = false, unique = true)
     private Review review;
 }

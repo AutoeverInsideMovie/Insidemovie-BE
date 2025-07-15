@@ -53,4 +53,20 @@ public class Member extends BaseTimeEntity {
         this.refreshToken = refreshToken;
     }
 
+    // 닉네임 변경
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    // 메인 감정 변경
+    public void updateMainEmotion(EmotionType mainEmotion) {
+        this.mainEmotion = mainEmotion;
+    }
+
+    // 비밀번호 변경
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+
 }

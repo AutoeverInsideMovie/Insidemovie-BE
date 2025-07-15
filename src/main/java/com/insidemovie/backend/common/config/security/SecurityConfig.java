@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -45,7 +46,8 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
                         config.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:5173"
+                                "http://localhost:5173",
+                                "http://localhost:8000"
                         ));
                         config.setAllowedMethods(Collections.singletonList("*"));
                         config.setAllowCredentials(true);
@@ -63,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/member/signup", "/api/v1/member/reissue", "/api/v1/member/login", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue").permitAll() // 회원가입, 로그인 인증 허용
                         .requestMatchers("/api/kobis/**").permitAll() //잠시
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/review/**").permitAll() // 영화에 대한 리뷰 목록 요청 허용
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)

@@ -1,0 +1,100 @@
+package com.insidemovie.backend.api.review.controller;
+
+import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
+import com.insidemovie.backend.api.review.dto.ReviewCreateDTO;
+import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
+import com.insidemovie.backend.api.review.dto.ReviewUpdateDTO;
+import com.insidemovie.backend.api.review.service.ReviewService;
+import com.insidemovie.backend.common.response.ApiResponse;
+import com.insidemovie.backend.common.response.SuccessStatus;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@Tag(name="Review", description = "Review 관련 API 입니다.")
+@RequestMapping("/api/v1/review")
+@RequiredArgsConstructor
+public class ReviewController {
+
+    private final ReviewService reviewService;
+
+    @Operation(
+            summary = "리뷰 등록 API", description = "새로운 리뷰를 등록합니다.")
+    @PostMapping
+    public ResponseEntity<ApiResponse<Long>> createReview(@RequestBody ReviewCreateDTO reviewCreateDTO, @AuthenticationPrincipal UserDetails userDetails){
+
+        Long id = reviewService.createReview(reviewCreateDTO, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.CREATE_REVIEW_SUCCESS, id);
+    }
+
+    @Operation(
+            summary = "리뷰 목록 조회 API", description = "특정 영화에 대한 리뷰 목록을 조회합니다.")
+    @GetMapping("/{movieId}")
+    public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByMovie(
+            @PathVariable Long movieId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Page<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageRequest, userEmail);
+        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, reviewPage);
+    }
+
+    @Operation(
+            summary = "리뷰 수정 API", description = "리뷰를 수정 합니다.")
+    @PutMapping
+    public ResponseEntity<ApiResponse<Void>> modifyArticle(@RequestBody ReviewUpdateDTO articleUpdateDTO, @AuthenticationPrincipal UserDetails userDetails) {
+
+        reviewService.modifyReview(articleUpdateDTO, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.MODIFY_REVIEW_SUCCESS);
+    }
+
+    @Operation(
+            summary = "리뷰 삭제 API", description = "리뷰를 삭제 합니다.")
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable Long reviewId, @AuthenticationPrincipal UserDetails userDetails) {
+
+        reviewService.deleteReview(reviewId, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.DELETE_REVIEW_SUCCESS);
+    }
+
+    @Operation(
+            summary = "리뷰 좋아요 토글 API",
+            description = "리뷰에 좋아요 또는 좋아요 취소를 합니다."
+    )
+    @PostMapping("/like/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> toggleReviewLike(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        reviewService.toggleReviewLike(reviewId, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.SEND_REVIEW_LIKE_SUCCESS);
+    }
+
+    @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
+    @GetMapping("/my-review")
+    public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviews(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MyReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), pageable);
+
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
+    }
+
+
+}

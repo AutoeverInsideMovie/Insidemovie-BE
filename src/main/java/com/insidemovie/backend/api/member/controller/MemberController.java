@@ -5,6 +5,9 @@ import com.insidemovie.backend.api.member.dto.*;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
+import com.insidemovie.backend.api.review.controller.ReviewController;
+import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
+import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +15,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +36,7 @@ public class MemberController {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
+    private final ReviewService reviewService;
 
     @Operation(
             summary = "이메일 회원가입 API", description = "회원정보를 받아 사용자를 등록합니다.")
@@ -111,6 +118,20 @@ public class MemberController {
 
         memberService.updatePassword(userDetails.getUsername(), requestDto);
         return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
+    }
+
+    // 내가 작성한 리뷰 조회
+    @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
+    @GetMapping("/my-review")
+    public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviews(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MyReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), pageable);
+
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
     }
 
 }

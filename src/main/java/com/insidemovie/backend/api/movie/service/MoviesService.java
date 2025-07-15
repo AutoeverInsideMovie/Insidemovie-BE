@@ -1,7 +1,5 @@
 package com.insidemovie.backend.api.movie.service;
 
-import com.insidemovie.backend.api.movie.dto.MovieDetail;
-import com.insidemovie.backend.api.movie.dto.PaginatedResponse;
 import com.insidemovie.backend.api.movie.dto.TmdbMovieDto;
 import com.insidemovie.backend.api.movie.dto.TmdbResponse;
 import com.insidemovie.backend.api.movie.entity.Movie;
@@ -10,13 +8,10 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -123,60 +118,5 @@ public class MoviesService {
                 .toList();
 
     }
-//    private Movie upsertMovie(TmdbMovieDto dto) {
-//        Movie movie = movieRepository
-//                .findByTmdbMovieId(dto.getId())
-//                .map(entity -> {
-//                    return movieRepository.save(entity);
-//                })
-//                .orElseGet(() -> Movie.builder()
-//                        .tmdbMovieId(dto.getId())
-//                        .build());
-//
-//        // 엔티티의 update 메서드를 호출해서 필드 갱신
-//        movie.updateTitle(dto.getTitle());
-//        movie.updateOverview(dto.getOverview());
-//        movie.updatePosterPath(dto.getPosterPath());
-//        movie.updateBackDropPath(dto.getBackDropPath());
-//        movie.updateVoteAverage(dto.getVoteAverage());
-//        movie.updateReleaseDate(dto.getReleaseDate());
-//        movie.updateGenreIds(dto.getGenreIds());
-//        movie.updateOriginalLanguage(dto.getOriginalLanguage());
-//
-//        return movie;
-//    }
-
-//
-//    public MoviesService(RestTemplate restTemplate,
-//                         @Value("${tmdb.api.key}") String apiKey,
-//                         @Value("${tmdb.api.base-url}") String baseUrl,
-//                         @Value("${tmdb.api.language}") String language) {
-//        this.restTemplate = restTemplate;
-//        this.apiKey = apiKey;
-//        this.baseUrl = baseUrl;
-//        this.language= language;
-//    }
-//
-//    /** 영화 ID로 상세 정보 조회 */
-//    public MovieDetail getMovieDetail(String movieId) {
-//        String url = String.format("%s/movie/%s?api_key=%s&language=%s", baseUrl, movieId, apiKey, language);
-//        return restTemplate.getForObject(url, MovieDetail.class);
-//    }
-//
-//    /** 인기 영화 목록 조회 (한국어) */
-//    public List<MovieDetail> getPopularMovies(int page) {
-//        String url = String.format(
-//                "%s/movie/popular?api_key=%s&language=%s&page=%d",
-//                baseUrl, apiKey, language,page
-//        );
-//        PaginatedResponse<MovieDetail> resp = restTemplate.exchange(
-//                url,
-//                HttpMethod.GET,
-//                null,
-//                new ParameterizedTypeReference<PaginatedResponse<MovieDetail>>() {}
-//        ).getBody();
-//
-//        return (resp != null) ? resp.getResults() : Collections.emptyList();
-//    }
 
 }

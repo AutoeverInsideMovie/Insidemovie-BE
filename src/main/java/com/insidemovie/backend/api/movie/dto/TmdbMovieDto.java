@@ -37,10 +37,4 @@ public class TmdbMovieDto {
     @JsonProperty("original_language")
     private String originalLanguage; //국가
 
-    //등급
-    //러닝타임
-    //관객수
-    //감독이름
-    //출연진
-    //가능 ott
 }

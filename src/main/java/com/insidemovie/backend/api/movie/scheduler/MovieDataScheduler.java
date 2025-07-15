@@ -14,7 +14,7 @@ public class MovieDataScheduler {
     }
     //매일 오전 6시(Asia/Seoul) 에 한 번씩 실행
     //cron 포맷: 초 분 시 일 월 요일
-    @Scheduled(cron = "0 29 14 * * *", zone="Asia/Seoul")
+    @Scheduled(cron = "0 37 16 * * *", zone="Asia/Seoul")
     public void fetchAndStoreMovies(){
         log.info("[SCHEDULER] 영화 데이터 갱신 시작 (task-thread={})",
                 Thread.currentThread().getName());

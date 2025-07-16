@@ -53,9 +53,4 @@ public class Report extends BaseTimeEntity {
                 this.status = newStatus;
     }
 
-//    // 사유 설정용 메서드 (빌더 대신 사용하셔도 됩니다)
-//    public void setReason(ReportReason reason) {
-//        this.reason = reason;
-//    }
-
 }

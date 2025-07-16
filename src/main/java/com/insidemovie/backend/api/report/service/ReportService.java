@@ -63,4 +63,26 @@ public class ReportService {
                 )
         );
     }
+
+    // 신고 수용 처리
+    @Transactional
+    public void acceptReport(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REPORT_EXCEPTION.getMessage()));
+
+        report.updateStatus(ReportStatus.ACCEPTED);
+
+        Review review = report.getReview();
+        review.conceal();
+    }
+
+    // 신고 기각 처리
+    @Transactional
+    public void rejectReport(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REPORT_EXCEPTION.getMessage()));
+
+        report.updateStatus(ReportStatus.REJECTED);
+    }
+
 }

@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     docker.image("${GRADLE_IMAGE}").inside {
-                        sh './gradlew clean build -x test'
+                        sh './gradlew clean build -x test --no-build-cache'
                     }
                 }
             }
@@ -32,7 +32,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${TAG} ."
+                sh "docker build --no-cache -t ${IMAGE_NAME}:${TAG} ."
             }
         }
 

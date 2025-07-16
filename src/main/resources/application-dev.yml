@@ -1,6 +1,5 @@
 spring:
   config:
-    import: optional:file:application-secrets.yml
     activate:
       on-profile: local
 

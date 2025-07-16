@@ -12,8 +12,10 @@ import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -87,6 +89,22 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS, result);
     }
 
+    @Operation(summary = "로그아웃 API", description = "사용자의 refreshToken을 무효화하고 로그아웃 처리합니다.\n input으로 사용자의 토큰을 받습니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "로그아웃 성공"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "인증 실패 (토큰이 없거나 만료됨)"
+        )
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal UserDetails userDetails) {
+        memberService.logout(userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.LOGOUT_SUCCESS);
+    }
+
     // 닉네임 변경
     @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
     @PutMapping("/nickname")
@@ -133,5 +151,6 @@ public class MemberController {
 
         return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
     }
+
 
 }

@@ -56,9 +56,8 @@ pipeline {
                 sshagent(['movie_SSH']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ubuntu@52.79.175.149 "
-                        docker pull ${IMAGE_NAME}:${TAG} &&
+                        docker-compose pull
                         docker-compose down &&
-                        docker rm ${CONTAINER_NAME} || true &&
                         docker-compose up -d
                     "
                     """

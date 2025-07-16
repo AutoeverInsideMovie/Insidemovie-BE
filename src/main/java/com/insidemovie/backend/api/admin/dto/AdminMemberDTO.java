@@ -17,9 +17,11 @@ public class AdminMemberDTO {
     private Long id;
     private String email;
     private String nickname;
-    private EmotionType mainEmotion;
+    private int reportCount;
+    private String authority;
     private LocalDateTime createdAt;
 
-    private long reviewCount;
     private boolean isBanned;
+
+    private long reviewCount;
 }

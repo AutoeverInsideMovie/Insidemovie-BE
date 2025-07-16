@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AdminMemberService {
+public class AdminService {
 
     private final MemberRepository memberRepository;
     private final ReviewRepository reviewRepository;
@@ -26,18 +26,22 @@ public class AdminMemberService {
     public Page<AdminMemberDTO> getMembers(String keyword, Pageable pageable) {
         return memberRepository
                 .findByEmailContainingOrNicknameContaining(keyword, keyword, pageable)
-                .map(member -> {
-                    long reviewCount = reviewRepository.countByMember(member);  // 리뷰 수 조회
-                    return AdminMemberDTO.builder()
-                            .id(member.getId())
-                            .email(member.getEmail())
-                            .nickname(member.getNickname())
-                            .mainEmotion(member.getMainEmotion())
-                            .createdAt(member.getCreatedAt())
-                            .reviewCount(reviewCount)
-                            .isBanned(member.isBanned())
-                            .build();
-                        });
+                .map(this::convertToDto);
+    }
+
+    private AdminMemberDTO convertToDto(Member member) {
+        long reviewCount = reviewRepository.countByMember(member);  // 리뷰 수 조회
+
+        return AdminMemberDTO.builder()
+                .id(member.getId())
+                .email(member.getEmail())
+                .nickname(member.getNickname())
+                .reportCount(member.getReportCount())
+                .authority(member.getAuthority().name())
+                .createdAt(member.getCreatedAt())
+                .reviewCount(reviewCount)
+                .isBanned(member.isBanned())
+                .build();
     }
 
     // 회원 정지

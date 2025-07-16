@@ -1,30 +1,36 @@
 package com.insidemovie.backend.api.member.service;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insidemovie.backend.api.member.dto.KakaoUserInfoDto;
-import com.insidemovie.backend.common.exception.BadRequestException;
-import com.insidemovie.backend.common.exception.InternalServerException;
-import com.insidemovie.backend.common.response.ErrorStatus;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.insidemovie.backend.api.member.dto.KakaoUserInfoDto;
+import com.insidemovie.backend.common.exception.BadRequestException;
+import com.insidemovie.backend.common.exception.InternalServerException;
+import com.insidemovie.backend.common.response.ErrorStatus;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class OAuthService {
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
+    @Value("${kakao.client.id}")
     private String clientId;
 
-    @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
+    @Value("${kakao.client.secret}")
     private String clientSecret;
 
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")

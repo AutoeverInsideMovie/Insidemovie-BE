@@ -31,6 +31,7 @@ public class MoviesService {
     @Value("${tmdb.api.language}")
     private String language;
 
+
     public MoviesService(RestTemplateBuilder builder, MovieRepository movieRepository) {
         this.restTemplate = builder.build();
         this.movieRepository = movieRepository;

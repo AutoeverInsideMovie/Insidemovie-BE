@@ -6,8 +6,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://mysql:3306/insidemovie?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${mysql.user}
-    password: ${mysql.password}
+    username: root
+    password: 1234
 
   jpa:
     hibernate:

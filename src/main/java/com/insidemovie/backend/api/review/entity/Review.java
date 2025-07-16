@@ -5,7 +5,10 @@ import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.report.entity.Report;
 import com.insidemovie.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -71,8 +74,8 @@ public class Review extends BaseTimeEntity {
         this.isReported = true;
     }
 
-    // 리뷰 숨김 처리
-    public void conceal() {
+    // 관리자 수용 시 호출
+    public void markConcealed() {
         this.isConcealed = true;
     }
 

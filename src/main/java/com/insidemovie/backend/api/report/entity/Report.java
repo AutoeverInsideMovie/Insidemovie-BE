@@ -43,19 +43,9 @@ public class Report extends BaseTimeEntity {
     @Column(name = "status", nullable = false)
     private ReportStatus status = ReportStatus.UNPROCESSED;
 
-    // 신고 사유
-    @Enumerated(EnumType.STRING)
-    @Column(name = "reason", nullable = false)
-    private ReportReason reason;
-
     // 상태 변경용 메서드
     public void updateStatus(ReportStatus newStatus) {
                 this.status = newStatus;
     }
-
-//    // 사유 설정용 메서드 (빌더 대신 사용하셔도 됩니다)
-//    public void setReason(ReportReason reason) {
-//        this.reason = reason;
-//    }
 
 }

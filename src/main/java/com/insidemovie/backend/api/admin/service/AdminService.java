@@ -1,11 +1,8 @@
 package com.insidemovie.backend.api.admin.service;
 
 import com.insidemovie.backend.api.admin.dto.AdminMemberDTO;
-import com.insidemovie.backend.api.admin.dto.AdminReportDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
-import com.insidemovie.backend.api.report.entity.Report;
-import com.insidemovie.backend.api.report.repository.ReportRepository;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
@@ -23,7 +20,6 @@ public class AdminService {
 
     private final MemberRepository memberRepository;
     private final ReviewRepository reviewRepository;
-    private final ReportRepository reportRepository;
 
     // 회원 목록 조회
     @Transactional
@@ -64,26 +60,5 @@ public class AdminService {
         member.setBanned(false); // 정지 해제
     }
 
-    // 신고 목록 조회
-    @Transactional
-    public Page<AdminReportDTO> getAllReports(Pageable pageable) {
-        return reportRepository.findAll(pageable)
-                .map(this::convertToDto);
-    }
-
-    private AdminReportDTO convertToDto(Report report) {
-        return AdminReportDTO.builder()
-                .reportId(report.getId())
-                .reviewId(report.getReview().getId())
-                .reviewContent(report.getReview().getContent())
-                .reporterId(report.getReporter().getId())
-                .reporterNickname(report.getReporter().getNickname())
-                .reportedMemberId(report.getReportedMember().getId())
-                .reportedNickname(report.getReportedMember().getNickname())
-                .reason(report.getReason())
-                .status(report.getStatus())
-                .createdAt(report.getCreatedAt())
-                .build();
-    }
 
 }

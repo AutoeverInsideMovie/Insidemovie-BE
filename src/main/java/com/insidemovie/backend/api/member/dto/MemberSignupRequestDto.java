@@ -36,17 +36,16 @@ public class MemberSignupRequestDto {
     @Size(min = 2, max = 20, message = "닉네임 2-20자 사이로 입력해주세요.")
     private String nickname;
 
-    private EmotionType mainEmotion;
 
     public Member toEntity(String encodedPassword) {
         return Member.builder()
                 .email(email)
                 .password(encodedPassword)
                 .nickname(nickname)
-                .mainEmotion(mainEmotion)
                 .socialType("NORMAL")
                 .socialId(null)
                 .authority(Authority.ROLE_USER)
+                .reportCount(0)
                 .build();
     }
 }

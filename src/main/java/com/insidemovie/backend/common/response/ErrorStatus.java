@@ -28,8 +28,7 @@ public enum ErrorStatus {
     NOT_FOUND_MEMBERID_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 사용자 입니다."),
     NOT_FOUND_MOVIE_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 영화 입니다."),
     NOT_FOUND_REVIEW_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 리뷰 입니다."),
-    NOT_FOUND_DAILY_BOXOFFICE(HttpStatus.NOT_FOUND, "일간 박스오피스 데이터를 찾을 수 없습니다."),
-    NOT_FOUND_WEEKLY_BOXOFFICE(HttpStatus.NOT_FOUND, "주간 박스오피스 데이터를 찾을 수 없습니다."),
+    NOT_FOUND_REPORT_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다."),
 
     /** 500 SERVER_ERROR */
     FAIL_UPLOAD_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR,"파일 업로드 실패하였습니다."),

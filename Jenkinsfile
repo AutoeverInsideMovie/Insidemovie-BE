@@ -57,9 +57,9 @@ pipeline {
                     sh """
                     ssh -o StrictHostKeyChecking=no ubuntu@52.79.175.149 "
                         docker pull ${IMAGE_NAME}:${TAG} &&
-                        docker stop ${CONTAINER_NAME} || true &&
+                        docker-compose down &&
                         docker rm ${CONTAINER_NAME} || true &&
-                        docker run -d -p 8080:8080 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${TAG}
+                        docker-compose up -d
                     "
                     """
                 }

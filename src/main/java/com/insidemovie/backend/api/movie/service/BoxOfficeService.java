@@ -15,7 +15,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -53,14 +52,16 @@ public class BoxOfficeService {
         // 기존 데이터 삭제
         dailyRepo.deleteByTargetDate(date);
 
-        // --- 변경된 호출 ---
+        // 외부 API 데이터 삽입
         List<DailyBoxOfficeEntity> entities = fetchDailyFromApi(date, req.getItemPerPage());
 
-        // 저장·DTO 변환·예외 처리
+        // 저장·DTO 변환
         dailyRepo.saveAll(entities);
         List<DailyBoxOfficeResponseDTO> items = entities.stream()
             .map(DailyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());
+
+        // API에서 가져온 데이터가 없을 시, 에러 발생
         if (items.isEmpty()) {
             throw new BaseException(
                 ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
@@ -68,6 +69,7 @@ public class BoxOfficeService {
             );
         }
 
+        // 응답 DTO 생성
         String showRange = targetDt + "~" + targetDt;
         return BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
             .boxofficeType("일별")
@@ -122,11 +124,11 @@ public class BoxOfficeService {
     // 주간 박스오피스 조회 및 저장
     @Transactional
     public BoxOfficeListDTO<WeeklyBoxOfficeResponseDTO> getWeeklyBoxOffice(BoxOfficeRequestDTO req) {
-        // 1) 어제 대신 '지난주' 날짜 구하기
+        // 지난주 날짜로 설정
         LocalDate lastWeekDate = LocalDate.now().minusWeeks(1);
         String targetDt = lastWeekDate.format(FMT);
 
-        // 2) ISO 주차 기준으로 '년+주차' 문자열 생성 (예: 2025IW28)
+        // ISO 주차 기준으로 '년+주차' 문자열 생성 (예: 2025IW28)
         WeekFields wf = WeekFields.ISO;
         int week = lastWeekDate.get(wf.weekOfWeekBasedYear());
         int year = lastWeekDate.get(wf.weekBasedYear());
@@ -134,19 +136,20 @@ public class BoxOfficeService {
 
         log.info("[Service] WeeklyBoxOffice for last week {} (yearWeek={})", targetDt, yearWeek);
 
-        // 3) 기존 DB 삭제
+        // 기존 DB 삭제
         weeklyRepo.deleteByYearWeekTime(yearWeek);
 
-        // 4) API 호출 (지난주 targetDt, req.getWeekGb(), req.getItemPerPage(), yearWeek 사용)
+        // API 호출
         List<WeeklyBoxOfficeEntity> entities =
             fetchWeeklyFromApi(lastWeekDate, req.getWeekGb(), req.getItemPerPage(), yearWeek);
 
-        // 5) 저장·DTO 변환
+        // 저장·DTO 변환
         weeklyRepo.saveAll(entities);
         List<WeeklyBoxOfficeResponseDTO> items = entities.stream()
             .map(WeeklyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());
 
+        // API로 반환된 데이터 없을 시 에러 발생
         if (items.isEmpty()) {
             throw new BaseException(
                 ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
@@ -154,7 +157,7 @@ public class BoxOfficeService {
             );
         }
 
-        // 6) 응답
+        // 응답
         return BoxOfficeListDTO.<WeeklyBoxOfficeResponseDTO>builder()
             .boxofficeType("주간")
             .showRange(yearWeek)

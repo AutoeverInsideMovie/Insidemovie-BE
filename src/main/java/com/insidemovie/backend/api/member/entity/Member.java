@@ -29,14 +29,14 @@ public class Member extends BaseTimeEntity {
     private String socialId;
 
     @Column(name = "report_count", nullable = false)
-    private Integer reportCount = 0;
+    private int reportCount = 0;
 
     // 사용자가 신고한 내역
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Report> reportsFiled = new ArrayList<>();
 
     // 사용자가 신고당한 내역
-    @OneToOne(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Report> reportsReceived = new ArrayList<>();
 
     // 감정 요약

@@ -2,7 +2,11 @@ package com.insidemovie.backend.api.report.service;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.report.dto.ReportRequestDTO;
+import com.insidemovie.backend.api.report.dto.ReportResponseDTO;
 import com.insidemovie.backend.api.report.entity.Report;
+import com.insidemovie.backend.api.report.entity.ReportReason;
+import com.insidemovie.backend.api.report.entity.ReportStatus;
 import com.insidemovie.backend.api.report.repository.ReportRepository;
 import com.insidemovie.backend.api.review.entity.Review;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
@@ -25,7 +29,7 @@ public class ReportService {
 
     // 리뷰 신고
     @Transactional
-    public void reportReview(String reporterEmail, Long reviewId) {
+    public ReportResponseDTO reportReview(String reporterEmail, Long reviewId, ReportReason reason) {
 
         // 신고자 조회
         Member reporter = memberRepository.findByEmail(reporterEmail)
@@ -35,16 +39,28 @@ public class ReportService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
 
+        // 신고당한 사용자(리뷰 작성자) 가져오기
+        Member reportedMember = review.getMember();
+
         // 중복 신고 방지
-        if (reportRepository.existsByReviewAndMember(review, reporter)) {
+        if (reportRepository.existsByReviewAndReporter(review, reporter)) {
             throw new BadRequestException(ErrorStatus.DUPLICATE_REPORT_EXCEPTION.getMessage());
         }
 
-        reportRepository.save(
-                Report.builder()
-                        .review(review)
-                        .member(reporter)
-                        .build()
+        // 리뷰, 회원 상태 업데이트
+        review.markReported();                   // 리뷰 isReported = true
+        reportedMember.incrementReportCount();   // 피신고자 reportCount++
+
+        return ReportResponseDTO.fromEntity(
+                reportRepository.save(
+                        Report.builder()
+                                .review(review)
+                                .reporter(reporter)
+                                .reportedMember(reportedMember)
+                                .reason(reason)
+                                .status(ReportStatus.UNPROCESSED)
+                                .build()
+                )
         );
     }
 }

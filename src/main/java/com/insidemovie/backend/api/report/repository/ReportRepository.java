@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
     // 동일 사용자가 동일 리뷰를 이미 신고했는지 확인
-    boolean existsByReviewAndMember(Review review, Member member);
+    boolean existsByReviewAndReporter(Review review, Member reporter);
 }

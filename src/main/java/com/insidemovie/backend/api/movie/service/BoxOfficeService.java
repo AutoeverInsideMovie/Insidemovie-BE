@@ -1,10 +1,10 @@
 package com.insidemovie.backend.api.movie.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.insidemovie.backend.api.movie.dto.BoxOfficeListDTO;
-import com.insidemovie.backend.api.movie.dto.BoxOfficeRequestDTO;
-import com.insidemovie.backend.api.movie.dto.DailyBoxOfficeResponseDTO;
-import com.insidemovie.backend.api.movie.dto.WeeklyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;

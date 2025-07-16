@@ -2,7 +2,9 @@ spring:
   profiles:
     active: local
   config:
-    import: "classpath:application-key.yml"
+    import:
+      - optional:file:./application-key.yml
+      - optional:file:/home/ubuntu/application-key.yml
 
   security:
     oauth2:
@@ -56,6 +58,6 @@ kobis:
 
 scheduler:
   cron:
-    daily: "0 0 1 * * ?"      # 매일 오전 1시
-    weekly: "0 0 2 ? * MON"   # 매주 월요일 오전 2시
+    daily: "0 0 1 * * ?" # 매일 오전 1시
+    weekly: "0 0 2 ? * MON" # 매주 월요일 오전 2시
   zone: "Asia/Seoul"

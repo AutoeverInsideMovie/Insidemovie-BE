@@ -37,4 +37,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @Transactional
     @Query("UPDATE Review r SET r.likeCount = CASE WHEN r.likeCount > 0 THEN r.likeCount - 1 ELSE 0 END WHERE r.id = :reviewId")
     void decrementLikeCount(@Param("reviewId") Long reviewId);
+
+    // 숨김 처리된 리뷰 수
+    long countByIsConcealedTrue();
+
 }

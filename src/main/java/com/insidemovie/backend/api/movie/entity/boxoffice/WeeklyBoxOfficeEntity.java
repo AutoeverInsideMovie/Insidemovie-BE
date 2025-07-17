@@ -1,4 +1,4 @@
-package com.insidemovie.backend.api.movie.entity;
+package com.insidemovie.backend.api.movie.entity.boxoffice;
 
 import jakarta.persistence.*;
 import lombok.*;

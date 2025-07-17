@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.repository;
 
-import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 

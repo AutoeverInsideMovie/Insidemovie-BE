@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.dto.boxoffice;
 
-import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
 import lombok.Builder;
 import lombok.Getter;
 import java.time.LocalDate;

@@ -23,14 +23,17 @@ public class Movie {
     private Long id;
 
     @Column(name = "kofic_id", unique = true)
-    private String koficId;  // kofic 영화 코드
+    private String koficId;             // kofic 영화 코드
 
     @Column(name = "tmdb_id", unique = true)
     private Long tmdbMovieId;            // tmdb 영화 코드
 
 
     @Column(columnDefinition = "TEXT")
-    private String overview;
+    private String overview;            // 영화 개요
+
+    @Column(name = "popularity")
+    private Double popularity;          // tmdb 자체 인기도
 
 
     @Column(name = "original_language")
@@ -45,18 +48,16 @@ public class Movie {
     private String title;                // 영화 제목
     private String titleEn;              // 영문 영화 제목
     private Integer runtime;             // 러닝 타임
-    private Long audienceAcc;            // 누적 관객수
     private String nation;               // 제작 국가
     private String status;               // 제작 상태 (개봉, 기타 등)
     private String directors;            // 감독
-    private String ottProviders;
+    private String ottProviders;         // OTT 제공
     private String posterPath;           // 포스터 이미지 경로
     private String backdropPath;         // 배경 이미지 경로
     private Double voteAverage;          // 평균 평점
     private Integer voteCount;           // 평점 투표 수
-    private String rating;              // 영화 등급
-    private LocalDate releaseDate;      // 개봉일
-    private LocalDateTime cachedAt;     // 언제 가져왔는지
+    private String rating;               // 영화 등급
+    private LocalDate releaseDate;       // 개봉일
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -93,5 +94,9 @@ public class Movie {
     // 개봉일 수정
     public void updateReleaseDate(LocalDate date) {
         this.releaseDate = date;
+    }
+    // 인기 수정
+    public void updatePopularity(Double popularity) {
+        this.popularity = popularity;
     }
 }

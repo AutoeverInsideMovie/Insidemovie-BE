@@ -3,7 +3,7 @@ spring:
     active: local
   config:
     import:
-      - optional:file:./application-key.yml
+      - classpath:application-key.yml
       - optional:file:/home/ubuntu/application-key.yml
 
   security:

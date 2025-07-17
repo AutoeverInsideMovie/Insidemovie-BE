@@ -7,6 +7,7 @@ import com.insidemovie.backend.api.member.dto.*;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.common.exception.BadRequestException;
+import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
@@ -129,8 +130,6 @@ public class MemberService {
                         authorities  // 권한 목록
                 );
 
-
-
         // JWT 토큰 발급
         String accessToken = jwtProvider.generateAccessToken(authentication);
         String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
@@ -188,15 +187,6 @@ public class MemberService {
         member.updateNickname(newNickname);
     }
 
-    // 메인 감정 변경
-    @Transactional
-    public void updateMainEmotion(String email, MainEmotionUpdateRequestDTO mainEmotionUpdateRequestDTO) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
-
-        member.updateMainEmotion(mainEmotionUpdateRequestDTO.getMainEmotion());
-    }
-
     // 비밀번호 변경
     @Transactional
     public void updatePassword(String email, PasswordUpdateRequestDTO dto) {
@@ -211,4 +201,14 @@ public class MemberService {
         member.updatePassword(encoded);
     }
 
+    @Transactional
+    public void logout(String email) {
+        int updated = memberRepository.clearRefreshTokenByUserEmail(email);
+        if (updated == 0) {
+            throw new BaseException(
+                    ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getHttpStatus(),
+                    ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()
+            );
+        }
+    }
 }

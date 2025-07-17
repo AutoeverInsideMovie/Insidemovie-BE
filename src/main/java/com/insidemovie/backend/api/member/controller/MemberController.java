@@ -5,13 +5,21 @@ import com.insidemovie.backend.api.member.dto.*;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
+import com.insidemovie.backend.api.review.controller.ReviewController;
+import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
+import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +38,7 @@ public class MemberController {
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
+    private final ReviewService reviewService;
 
     @Operation(
             summary = "이메일 회원가입 API", description = "회원정보를 받아 사용자를 등록합니다.")
@@ -80,6 +89,22 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS, result);
     }
 
+    @Operation(summary = "로그아웃 API", description = "사용자의 refreshToken을 무효화하고 로그아웃 처리합니다.\n input으로 사용자의 토큰을 받습니다.")
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "로그아웃 성공"
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401", description = "인증 실패 (토큰이 없거나 만료됨)"
+        )
+    })
+    @SecurityRequirement(name = "bearerAuth")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal UserDetails userDetails) {
+        memberService.logout(userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.LOGOUT_SUCCESS);
+    }
+
     // 닉네임 변경
     @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
     @PutMapping("/nickname")
@@ -89,17 +114,6 @@ public class MemberController {
 
         memberService.updateNickname(userDetails.getUsername(), nicknameUpdateRequestDTO);
         return ApiResponse.success_only(SuccessStatus.UPDATE_NICKNAME_SUCCESS);
-    }
-
-    // 메인 감정 변경
-    @Operation(summary = "메인 감정 변경 API", description = "사용자의 메인 감정을 수정합니다.")
-    @PutMapping("/emotion")
-    public ResponseEntity<ApiResponse<Void>> updateMainEmotion(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody @Valid MainEmotionUpdateRequestDTO requestDto) {
-
-        memberService.updateMainEmotion(userDetails.getUsername(), requestDto);
-        return ApiResponse.success_only(SuccessStatus.UPDATE_EMOTION_SUCCESS);
     }
 
     // 비밀번호 변경
@@ -112,5 +126,20 @@ public class MemberController {
         memberService.updatePassword(userDetails.getUsername(), requestDto);
         return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
     }
+
+    // 내가 작성한 리뷰 조회
+    @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
+    @GetMapping("/my-review")
+    public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviews(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MyReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), pageable);
+
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
+    }
+
 
 }

@@ -7,6 +7,7 @@ import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.entity.Emotion;
 import com.insidemovie.backend.api.review.entity.Review;
+import com.insidemovie.backend.api.review.entity.ReviewLike;
 import com.insidemovie.backend.api.review.repository.EmotionRespository;
 import com.insidemovie.backend.api.review.repository.ReviewLikeRepository;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -107,13 +109,7 @@ public class ReviewService {
             Pageable pageable,
             String memberEmail
     ) {
-        // 로그인 여부에 따라 회원 ID 조회
-//        Long userId = null;
-//        if (memberEmail != null && !memberEmail.isBlank()) {
-//            userId = memberRepository.findByEmail(memberEmail.trim())
-//                    .map(Member::getId)
-//                    .orElse(null);
-//        }
+
         Long tempUserId = null;
         if (memberEmail != null && !memberEmail.isBlank()) {
             Optional<Member> opt = memberRepository.findByEmail(memberEmail.trim());
@@ -230,4 +226,54 @@ public class ReviewService {
         // 리뷰 삭제
         reviewRepository.delete(review);
     }
+
+    // 좋아요 토글 메서드
+    @Transactional
+    public void toggleReviewLike(Long reviewId, String memberEmail) {
+        // 사용자 조회
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        // 리뷰 조회
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
+
+        // 좋아요 여부 확인
+        Optional<ReviewLike> optionalLike = reviewLikeRepository.findByReview_IdAndMember_Id(reviewId, member.getId());
+
+        if (optionalLike.isPresent()) {
+            // 이미 좋아요 눌렀다면 취소
+            reviewLikeRepository.delete(optionalLike.get());
+            reviewRepository.decrementLikeCount(reviewId);
+        } else {
+            // 좋아요가 없다면 등록
+            ReviewLike newLike = ReviewLike.builder()
+                    .review(review)
+                    .member(member)
+                    .build();
+
+            reviewLikeRepository.save(newLike);
+            reviewRepository.incrementLikeCount(reviewId);
+        }
+    }
+
+    // 내가 작성한 리뷰 목록 조회 메서드
+    @Transactional
+    public Page<MyReviewResponseDTO> getMyReviews(String memberEmail, Pageable pageable) {
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        Page<Review> myReviews = reviewRepository.findByMember(member, pageable);
+
+        return myReviews.map(review ->
+                MyReviewResponseDTO.builder()
+                        .reviewId(review.getId())
+                        .movieId(review.getMovie().getId())
+                        .content(review.getContent())
+                        .createdAt(review.getCreatedAt())
+                        .build()
+        );
+    }
+
+
 }

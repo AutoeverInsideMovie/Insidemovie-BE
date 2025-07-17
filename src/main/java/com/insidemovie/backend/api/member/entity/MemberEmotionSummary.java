@@ -19,12 +19,12 @@ public class MemberEmotionSummary {
     @JoinColumn(name = "member_id")
     private Member member;
 
-    private float avgJoy;
-    private float avgSadness;
-    private float avgAnger;
-    private float avgFear;
-    private float avgDisgust;
+    private Float joy;
+    private Float sadness;
+    private Float anger;
+    private Float fear;
+    private Float neutral;
 
-    @Enumerated(EnumType.STRING)
-    private EmotionType repEmotionType;  // 대표 감정
+    @Column(name = "rep_emotion_type")
+    private String repEmotionType;  // 대표 감정
 }

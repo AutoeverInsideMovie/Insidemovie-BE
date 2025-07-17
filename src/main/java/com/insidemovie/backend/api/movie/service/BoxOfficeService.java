@@ -5,6 +5,7 @@ import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
@@ -72,10 +73,17 @@ public class BoxOfficeService {
                     LocalDate.parse(e.getOpenDate(), ISO_FMT).getYear()
                 )
                 .ifPresent(dto -> {
-                    // ➌ 박스오피스 엔티티에 TMDB ID 세팅
-                    e.setTmdbMovieId(dto.getId());
-                    // ➍ TMDB 상세정보 조회 & Movie 테이블에 저장
+                    // ➌ TMDB 상세정보 먼저 저장
                     movieService.fetchAndSaveMovieById(dto.getId());
+
+                    // ➍ 저장된 Movie 엔티티 조회
+                    Movie movie = movieRepo.findByTmdbMovieId(dto.getId())
+                        .orElseThrow(() -> new IllegalStateException(
+                            "Movie not found for TMDB ID=" + dto.getId()));
+
+                    // ➎ DailyBoxOfficeEntity 와 연관 설정
+                    e.setMovie(movie);
+
                     log.info("[연동완료] {} ({}) → TMDB ID={}",
                         e.getMovieName(), e.getMovieCd(), dto.getId());
                 });
@@ -175,10 +183,11 @@ public class BoxOfficeService {
                     LocalDate.parse(e.getOpenDt(), ISO_FMT).getYear()
                 )
                 .ifPresent(dto -> {
-                    // ➌ 박스오피스 엔티티에 TMDB ID 세팅
-                    e.setTmdbMovieId(dto.getId());
-                    // ➍ TMDB 상세정보 조회 & Movie 테이블에 저장
                     movieService.fetchAndSaveMovieById(dto.getId());
+                    Movie movie = movieRepo.findByTmdbMovieId(dto.getId())
+                        .orElseThrow(() -> new IllegalStateException(
+                            "Movie not found for TMDB ID=" + dto.getId()));
+                    e.setMovie(movie);
                     log.info("[연동완료] {} ({}) → TMDB ID={}",
                         e.getMovieNm(), e.getMovieCd(), dto.getId());
                 });

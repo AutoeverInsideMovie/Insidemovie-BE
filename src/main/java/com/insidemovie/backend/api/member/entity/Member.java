@@ -71,6 +71,7 @@ public class Member extends BaseTimeEntity {
     }
 
     // 회원 정지
+    @Column(nullable = false)
     public void setBanned(boolean banned) {
         this.isBanned = banned;
     }

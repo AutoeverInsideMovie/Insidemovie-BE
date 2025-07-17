@@ -15,8 +15,6 @@ public enum SuccessStatus {
     SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
     SEND_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 목록 조회 성공"),
-    SEND_DAILY_BOXOFFICE_SUCCESS(HttpStatus.OK, "일간 박스오피스 순위 조회 성공"),
-    SEND_WEEKLY_BOXOFFICE_SUCCESS(HttpStatus.OK, "주간 박스오피스 순위 조회 성공"),
     MODIFY_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 수정 성공"),
     DELETE_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 삭제 성공"),
     UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 수정 성공"),
@@ -29,6 +27,14 @@ public enum SuccessStatus {
     MEMBER_BAN_SUCCESS(HttpStatus.OK, "회원 정지 성공"),
     MEMBER_UNBAN_SUCCESS(HttpStatus.OK, "회원 정지 해제 성공"),
     SEND_MOVIE_DETAIL_SUCCESS(HttpStatus.OK, "영화 상세 조회 성공"),
+    SEND_REPORT_LIST_SUCCESS(HttpStatus.OK, "신고 목록 조회 성공"),
+    REPORT_ACCEPTED(HttpStatus.OK, "신고 수용 성공"),
+    REPORT_REJECTED(HttpStatus.OK, "신고 수용 기각"),
+    SEND_DASHBOARD_SUCCESS(HttpStatus.OK, "대시보드 조회 성공"),
+    SEND_DAILY_BOXOFFICE_SUCCESS(HttpStatus.OK, "일간 박스오피스 조회 성공"),
+    SEND_WEEKLY_BOXOFFICE_SUCCESS(HttpStatus.OK, "주간 박스오피스 조회 성공"),
+    LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
+
 
     /** 201 CREATED */
     CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),

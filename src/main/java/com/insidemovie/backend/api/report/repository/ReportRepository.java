@@ -2,6 +2,7 @@ package com.insidemovie.backend.api.report.repository;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.report.entity.Report;
+import com.insidemovie.backend.api.report.entity.ReportStatus;
 import com.insidemovie.backend.api.review.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,4 +17,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     // 관리자용 전체 신고 페이징 조회
     Page<Report> findAll(Pageable pageable);
+
+    // 미처리 신고 수
+    long countByStatus(ReportStatus status);
 }

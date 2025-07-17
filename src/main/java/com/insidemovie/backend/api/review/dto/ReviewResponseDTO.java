@@ -27,7 +27,4 @@ public class ReviewResponseDTO {
     private Long movieId;
 
     private EmotionDTO emotion; // 감정 상태 DTO
-
-    private Boolean isReported;
-    private Boolean isConcealed;
 }

@@ -1,13 +1,10 @@
 package com.insidemovie.backend.api.member.entity;
 
 import com.insidemovie.backend.api.constant.Authority;
-import com.insidemovie.backend.api.report.entity.Report;
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -28,20 +25,11 @@ public class Member extends BaseTimeEntity {
     private String socialType;  //  로그인한 소셜 타입의 식별자 값
     private String socialId;
 
-    @Column(name = "report_count", nullable = false)
-    private int reportCount = 0;
+    private Integer reportCount = 0;
 
-    // 사용자가 신고한 내역
-    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Report> reportsFiled = new ArrayList<>();
-
-    // 사용자가 신고당한 내역
-    @OneToMany(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Report> reportsReceived = new ArrayList<>();
-
-    // 감정 요약
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private MemberEmotionSummary emotionSummary;
+    @Column(name = "main_emotion")
+    @Enumerated(EnumType.STRING)
+    private EmotionType mainEmotion;
 
     private String refreshToken;  // 리프레시 토큰
 
@@ -54,11 +42,12 @@ public class Member extends BaseTimeEntity {
     private boolean isBanned = false;  // 정지
 
     @Builder
-    public Member(String email, String password, String nickname, Authority authority) {
+    public Member(String email, String password, String nickname, Authority authority, EmotionType mainEmotion) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.authority = authority;
+        this.mainEmotion = mainEmotion;
     }
 
     // 리프레시 토큰 업데이트
@@ -72,9 +61,9 @@ public class Member extends BaseTimeEntity {
     }
 
     // 메인 감정 변경
-//    public void updateMainEmotion(EmotionType mainEmotion) {
-//        this.mainEmotion = mainEmotion;
-//    }
+    public void updateMainEmotion(EmotionType mainEmotion) {
+        this.mainEmotion = mainEmotion;
+    }
 
     // 비밀번호 변경
     public void updatePassword(String newPassword) {
@@ -84,11 +73,6 @@ public class Member extends BaseTimeEntity {
     // 회원 정지
     public void setBanned(boolean banned) {
         this.isBanned = banned;
-    }
-
-    // 신고 횟수 증가
-    public void incrementReportCount() {
-        this.reportCount++;
     }
 
 

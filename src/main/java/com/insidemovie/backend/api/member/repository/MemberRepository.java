@@ -21,4 +21,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 이메일 또는 닉네임에 키워드 포함된 회원을 페이징 조회
     Page<Member> findByEmailContainingOrNicknameContaining(String email, String nickname, Pageable pageable);
+
+    // 정지된 회원 수
+    long countByIsBannedTrue();
 }

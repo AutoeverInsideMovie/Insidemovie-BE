@@ -171,6 +171,18 @@ public class MemberService {
         return new UsernamePasswordAuthenticationToken(email, password);
     }
 
+    // 사용자 정보 조회
+    public MemberInfoDto getMemberInfo(String email) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(()-> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+        return MemberInfoDto.builder()
+                .memberId(member.getId())
+                .email(member.getEmail())
+                .nickname(member.getNickname())
+                .reportCount(member.getReportCount())
+                .authority(member.getAuthority())
+                .build();
+    }
+
     // 닉네임 변경
     @Transactional
     public void updateNickname(String email, NicknameUpdateRequestDTO nicknameUpdateRequestDTO) {

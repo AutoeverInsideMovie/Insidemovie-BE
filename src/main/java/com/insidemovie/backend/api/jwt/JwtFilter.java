@@ -26,7 +26,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 헤더에서 JWT 추출
         String jwt = resolveToken(request); // 헤더에서 JWT 추출
-        System.out.println("JWT: " + jwt);
 
         // 로그인, 회원가입 요청은 JWT 검사 안 함
         String requestURI = request.getRequestURI();

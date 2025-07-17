@@ -58,7 +58,7 @@ public class MovieService {
             return;
         }
 
-        for (TmdbMovieDto dto : response.getBody().getResults()) {
+        for (TmdbMovieResponseDTO dto : response.getBody().getResults()) {
             if (!MovieLanguage.isAllowed(dto.getOriginalLanguage())) {
                 log.info("[필터링] 지원하지 않는 언어({}) 영화(ID={}) 건너뜀",
                         dto.getOriginalLanguage(), dto.getId());
@@ -155,7 +155,7 @@ public class MovieService {
         }
     }
 
-    private boolean hasChanged(Movie movie, TmdbMovieDto dto) {
+    private boolean hasChanged(Movie movie, TmdbMovieResponseDTO dto) {
         return !Objects.equals(movie.getTitle(), dto.getTitle())
                 || !Objects.equals(movie.getOverview(), dto.getOverview())
                 || !Objects.equals(movie.getPosterPath(), dto.getPosterPath())

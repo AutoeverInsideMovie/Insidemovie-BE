@@ -5,6 +5,7 @@ import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.tmdb.TmdbMovieResponseDTO;
 import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;

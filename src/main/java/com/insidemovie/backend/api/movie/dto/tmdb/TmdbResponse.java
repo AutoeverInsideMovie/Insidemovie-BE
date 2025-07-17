@@ -13,7 +13,7 @@ public class TmdbResponse {
     private int page;
 
     //Json의 "results"배열을 List<TmdbMovieDto>로 매핑
-    private List<TmdbMovieDto> results;
+    private List<TmdbMovieResponseDTO> results;
 
     @JsonProperty("total_pages")
     private int totalPages;

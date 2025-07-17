@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.service;
 
-import com.insidemovie.backend.api.movie.dto.tmdb.TmdbMovieDto;
+import com.insidemovie.backend.api.movie.dto.tmdb.TmdbMovieResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.TmdbResponse;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
@@ -40,13 +40,13 @@ public class MoviesService {
 
     @Transactional
     public void fetchAndSaveAllMovies() {
-        List<TmdbMovieDto> allDtos = new ArrayList<>();
+        List<TmdbMovieResponseDTO> allDtos = new ArrayList<>();
         for (int page = 1; page <= 5; page++) {
             allDtos.addAll(fetchFromTmdb(page));
         }
-        Map<Long, TmdbMovieDto> dtoMap = allDtos.stream()
+        Map<Long, TmdbMovieResponseDTO> dtoMap = allDtos.stream()
                 .collect(Collectors.toMap(
-                        TmdbMovieDto::getId,
+                        TmdbMovieResponseDTO::getId,
                         Function.identity(),
                         (dto1,dto2)->dto1
                 ));
@@ -56,7 +56,7 @@ public class MoviesService {
                 .collect(Collectors.toMap(Movie::getTmdbMovieId,Function.identity()));
 
         existingMap.forEach((tmdbId, movie)->{
-            TmdbMovieDto dto = dtoMap.get(tmdbId);
+            TmdbMovieResponseDTO dto = dtoMap.get(tmdbId);
             movie.updateTitle(dto.getTitle());
             movie.updateOverview(dto.getOverview());
             movie.updatePosterPath(dto.getPosterPath());
@@ -69,7 +69,7 @@ public class MoviesService {
         List<Movie> newMovies = dtoMap.entrySet().stream()
                 .filter(e -> !existingMap.containsKey(e.getKey()))
                 .map(e -> {
-                    TmdbMovieDto dto = e.getValue();
+                    TmdbMovieResponseDTO dto = e.getValue();
                     Movie m = Movie.builder()
                             .tmdbMovieId(dto.getId())
                             .build();
@@ -85,8 +85,8 @@ public class MoviesService {
         movieRepository.saveAll(newMovies);
 
     }
-    private List<TmdbMovieDto> fetchFromTmdb(int page) {
-        List<TmdbMovieDto> all = new ArrayList<>();
+    private List<TmdbMovieResponseDTO> fetchFromTmdb(int page) {
+        List<TmdbMovieResponseDTO> all = new ArrayList<>();
         String[] categories ={
                 "popular",
                 "now_playing",
@@ -112,7 +112,7 @@ public class MoviesService {
         }
        return all.stream()
                 .collect(Collectors.toMap(
-                        TmdbMovieDto::getId,
+                        TmdbMovieResponseDTO::getId,
                         Function.identity(),
                         (existing, replacement) -> existing))
                 .values()

@@ -11,7 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class TmdbMovieDto {
+public class TmdbMovieResponseDTO {
     private Long id;
     private String title;
     private String overview; //줄거리

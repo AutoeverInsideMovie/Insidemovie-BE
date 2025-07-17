@@ -28,14 +28,17 @@ public class Member extends BaseTimeEntity {
     private String socialType;  //  로그인한 소셜 타입의 식별자 값
     private String socialId;
 
+    @Builder.Default
     @Column(name = "report_count", nullable = true)
     private Integer reportCount = 0;
 
     // 사용자가 신고한 내역
+    @Builder.Default
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Report> reportsFiled = new ArrayList<>();
 
     // 사용자가 신고당한 내역
+    @Builder.Default
     @OneToMany(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Report> reportsReceived = new ArrayList<>();
 
@@ -51,6 +54,7 @@ public class Member extends BaseTimeEntity {
     private Authority authority;
 
     @Column(nullable = true)
+    @Builder.Default
     private Boolean isBanned = false;  // 정지
 
     @Builder

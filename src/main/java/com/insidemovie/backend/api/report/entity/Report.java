@@ -39,6 +39,7 @@ public class Report extends BaseTimeEntity {
     private Member reportedMember;
 
     // 처리 상태: 미처리, 수용, 각하
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ReportStatus status = ReportStatus.UNPROCESSED;

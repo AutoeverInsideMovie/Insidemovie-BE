@@ -2,14 +2,12 @@ package com.insidemovie.backend.api.movie.service;
 
 import com.insidemovie.backend.api.movie.dto.GenreDto;
 import com.insidemovie.backend.api.movie.dto.GenreResponse;
-import com.insidemovie.backend.api.movie.dto.TmdbResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.List;
 @Slf4j
 @Service

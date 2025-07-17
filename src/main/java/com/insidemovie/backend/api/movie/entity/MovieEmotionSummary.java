@@ -2,7 +2,9 @@ package com.insidemovie.backend.api.movie.entity;
 
 import com.insidemovie.backend.api.constant.EmotionType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter

@@ -1,7 +1,6 @@
 package com.insidemovie.backend.api.movie.service;
 
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
-import com.insidemovie.backend.api.movie.entity.Genre;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import com.insidemovie.backend.api.movie.repository.GenreRepository;
@@ -12,7 +11,6 @@ import com.insidemovie.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 

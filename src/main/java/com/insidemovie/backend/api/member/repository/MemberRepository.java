@@ -24,4 +24,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 정지된 회원 수
     long countByIsBannedTrue();
+
+    @Modifying
+    @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.email = :email")
+    int clearRefreshTokenByUserEmail(@Param("email") String email);
 }

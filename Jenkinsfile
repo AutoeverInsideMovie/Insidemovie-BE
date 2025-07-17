@@ -4,25 +4,41 @@ pipeline {
     options {
         skipDefaultCheckout(true)
     }
-    
+
     environment {
         IMAGE_NAME = 'ssafysong/inside-movie'
         TAG = 'be'
         CONTAINER_NAME = 'backend'
         DOCKER_CREDENTIALS_ID = 'movie'
+        GRADLE_IMAGE = 'gradle:8.5-jdk17'
     }
 
     stages {
-        stage('Build') {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout') {
             steps {
                 checkout scm
-                sh './gradlew build -x test'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                script {
+                    docker.image("${GRADLE_IMAGE}").inside {
+                        sh './gradlew clean build -x test --no-build-cache'
+                    }
+                }
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${TAG} ."
+                sh "docker build --no-cache -t ${IMAGE_NAME}:${TAG} ."
             }
         }
 
@@ -46,10 +62,9 @@ pipeline {
                 sshagent(['movie_SSH']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ubuntu@52.79.175.149 "
-                        docker pull ${IMAGE_NAME}:${TAG} &&
-                        docker stop ${CONTAINER_NAME} || true &&
-                        docker rm ${CONTAINER_NAME} || true &&
-                        docker run -d -p 8080:8080 --name ${CONTAINER_NAME} ${IMAGE_NAME}:${TAG}
+                        docker-compose pull
+                        docker-compose down &&
+                        docker-compose up -d
                     "
                     """
                 }

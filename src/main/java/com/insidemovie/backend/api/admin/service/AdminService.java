@@ -46,7 +46,7 @@ public class AdminService {
                 .authority(member.getAuthority().name())
                 .createdAt(member.getCreatedAt())
                 .reviewCount(reviewCount)
-                .isBanned(member.isBanned())
+                .isBanned(member.getIsBanned())
                 .build();
     }
 

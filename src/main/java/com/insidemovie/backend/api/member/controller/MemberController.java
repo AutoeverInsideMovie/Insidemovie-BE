@@ -116,17 +116,6 @@ public class MemberController {
         return ApiResponse.success_only(SuccessStatus.UPDATE_NICKNAME_SUCCESS);
     }
 
-    // 메인 감정 변경
-    @Operation(summary = "메인 감정 변경 API", description = "사용자의 메인 감정을 수정합니다.")
-    @PutMapping("/emotion")
-    public ResponseEntity<ApiResponse<Void>> updateMainEmotion(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody @Valid MainEmotionUpdateRequestDTO requestDto) {
-
-        memberService.updateMainEmotion(userDetails.getUsername(), requestDto);
-        return ApiResponse.success_only(SuccessStatus.UPDATE_EMOTION_SUCCESS);
-    }
-
     // 비밀번호 변경
     @Operation(summary = "비밀번호 변경 API", description = "사용자의 비밀번호를 변경합니다.")
     @PutMapping("/password")

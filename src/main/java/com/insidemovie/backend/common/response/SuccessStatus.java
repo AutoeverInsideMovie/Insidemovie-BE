@@ -30,6 +30,9 @@ public enum SuccessStatus {
     REPORT_ACCEPTED(HttpStatus.OK, "신고 수용 성공"),
     REPORT_REJECTED(HttpStatus.OK, "신고 수용 기각"),
     SEND_DASHBOARD_SUCCESS(HttpStatus.OK, "대시보드 조회 성공"),
+    SEND_DAILY_BOXOFFICE_SUCCESS(HttpStatus.OK, "일간 박스오피스 조회 성공"),
+    SEND_WEEKLY_BOXOFFICE_SUCCESS(HttpStatus.OK, "주간 박스오피스 조회 성공"),
+    LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
 
     /** 201 CREATED */
     CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),

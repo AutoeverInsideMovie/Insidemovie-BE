@@ -28,8 +28,8 @@ public class Member extends BaseTimeEntity {
     private String socialType;  //  로그인한 소셜 타입의 식별자 값
     private String socialId;
 
-    @Column(name = "report_count", nullable = false)
-    private int reportCount = 0;
+    @Column(name = "report_count", nullable = true)
+    private Integer reportCount = 0;
 
     // 사용자가 신고한 내역
     @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -50,8 +50,8 @@ public class Member extends BaseTimeEntity {
     @Column(nullable=false)
     private Authority authority;
 
-    @Column(nullable = false)
-    private boolean isBanned = false;  // 정지
+    @Column(nullable = true)
+    private Boolean isBanned = false;  // 정지
 
     @Builder
     public Member(String email, String password, String nickname, Authority authority) {

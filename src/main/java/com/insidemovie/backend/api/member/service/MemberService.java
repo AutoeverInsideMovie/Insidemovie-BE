@@ -187,15 +187,6 @@ public class MemberService {
         member.updateNickname(newNickname);
     }
 
-    // 메인 감정 변경
-    @Transactional
-    public void updateMainEmotion(String email, MainEmotionUpdateRequestDTO mainEmotionUpdateRequestDTO) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
-
-        member.updateMainEmotion(mainEmotionUpdateRequestDTO.getMainEmotion());
-    }
-
     // 비밀번호 변경
     @Transactional
     public void updatePassword(String email, PasswordUpdateRequestDTO dto) {

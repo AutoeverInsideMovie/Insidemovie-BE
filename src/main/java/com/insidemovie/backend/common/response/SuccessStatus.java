@@ -28,6 +28,10 @@ public enum SuccessStatus {
     SEND_MEMBER_LIST_SUCCESS(HttpStatus.OK, "사용자 목록 조회 성공"),
     MEMBER_BAN_SUCCESS(HttpStatus.OK, "회원 정지 성공"),
     MEMBER_UNBAN_SUCCESS(HttpStatus.OK, "회원 정지 해제 성공"),
+    SEND_REPORT_LIST_SUCCESS(HttpStatus.OK, "신고 목록 조회 성공"),
+    REPORT_ACCEPTED(HttpStatus.OK, "신고 수용 성공"),
+    REPORT_REJECTED(HttpStatus.OK, "신고 수용 기각"),
+    SEND_DASHBOARD_SUCCESS(HttpStatus.OK, "대시보드 조회 성공"),
     LOGOUT_SUCCESS(HttpStatus.OK, "회원 로그아웃 성공"),
 
     /** 201 CREATED */

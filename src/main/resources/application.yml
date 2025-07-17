@@ -15,7 +15,7 @@ spring:
             client-secret: ${kakao.client.secret}
             client-name: kakao
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost:8080/api/v1/member/kakao-accesstoken
+            redirect-uri: http://localhost:5173/login/oauth2/code/kakao
             scope:
               - profile_nickname
               - account_email

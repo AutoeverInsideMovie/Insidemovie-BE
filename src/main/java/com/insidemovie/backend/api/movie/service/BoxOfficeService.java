@@ -98,7 +98,7 @@ public class BoxOfficeService {
             .map(node -> DailyBoxOfficeEntity.builder()
                 .targetDate(date)
                 .rnum(node.path("rnum").asText())
-                .rank(node.path("rank").asText())
+                .movieRank(node.path("rank").asText())
                 .rankInten(node.path("rankInten").asText())
                 .rankOldAndNew(node.path("rankOldAndNew").asText())
                 .movieCd(node.path("movieCd").asText())
@@ -187,7 +187,7 @@ public class BoxOfficeService {
             .map(node -> WeeklyBoxOfficeEntity.builder()
                 .yearWeekTime(yearWeek)                // DB에 저장할 연주차
                 .rnum(node.path("rnum").asText())
-                .rank(node.path("rank").asText())
+                .movieRank(node.path("rank").asText())
                 .rankInten(node.path("rankInten").asText())
                 .rankOldAndNew(node.path("rankOldAndNew").asText())
                 .movieCd(node.path("movieCd").asText())

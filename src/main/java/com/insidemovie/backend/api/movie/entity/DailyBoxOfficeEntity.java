@@ -19,7 +19,7 @@ public class DailyBoxOfficeEntity {
 
     private LocalDate targetDate;       // 조회 일자
     private String rnum;                // 순번
-    private String rank;                // 해당 일자 박스오피스 순위
+    private String movieRank;                // 해당 일자 박스오피스 순위
     private String rankInten;           // 전일 대비 순위 증감분
     private String rankOldAndNew;       // 랭킹 신규 진입 여부(OLD or NEW)
     private String movieCd;             // 영화 대표 코드

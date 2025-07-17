@@ -19,7 +19,7 @@ public class DailyBoxOfficeResponseDTO {
             .base(BaseBoxOfficeItemDTO.builder()
                 .id(e.getId())
                 .rnum(e.getRnum())
-                .rank(e.getRank())
+                .rank(e.getMovieRank())
                 .rankInten(e.getRankInten())
                 .rankOldAndNew(e.getRankOldAndNew())
                 .movieCd(e.getMovieCd())

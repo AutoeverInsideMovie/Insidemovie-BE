@@ -18,7 +18,7 @@ public class WeeklyBoxOfficeEntity {
     @Column(name = "year_week_time")
     private String yearWeekTime;    // 연도+주차 (YYYYIWww)
     private String rnum;            // 순번
-    private String rank;            // 순위
+    private String movieRank;            // 순위
     private String rankInten;       // 순위 증감
     private String rankOldAndNew;   // 신규 진입 여부
     private String movieCd;         // 영화 코드

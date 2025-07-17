@@ -40,4 +40,6 @@ public class TmdbMovieDto {
     @JsonProperty("popularity")
     private Double popularity;          // 인기
 
+    @JsonProperty("adult")
+    private Boolean adult;
 }

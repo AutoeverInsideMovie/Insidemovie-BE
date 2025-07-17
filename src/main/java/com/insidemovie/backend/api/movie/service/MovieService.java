@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +39,12 @@ public class MovieService {
     @Value("${tmdb.api.language}")
     private String language;
 
+    @Value("${tmdb.image.base-url}")
+    private String imageBaseUrl;
+
+    @Value("${tmdb.image.poster-size}")
+    private String posterSize;
+
     @Transactional
     public void fetchAndSaveMoviesByPage(String type, int page, boolean isInitial) {
         // 목록 조회
@@ -56,6 +64,12 @@ public class MovieService {
                         dto.getOriginalLanguage(), dto.getId());
                 continue;
             }
+
+            if (dto.getAdult() != null && dto.getAdult()) {
+                    log.info("성인 영화 스킵: " + dto.getId() + " - " + dto.getTitle());
+                    continue;
+            }
+
             log.info("처리 시작: ID={} / {}", dto.getId(), dto.getTitle());
 
             // 상세 정보(credits, release_dates, watch/providers) 한번에 조회
@@ -78,12 +92,19 @@ public class MovieService {
                     .build()
             );
 
+            String fullPosterUrl = imageBaseUrl+posterSize+movie.getPosterPath();
+            String fullBackDropUrl = imageBaseUrl+posterSize+movie.getBackdropPath();
+            double raw = movie.getVoteAverage();  // 예: 6.2309999…
+            double rounded = BigDecimal.valueOf(raw)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
+
             // 기본 정보 갱신
             movie.updateTitle(dto.getTitle());
             movie.updateOverview(dto.getOverview());
-            movie.updatePosterPath(dto.getPosterPath());
-            movie.updateBackDropPath(dto.getBackDropPath());
-            movie.updateVoteAverage(dto.getVoteAverage());
+            movie.updatePosterPath(fullPosterUrl);
+            movie.updateBackDropPath(fullBackDropUrl);
+            movie.updateVoteAverage(rounded);
             movie.updateOriginalLanguage(dto.getOriginalLanguage());
             movie.updateReleaseDate(dto.getReleaseDate());
             movie.updateGenreIds(dto.getGenreIds());
@@ -133,6 +154,7 @@ public class MovieService {
             log.info("저장 완료: ID={}", dto.getId());
         }
     }
+
     private boolean hasChanged(Movie movie, TmdbMovieDto dto) {
         return !Objects.equals(movie.getTitle(), dto.getTitle())
                 || !Objects.equals(movie.getOverview(), dto.getOverview())
@@ -144,5 +166,4 @@ public class MovieService {
                 || !Objects.equals(movie.getReleaseDate(),
                 dto.getReleaseDate() != null ? dto.getReleaseDate() : null);
     }
-
 }

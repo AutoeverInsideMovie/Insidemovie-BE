@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Slf4j
@@ -17,21 +16,22 @@ import java.util.List;
 public class MovieUpdateScheduler {
     private final MovieService movieService;
 
-    @Scheduled(cron = "0 17 16 * * *") //
+    @Scheduled(cron = "0 0 4 * * *")
     public void updateMovies() {
-        List<String> types = List.of("popular","now_playing");
+        List<String> types = List.of("popular", "now_playing");
 
         for (String type : types) {
-            for (int page = 400; page <= 410; page++) { // 하루마다 전부 갱신하지 않아도 상위 400개만 확인
-                movieService.fetchAndSaveMoviesByPage(type, page, false); // false = 변경 체크용
+            for (int page = 1; page <= 50; page++) {
+                log.info("영화 타입 '{}' 페이지 {} 처리 시작", type, page);
+                movieService.fetchAndSaveMoviesByPage(type, page, false);
                 try {
-                    log.info("타입 "+type+"📄 페이지 " + page + " 처리 중...");
-                    Thread.sleep(250); // 초당 4건 수준
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    log.error("❌ 에러: " + e.getMessage());
+                    log.error("영화 업데이트 처리 중 예외 발생: {}", e.getMessage());
                     Thread.currentThread().interrupt();
                 }
-            }log.info("✅ 모든 페이지 처리 완료");
+            }
+            log.info("영화 타입 '{}' 모든 페이지 처리 완료", type);
         }
     }
 }

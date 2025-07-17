@@ -1,4 +1,4 @@
-package com.insidemovie.backend.api.movie.dto;
+package com.insidemovie.backend.api.movie.dto.tmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;

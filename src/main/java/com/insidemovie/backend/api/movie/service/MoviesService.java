@@ -1,7 +1,7 @@
 package com.insidemovie.backend.api.movie.service;
 
-import com.insidemovie.backend.api.movie.dto.TmdbMovieDto;
-import com.insidemovie.backend.api.movie.dto.TmdbResponse;
+import com.insidemovie.backend.api.movie.dto.tmdb.TmdbMovieDto;
+import com.insidemovie.backend.api.movie.dto.tmdb.TmdbResponse;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import jakarta.transaction.Transactional;
@@ -11,8 +11,9 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 @Slf4j

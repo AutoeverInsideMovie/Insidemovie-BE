@@ -1,21 +1,20 @@
-package com.insidemovie.backend.api.movie.dto;
+package com.insidemovie.backend.api.movie.dto.boxoffice;
 
-import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
 import lombok.Builder;
 import lombok.Getter;
-import java.time.LocalDate;
 
-// 일간 박스오피스 응답 DTO
+// 주간 박스오피스 응답 DTO
 @Getter
 @Builder
-public class DailyBoxOfficeResponseDTO {
+public class WeeklyBoxOfficeResponseDTO {
     private BaseBoxOfficeItemDTO base;
-    private LocalDate targetDate;
+    private String yearWeekTime;
     private String boxofficeType;
     private String showRange;
 
-    public static DailyBoxOfficeResponseDTO fromEntity(DailyBoxOfficeEntity e) {
-        return DailyBoxOfficeResponseDTO.builder()
+    public static WeeklyBoxOfficeResponseDTO fromEntity(WeeklyBoxOfficeEntity e) {
+        return WeeklyBoxOfficeResponseDTO.builder()
             .base(BaseBoxOfficeItemDTO.builder()
                 .id(e.getId())
                 .rnum(e.getRnum())
@@ -23,9 +22,9 @@ public class DailyBoxOfficeResponseDTO {
                 .rankInten(e.getRankInten())
                 .rankOldAndNew(e.getRankOldAndNew())
                 .movieCd(e.getMovieCd())
-                .movieNm(e.getMovieName())
-                .openDt(e.getOpenDate())
-                .salesAmt(e.getSalesAcc())
+                .movieNm(e.getMovieNm())
+                .openDt(e.getOpenDt())
+                .salesAmt(e.getSalesAmt())
                 .salesShare(e.getSalesShare())
                 .salesInten(e.getSalesInten())
                 .salesChange(e.getSalesChange())
@@ -37,9 +36,7 @@ public class DailyBoxOfficeResponseDTO {
                 .scrnCnt(e.getScrnCnt())
                 .showCnt(e.getShowCnt())
                 .build())
-            .targetDate(e.getTargetDate())
-            .boxofficeType("일별")
-            .showRange(e.getTargetDate().toString() + "~" + e.getTargetDate().toString())
+            .yearWeekTime(e.getYearWeekTime())
             .build();
     }
 }

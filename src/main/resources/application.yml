@@ -48,6 +48,9 @@ tmdb:
     base-url: https://api.themoviedb.org/3
     # 응답 언어 설정 (한국어)
     language: ko-KR
+  image:
+    base-url: https://image.tmdb.org/t/p/
+    poster-size: w500
 
 kobis:
   api:

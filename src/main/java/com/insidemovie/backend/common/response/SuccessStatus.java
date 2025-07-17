@@ -28,6 +28,7 @@ public enum SuccessStatus {
     SEND_MEMBER_LIST_SUCCESS(HttpStatus.OK, "사용자 목록 조회 성공"),
     MEMBER_BAN_SUCCESS(HttpStatus.OK, "회원 정지 성공"),
     MEMBER_UNBAN_SUCCESS(HttpStatus.OK, "회원 정지 해제 성공"),
+    SEND_MOVIE_DETAIL_SUCCESS(HttpStatus.OK, "영화 상세 조회 성공"),
 
     /** 201 CREATED */
     CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),

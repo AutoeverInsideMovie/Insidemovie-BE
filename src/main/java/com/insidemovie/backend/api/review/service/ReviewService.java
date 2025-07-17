@@ -89,7 +89,7 @@ public class ReviewService {
             Emotion emotion = Emotion.builder()
                     .anger(probabilities.get("anger"))
                     .fear(probabilities.get("fear"))
-                    .joy(probabilities.get("happiness"))
+                    .joy(probabilities.get("joy"))
                     .neutral(probabilities.get("neutral"))
                     .sadness(probabilities.get("sadness"))
                     .review(savedReview)

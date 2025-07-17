@@ -21,10 +21,9 @@ public class GenreInitService {
     public void init() {
         List<GenreDto> allGenres = tmdbClient.fetchAllGenres();
         for (GenreDto dto : allGenres) {
-            if (!genreRepository.existsByTmdbId(dto.getId())) {
+            if (!genreRepository.existsByTmdbMovieId(dto.getId())) {
                 Genre genre = Genre.builder()
-
-                        .tmdbId(dto.getId())
+                        .tmdbMovieId(dto.getId())
                         .genreNm(dto.getName())
                         .build();
                 genreRepository.save(genre);

@@ -2,10 +2,14 @@ package com.insidemovie.backend.api.member.service;
 
 
 import com.insidemovie.backend.api.constant.Authority;
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
 import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.entity.MemberEmotionSummary;
+import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryRepository;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.review.repository.EmotionRepository;
 import com.insidemovie.backend.common.exception.BadRequestException;
 import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.exception.NotFoundException;
@@ -33,7 +37,8 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final OAuthService oAuthService;
-
+    private final EmotionRepository emotionRepository;
+    private final MemberEmotionSummaryRepository memberEmotionSummaryRepository;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -211,4 +216,60 @@ public class MemberService {
             );
         }
     }
+
+    @Transactional
+    public EmotionAvgDTO getMyEmotionSummary(String email) {
+        // 회원 조회
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(
+                        ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()
+                ));
+        Long memberId = member.getId();
+
+        // 평균 감정 조회 (없으면 기본값 builder)
+        EmotionAvgDTO avg = emotionRepository
+                .findAverageEmotionsByMemberId(memberId)
+                .orElseGet(() -> EmotionAvgDTO.builder()
+                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).neutral(0.0)
+                        .repEmotionType(EmotionType.NEUTRAL)
+                        .build()
+                );
+
+        // 대표 감정 계산, DTO에 세팅
+        EmotionType rep = calculateRepEmotion(avg);
+        avg.setRepEmotionType(rep);
+
+        // 요약 엔티티 조회, 생성
+        MemberEmotionSummary summary = memberEmotionSummaryRepository
+                .findById(memberId)
+                .orElseGet(() -> MemberEmotionSummary.builder()
+                        .member(member)
+                        .build()
+                );
+
+        // 엔티티 업데이트, 저장
+        summary.updateFromDTO(avg);
+        memberEmotionSummaryRepository.save(summary);
+
+        // DTO 반환
+        return avg;
+    }
+
+    private EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
+        // 각 감정 점수를 Enum 키로 매핑
+        Map<EmotionType, Double> scores = Map.of(
+                EmotionType.JOY,     dto.getJoy(),
+                EmotionType.SADNESS, dto.getSadness(),
+                EmotionType.ANGER,   dto.getAnger(),
+                EmotionType.FEAR,    dto.getFear(),
+                EmotionType.NEUTRAL, dto.getNeutral()
+        );
+
+        // 최댓값 감정 리턴
+        return scores.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(EmotionType.NEUTRAL);
+    }
+
 }

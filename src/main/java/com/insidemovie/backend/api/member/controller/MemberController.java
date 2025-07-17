@@ -141,5 +141,14 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
     }
 
+    // 나의 리뷰 감정 평균 조회
+    @Operation(summary = "나의 감정 평균 조회", description = "로그인한 사용자의 리뷰 기반 감정 평균과 대표 감정을 조회합니다.")
+    @GetMapping("/emotion-summary")
+    public ResponseEntity<ApiResponse<EmotionAvgDTO>> getEmotionSummary(@AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername(); // 현재 로그인한 사용자 이메일
+        EmotionAvgDTO result = memberService.getMyEmotionSummary(email);
+        return ApiResponse.success(SuccessStatus.SEND_EMOTION_SUMMARY_SUCCESS, result);
+    }
+
 
 }

@@ -8,7 +8,7 @@ import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.entity.Emotion;
 import com.insidemovie.backend.api.review.entity.Review;
 import com.insidemovie.backend.api.review.entity.ReviewLike;
-import com.insidemovie.backend.api.review.repository.EmotionRespository;
+import com.insidemovie.backend.api.review.repository.EmotionRepository;
 import com.insidemovie.backend.api.review.repository.ReviewLikeRepository;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.BadRequestException;
@@ -39,7 +39,7 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final MovieRepository movieRepository;
     private final RestTemplate fastApiRestTemplate;
-    private final EmotionRespository emotionRespository;
+    private final EmotionRepository emotionRepository;
 
     // 리뷰 작성 메서드
     @Transactional
@@ -94,7 +94,7 @@ public class ReviewService {
                     .sadness(probabilities.get("sadness"))
                     .review(savedReview)
                     .build();
-            emotionRespository.save(emotion);
+            emotionRepository.save(emotion);
 
         } catch (RestClientException e) {
             throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
@@ -132,7 +132,7 @@ public class ReviewService {
             boolean myLike = (userId != null &&
                     reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), userId));
 
-            Optional<Emotion> optEmotion = emotionRespository.findByReviewId(review.getId());
+            Optional<Emotion> optEmotion = emotionRepository.findByReviewId(review.getId());
             EmotionDTO emotionDTO = null;
             if (optEmotion.isPresent()) {
                 Emotion e = optEmotion.get();

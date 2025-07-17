@@ -2,7 +2,6 @@ package com.insidemovie.backend.api.movie.dto.tmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-
 import java.time.LocalDate;
 import java.util.List;
 

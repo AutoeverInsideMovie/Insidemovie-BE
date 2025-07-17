@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.scheduler;
 
-import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
+import com.insidemovie.backend.api.movie.dto.BoxOfficeRequestDTO;
 import com.insidemovie.backend.api.movie.service.BoxOfficeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

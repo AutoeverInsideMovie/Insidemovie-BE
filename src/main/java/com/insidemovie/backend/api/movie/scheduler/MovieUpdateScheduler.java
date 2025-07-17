@@ -16,7 +16,7 @@ import java.util.List;
 public class MovieUpdateScheduler {
     private final MovieService movieService;
 
-    @Scheduled(cron = "0 0 4 * * *")
+    @Scheduled(cron = "0 48 21 * * *")
     public void updateMovies() {
         List<String> types = List.of("popular", "now_playing");
 

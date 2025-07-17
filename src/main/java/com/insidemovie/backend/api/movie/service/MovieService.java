@@ -1,15 +1,23 @@
 package com.insidemovie.backend.api.movie.service;
 
 import com.insidemovie.backend.api.constant.MovieLanguage;
+import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
+import com.insidemovie.backend.api.movie.entity.Genre;
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import com.insidemovie.backend.api.movie.repository.GenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.common.exception.NotFoundException;
+import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -165,5 +173,33 @@ public class MovieService {
                 || !Objects.equals(movie.getOriginalLanguage(), dto.getOriginalLanguage())
                 || !Objects.equals(movie.getReleaseDate(),
                 dto.getReleaseDate() != null ? dto.getReleaseDate() : null);
+    }
+
+    public PageResDto<MovieSearchResDto> movieSearchTitle(String title, Integer page, Integer pageSize){
+        PageRequest pageRequest = PageRequest.of(page, pageSize);
+        Page<Movie> movies = movieRepository.findByTitle(title, pageRequest);
+        if(movies.isEmpty()){
+            throw new NotFoundException("제목이 '" + title + "'인 영화를 찾을 수 없습니다.");
+        }
+        Page<MovieSearchResDto> movieSearchResDtos = movies.map(this::convertEntityToDto);
+        return new PageResDto<>(movieSearchResDtos);
+    }
+    public PageResDto<MovieSearchResDto> movieSearchGenre(String genre, Integer page, Integer pageSize){
+        PageRequest pageRequest = PageRequest.of(page, pageSize);
+        Page<MovieGenre> genrePage = movieGenreRepository.findByGenre_GenreNm(genre,pageRequest);
+        if(genrePage.isEmpty()){
+            throw new NotFoundException("장르가 '" + genre + "'인 영화를 찾을 수 없습니다.");
+        }
+        Page<MovieSearchResDto> dto = genrePage.map(mg -> convertEntityToDto(mg.getMovie()));
+        return new PageResDto<>(dto);
+    }
+
+    private MovieSearchResDto convertEntityToDto(Movie movie){
+        MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
+        movieSearchResDto.setId(movie.getId());
+        movieSearchResDto.setTitle(movie.getTitle());
+        movieSearchResDto.setPosterPath(movie.getPosterPath());
+        movieSearchResDto.setVoteAverage(movie.getVoteAverage());
+        return movieSearchResDto;
     }
 }

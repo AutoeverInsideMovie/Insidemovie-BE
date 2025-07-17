@@ -1,6 +1,9 @@
 package com.insidemovie.backend.api.movie.repository;
 
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.MovieGenre;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Collection;
@@ -11,7 +14,8 @@ import java.util.Optional;
 public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     List<Movie> findAllByTmdbMovieIdIn(Collection<Long> tmdbIds);
-    //List<Movie> findByTmdbMovieId(Long tmdbIds);
-
     Optional<Movie> findByTmdbMovieId(Long tmdbMovieId);
+
+    Page<Movie> findByTitle(String title, Pageable pageable);
+
 }

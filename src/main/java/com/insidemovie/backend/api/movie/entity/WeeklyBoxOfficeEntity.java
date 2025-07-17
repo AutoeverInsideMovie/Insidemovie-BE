@@ -15,6 +15,9 @@ public class WeeklyBoxOfficeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tmdb_movie_id")
+    private Long tmdbMovieId;
+
     @Column(name = "year_week_time")
     private String yearWeekTime;    // 연도+주차 (YYYYIWww)
     private String rnum;            // 순번

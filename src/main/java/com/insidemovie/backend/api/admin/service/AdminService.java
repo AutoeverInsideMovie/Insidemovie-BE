@@ -98,6 +98,4 @@ public class AdminService {
                 .unprocessedReports(reportRepository.countByStatus(ReportStatus.UNPROCESSED))
                 .build();
     }
-
-
 }

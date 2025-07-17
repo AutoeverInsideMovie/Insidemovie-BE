@@ -24,6 +24,7 @@ public class AdminController {
     private final AdminService adminService;
     private final ReportService reportService;
 
+
     @Operation(
             summary = "회원 목록 조회 API", description = "회원 목록을 조회합니다.")
     @GetMapping("/members")

@@ -52,7 +52,7 @@ public class BoxOfficeService {
         // 기존 데이터 삭제
         dailyRepo.deleteByTargetDate(date);
 
-        // --- 변경된 호출 ---
+        // 변경된 호출
         List<DailyBoxOfficeEntity> entities = fetchDailyFromApi(date, req.getItemPerPage());
 
         // 저장·DTO 변환·예외 처리

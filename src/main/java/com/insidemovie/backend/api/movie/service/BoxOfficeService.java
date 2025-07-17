@@ -1,10 +1,10 @@
 package com.insidemovie.backend.api.movie.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.insidemovie.backend.api.movie.dto.BoxOfficeListDTO;
-import com.insidemovie.backend.api.movie.dto.BoxOfficeRequestDTO;
-import com.insidemovie.backend.api.movie.dto.DailyBoxOfficeResponseDTO;
-import com.insidemovie.backend.api.movie.dto.WeeklyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
@@ -15,7 +15,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;

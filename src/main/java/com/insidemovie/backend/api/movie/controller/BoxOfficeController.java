@@ -1,9 +1,9 @@
 package com.insidemovie.backend.api.movie.controller;
 
-import com.insidemovie.backend.api.movie.dto.BoxOfficeListDTO;
-import com.insidemovie.backend.api.movie.dto.BoxOfficeRequestDTO;
-import com.insidemovie.backend.api.movie.dto.DailyBoxOfficeResponseDTO;
-import com.insidemovie.backend.api.movie.dto.WeeklyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.service.BoxOfficeService;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;

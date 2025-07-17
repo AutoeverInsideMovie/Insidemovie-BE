@@ -1,13 +1,15 @@
 package com.insidemovie.backend.api.movie.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.insidemovie.backend.api.movie.dto.BoxOfficeListDTO;
-import com.insidemovie.backend.api.movie.dto.BoxOfficeRequestDTO;
-import com.insidemovie.backend.api.movie.dto.DailyBoxOfficeResponseDTO;
-import com.insidemovie.backend.api.movie.dto.WeeklyBoxOfficeResponseDTO;
-import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
-import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
+import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.movie.repository.WeeklyBoxOfficeRepository;
 import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.response.ErrorStatus;
@@ -15,7 +17,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -31,17 +32,24 @@ import java.util.stream.StreamSupport;
 @Slf4j
 public class BoxOfficeService {
 
-    @Value("${kobis.api.key}")
-    private String kobisApiKey;
+    private final TmdbClient tmdbClient;
+    private final MovieService movieService;
+    @Value("${kobis.api.key}")         private String kobisApiKey;
+    @Value("${tmdb.api.base-url}")    private String tmdbBaseUrl;
+    @Value("${tmdb.api.key}")         private String tmdbApiKey;
+    @Value("${tmdb.api.language}")    private String tmdbLanguage;
 
     private final DailyBoxOfficeRepository dailyRepo;
     private final WeeklyBoxOfficeRepository weeklyRepo;
+    private final RestTemplate restTemplate;
+    private final MovieRepository movieRepo;
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final String DAILY_URL_JSON =
         "http://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
     private static final String WEEKLY_URL_JSON =
         "http://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchWeeklyBoxOfficeList.json";
+    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     // 일간 박스오피스 조회 및 저장
     @Transactional
@@ -53,14 +61,38 @@ public class BoxOfficeService {
         // 기존 데이터 삭제
         dailyRepo.deleteByTargetDate(date);
 
-        // --- 변경된 호출 ---
+        // 변경된 호출
         List<DailyBoxOfficeEntity> entities = fetchDailyFromApi(date, req.getItemPerPage());
 
         // 저장·DTO 변환·예외 처리
         dailyRepo.saveAll(entities);
+        
+        entities.forEach(e -> {
+            movieService.searchMovieByTitleAndYear(
+                    e.getMovieName(),
+                    LocalDate.parse(e.getOpenDate(), ISO_FMT).getYear()
+                )
+                .ifPresent(dto -> {
+                    // ➌ TMDB 상세정보 먼저 저장
+                    movieService.fetchAndSaveMovieById(dto.getId());
+
+                    // ➍ 저장된 Movie 엔티티 조회
+                    Movie movie = movieRepo.findByTmdbMovieId(dto.getId())
+                        .orElseThrow(() -> new IllegalStateException(
+                            "Movie not found for TMDB ID=" + dto.getId()));
+
+                    // ➎ DailyBoxOfficeEntity 와 연관 설정
+                    e.setMovie(movie);
+
+                    log.info("[연동완료] {} ({}) → TMDB ID={}",
+                        e.getMovieName(), e.getMovieCd(), dto.getId());
+                });
+        });
+        
         List<DailyBoxOfficeResponseDTO> items = entities.stream()
             .map(DailyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());
+
         if (items.isEmpty()) {
             throw new BaseException(
                 ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
@@ -99,7 +131,7 @@ public class BoxOfficeService {
             .map(node -> DailyBoxOfficeEntity.builder()
                 .targetDate(date)
                 .rnum(node.path("rnum").asText())
-                .rank(node.path("rank").asText())
+                .movieRank(node.path("rank").asText())
                 .rankInten(node.path("rankInten").asText())
                 .rankOldAndNew(node.path("rankOldAndNew").asText())
                 .movieCd(node.path("movieCd").asText())
@@ -143,6 +175,24 @@ public class BoxOfficeService {
 
         // 5) 저장·DTO 변환
         weeklyRepo.saveAll(entities);
+
+        entities.forEach(e -> {
+            movieService.searchMovieByTitleAndYear(
+                    e.getMovieNm(),
+                    // ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    LocalDate.parse(e.getOpenDt(), ISO_FMT).getYear()
+                )
+                .ifPresent(dto -> {
+                    movieService.fetchAndSaveMovieById(dto.getId());
+                    Movie movie = movieRepo.findByTmdbMovieId(dto.getId())
+                        .orElseThrow(() -> new IllegalStateException(
+                            "Movie not found for TMDB ID=" + dto.getId()));
+                    e.setMovie(movie);
+                    log.info("[연동완료] {} ({}) → TMDB ID={}",
+                        e.getMovieNm(), e.getMovieCd(), dto.getId());
+                });
+            });
+
         List<WeeklyBoxOfficeResponseDTO> items = entities.stream()
             .map(WeeklyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());
@@ -188,7 +238,7 @@ public class BoxOfficeService {
             .map(node -> WeeklyBoxOfficeEntity.builder()
                 .yearWeekTime(yearWeek)                // DB에 저장할 연주차
                 .rnum(node.path("rnum").asText())
-                .rank(node.path("rank").asText())
+                .movieRank(node.path("rank").asText())
                 .rankInten(node.path("rankInten").asText())
                 .rankOldAndNew(node.path("rankOldAndNew").asText())
                 .movieCd(node.path("movieCd").asText())

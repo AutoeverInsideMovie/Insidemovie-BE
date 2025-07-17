@@ -35,9 +35,11 @@ public class Review extends BaseTimeEntity {
     private LocalDateTime watchedAt;
     private boolean spoiler;
 
+    @Builder.Default
     @Column(name = "is_reported", nullable = false)
     private boolean isReported = false;  // 신고여부
 
+    @Builder.Default
     @Column(name = "is_concealed", nullable = false)
     private boolean isConcealed = false;  // 삭제여부
 
@@ -52,9 +54,11 @@ public class Review extends BaseTimeEntity {
     @OneToOne(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private Emotion emotion;
 
+    @Builder.Default
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewLike> likes = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Report> reports = new ArrayList<>();
 

@@ -3,6 +3,11 @@ package com.insidemovie.backend;
 import com.insidemovie.backend.api.constant.Authority;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+
+import com.insidemovie.backend.api.movie.service.TmdbClient;
+
+import com.insidemovie.backend.common.config.db.DatabaseInitializer;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -17,7 +22,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class BackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BackendApplication.class, args);
+		SpringApplication app = new SpringApplication(BackendApplication.class);
+    	app.addInitializers(new DatabaseInitializer());
+    	app.run(args);
 	}
 	@Bean
 	CommandLineRunner initAdmin(MemberRepository repo, PasswordEncoder encoder) {
@@ -32,5 +39,7 @@ public class BackendApplication {
 			}
 		};
 	}
+
+
 
 }

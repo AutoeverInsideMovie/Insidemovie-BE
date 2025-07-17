@@ -1,5 +1,6 @@
-package com.insidemovie.backend.api.movie.entity;
+package com.insidemovie.backend.api.movie.entity.boxoffice;
 
+import com.insidemovie.backend.api.movie.entity.Movie;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,10 +16,14 @@ public class WeeklyBoxOfficeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "tmdb_id", referencedColumnName = "tmdb_id")
+    private Movie movie;
+
     @Column(name = "year_week_time")
     private String yearWeekTime;    // 연도+주차 (YYYYIWww)
     private String rnum;            // 순번
-    private String rank;            // 순위
+    private String movieRank;            // 순위
     private String rankInten;       // 순위 증감
     private String rankOldAndNew;   // 신규 진입 여부
     private String movieCd;         // 영화 코드

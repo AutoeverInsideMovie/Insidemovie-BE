@@ -1,7 +1,7 @@
 package com.insidemovie.backend.api.movie.service;
 
-import com.insidemovie.backend.api.movie.dto.TmdbMovieDto;
-import com.insidemovie.backend.api.movie.dto.TmdbResponse;
+import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieResponseDTO;
+import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieWrapperDTO;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import jakarta.transaction.Transactional;
@@ -11,8 +11,9 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 @Slf4j
@@ -39,13 +40,13 @@ public class MoviesService {
 
     @Transactional
     public void fetchAndSaveAllMovies() {
-        List<TmdbMovieDto> allDtos = new ArrayList<>();
+        List<SearchMovieResponseDTO> allDtos = new ArrayList<>();
         for (int page = 1; page <= 5; page++) {
             allDtos.addAll(fetchFromTmdb(page));
         }
-        Map<Long, TmdbMovieDto> dtoMap = allDtos.stream()
+        Map<Long, SearchMovieResponseDTO> dtoMap = allDtos.stream()
                 .collect(Collectors.toMap(
-                        TmdbMovieDto::getId,
+                        SearchMovieResponseDTO::getId,
                         Function.identity(),
                         (dto1,dto2)->dto1
                 ));
@@ -55,20 +56,20 @@ public class MoviesService {
                 .collect(Collectors.toMap(Movie::getTmdbMovieId,Function.identity()));
 
         existingMap.forEach((tmdbId, movie)->{
-            TmdbMovieDto dto = dtoMap.get(tmdbId);
+            SearchMovieResponseDTO dto = dtoMap.get(tmdbId);
             movie.updateTitle(dto.getTitle());
             movie.updateOverview(dto.getOverview());
             movie.updatePosterPath(dto.getPosterPath());
             movie.updateBackDropPath(dto.getBackDropPath());
             movie.updateVoteAverage(dto.getVoteAverage());
             movie.updateReleaseDate(dto.getReleaseDate());
-            movie.updateGenreIds(dto.getGenreIds());
+            //movie.updateGenreIds(dto.getGenreIds());
             movie.updateOriginalLanguage(dto.getOriginalLanguage());
         });
         List<Movie> newMovies = dtoMap.entrySet().stream()
                 .filter(e -> !existingMap.containsKey(e.getKey()))
                 .map(e -> {
-                    TmdbMovieDto dto = e.getValue();
+                    SearchMovieResponseDTO dto = e.getValue();
                     Movie m = Movie.builder()
                             .tmdbMovieId(dto.getId())
                             .build();
@@ -84,8 +85,8 @@ public class MoviesService {
         movieRepository.saveAll(newMovies);
 
     }
-    private List<TmdbMovieDto> fetchFromTmdb(int page) {
-        List<TmdbMovieDto> all = new ArrayList<>();
+    private List<SearchMovieResponseDTO> fetchFromTmdb(int page) {
+        List<SearchMovieResponseDTO> all = new ArrayList<>();
         String[] categories ={
                 "popular",
                 "now_playing",
@@ -97,8 +98,8 @@ public class MoviesService {
                     "%s/movie/%s?api_key=%s&language=%s&page=%d",
                     baseUrl, cat, apiKey, language, page
             );
-            ResponseEntity<TmdbResponse> resp =
-                    restTemplate.getForEntity(url, TmdbResponse.class);
+            ResponseEntity<SearchMovieWrapperDTO> resp =
+                    restTemplate.getForEntity(url, SearchMovieWrapperDTO.class);
 
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                 //return resp.getBody().getResults();  // DTO 리스트 반환
@@ -111,7 +112,7 @@ public class MoviesService {
         }
        return all.stream()
                 .collect(Collectors.toMap(
-                        TmdbMovieDto::getId,
+                        SearchMovieResponseDTO::getId,
                         Function.identity(),
                         (existing, replacement) -> existing))
                 .values()

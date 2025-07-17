@@ -1,10 +1,12 @@
 package com.insidemovie.backend.api.admin.service;
 
+import com.insidemovie.backend.api.admin.dto.AdminDashboardDTO;
 import com.insidemovie.backend.api.admin.dto.AdminMemberDTO;
 import com.insidemovie.backend.api.admin.dto.AdminReportDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.report.entity.Report;
+import com.insidemovie.backend.api.report.entity.ReportStatus;
 import com.insidemovie.backend.api.report.repository.ReportRepository;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.NotFoundException;
@@ -85,5 +87,17 @@ public class AdminService {
                 .createdAt(report.getCreatedAt())
                 .build();
     }
+
+    // 대시보드 요약
+    public AdminDashboardDTO getDashboardSummary() {
+        return AdminDashboardDTO.builder()
+                .totalMembers(memberRepository.count())
+                .bannedMembers(memberRepository.countByIsBannedTrue())
+                .totalReviews(reviewRepository.count())
+                .concealedReviews(reviewRepository.countByIsConcealedTrue())
+                .unprocessedReports(reportRepository.countByStatus(ReportStatus.UNPROCESSED))
+                .build();
+    }
+
 
 }

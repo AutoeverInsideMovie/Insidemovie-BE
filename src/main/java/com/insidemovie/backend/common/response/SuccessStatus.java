@@ -29,6 +29,7 @@ public enum SuccessStatus {
     SEND_REPORT_LIST_SUCCESS(HttpStatus.OK, "신고 목록 조회 성공"),
     REPORT_ACCEPTED(HttpStatus.OK, "신고 수용 성공"),
     REPORT_REJECTED(HttpStatus.OK, "신고 수용 기각"),
+    SEND_DASHBOARD_SUCCESS(HttpStatus.OK, "대시보드 조회 성공"),
 
     /** 201 CREATED */
     CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),

@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.admin.controller;
 
+import com.insidemovie.backend.api.admin.dto.AdminDashboardDTO;
 import com.insidemovie.backend.api.admin.dto.AdminMemberDTO;
 import com.insidemovie.backend.api.admin.dto.AdminReportDTO;
 import com.insidemovie.backend.api.admin.service.AdminService;
@@ -76,6 +77,12 @@ public class AdminController {
         return ApiResponse.success_only(SuccessStatus.REPORT_REJECTED);
     }
 
+    @Operation(summary = "관리자 대시보드 요약 정보", description = "회원 수, 리뷰 수 등 요약 정보를 반환합니다.")
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse<AdminDashboardDTO>> getDashboard() {
+        AdminDashboardDTO dto = adminService.getDashboardSummary();
+        return ApiResponse.success(SuccessStatus.SEND_DASHBOARD_SUCCESS, dto);
+    }
 
 
 }

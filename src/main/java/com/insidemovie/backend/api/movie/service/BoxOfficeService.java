@@ -5,10 +5,12 @@ import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
-import com.insidemovie.backend.api.movie.dto.tmdb.TmdbMovieResponseDTO;
+import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieResponseDTO;
 import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
+import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.movie.repository.WeeklyBoxOfficeRepository;
 import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.response.ErrorStatus;
@@ -23,6 +25,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -31,17 +34,24 @@ import java.util.stream.StreamSupport;
 @Slf4j
 public class BoxOfficeService {
 
-    @Value("${kobis.api.key}")
-    private String kobisApiKey;
+    private final TmdbClient tmdbClient;
+    private final MovieService movieService;
+    @Value("${kobis.api.key}")         private String kobisApiKey;
+    @Value("${tmdb.api.base-url}")    private String tmdbBaseUrl;
+    @Value("${tmdb.api.key}")         private String tmdbApiKey;
+    @Value("${tmdb.api.language}")    private String tmdbLanguage;
 
     private final DailyBoxOfficeRepository dailyRepo;
     private final WeeklyBoxOfficeRepository weeklyRepo;
+    private final RestTemplate restTemplate;
+    private final MovieRepository movieRepo;
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final String DAILY_URL_JSON =
         "http://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
     private static final String WEEKLY_URL_JSON =
         "http://kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchWeeklyBoxOfficeList.json";
+    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     // 일간 박스오피스 조회 및 저장
     @Transactional
@@ -58,9 +68,26 @@ public class BoxOfficeService {
 
         // 저장·DTO 변환·예외 처리
         dailyRepo.saveAll(entities);
+        
+        entities.forEach(e -> {
+            movieService.searchMovieByTitleAndYear(
+                    e.getMovieName(),
+                    LocalDate.parse(e.getOpenDate(), ISO_FMT).getYear()
+                )
+                .ifPresent(dto -> {
+                    // ➌ 박스오피스 엔티티에 TMDB ID 세팅
+                    e.setTmdbMovieId(dto.getId());
+                    // ➍ TMDB 상세정보 조회 & Movie 테이블에 저장
+                    movieService.fetchAndSaveMovieById(dto.getId());
+                    log.info("[연동완료] {} ({}) → TMDB ID={}",
+                        e.getMovieName(), e.getMovieCd(), dto.getId());
+                });
+        });
+        
         List<DailyBoxOfficeResponseDTO> items = entities.stream()
             .map(DailyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());
+
         if (items.isEmpty()) {
             throw new BaseException(
                 ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
@@ -143,6 +170,23 @@ public class BoxOfficeService {
 
         // 5) 저장·DTO 변환
         weeklyRepo.saveAll(entities);
+
+        entities.forEach(e -> {
+            movieService.searchMovieByTitleAndYear(
+                    e.getMovieNm(),
+                    // ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                    LocalDate.parse(e.getOpenDt(), ISO_FMT).getYear()
+                )
+                .ifPresent(dto -> {
+                    // ➌ 박스오피스 엔티티에 TMDB ID 세팅
+                    e.setTmdbMovieId(dto.getId());
+                    // ➍ TMDB 상세정보 조회 & Movie 테이블에 저장
+                    movieService.fetchAndSaveMovieById(dto.getId());
+                    log.info("[연동완료] {} ({}) → TMDB ID={}",
+                        e.getMovieNm(), e.getMovieCd(), dto.getId());
+                });
+            });
+
         List<WeeklyBoxOfficeResponseDTO> items = entities.stream()
             .map(WeeklyBoxOfficeResponseDTO::fromEntity)
             .collect(Collectors.toList());

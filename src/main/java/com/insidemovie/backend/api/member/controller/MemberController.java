@@ -5,6 +5,8 @@ import com.insidemovie.backend.api.member.dto.*;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
+import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;
+import com.insidemovie.backend.api.movie.service.MovieLikeService;
 import com.insidemovie.backend.api.review.controller.ReviewController;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
@@ -39,6 +41,7 @@ public class MemberController {
     private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
     private final ReviewService reviewService;
+    private final MovieLikeService movieLikeService;
 
     @Operation(
             summary = "이메일 회원가입 API", description = "회원정보를 받아 사용자를 등록합니다.")
@@ -141,5 +144,18 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
     }
 
+    // 내가 좋아요 한 영화 조회
+    @Operation(summary = "내가 좋아요 한 영화 목록 조회", description = "로그인한 사용자의 영화 좋아요 목록을 페이징하여 조회합니다.")
+    @GetMapping("/my-movie")
+    public ResponseEntity<ApiResponse<Page<MyMovieResponseDTO>>> getMyMovies(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<MyMovieResponseDTO> result = movieLikeService.getMyMovies(userDetails.getUsername(), pageable);
+
+        return ApiResponse.success(SuccessStatus.SEND_MY_MOVIE_SUCCESS, result);
+    }
 
 }

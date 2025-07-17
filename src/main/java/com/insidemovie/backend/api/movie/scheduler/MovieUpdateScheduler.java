@@ -17,12 +17,12 @@ import java.util.List;
 public class MovieUpdateScheduler {
     private final MovieService movieService;
 
-    @Scheduled(cron = "0 0 4 * * *") //
+    @Scheduled(cron = "0 43 20 * * *") //
     public void updateMovies() {
         List<String> types = List.of("popular","now_playing");
 
         for (String type : types) {
-            for (int page = 1; page <= 50; page++) { // 하루마다 전부 갱신하지 않아도 상위 400개만 확인
+            for (int page = 300; page <= 350; page++) { // 하루마다 전부 갱신하지 않아도 상위 400개만 확인
                 movieService.fetchAndSaveMoviesByPage(type, page, false); // false = 변경 체크용
                 try {
                     log.info("타입 "+type+"📄 페이지 " + page + " 처리 중...");

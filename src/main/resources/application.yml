@@ -5,6 +5,7 @@ spring:
     import:
       - classpath:application-key.yml
       - optional:file:/home/ubuntu/application-key.yml
+      - optional:file:./application-key.yml
 
   security:
     oauth2:

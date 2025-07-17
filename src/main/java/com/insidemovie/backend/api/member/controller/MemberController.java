@@ -2,6 +2,7 @@ package com.insidemovie.backend.api.member.controller;
 
 import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
+import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -87,6 +89,14 @@ public class MemberController {
         String token = body.get("accessToken");
         Map<String, Object> result = memberService.kakaoLogin(token);
         return ApiResponse.success(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS, result);
+    }
+
+    // 사용자 정보 조회
+    @Operation(summary = "사용자 정보 조회 API", description = "사용자 정보를 조회합니다.")
+    @GetMapping("/profile")
+    public ResponseEntity<?> getMemberInfo(@AuthenticationPrincipal User principal) {
+        MemberInfoDto memberInfoDto = memberService.getMemberInfo(principal.getUsername());
+        return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberInfoDto);
     }
 
     @Operation(summary = "로그아웃 API", description = "사용자의 refreshToken을 무효화하고 로그아웃 처리합니다.\n input으로 사용자의 토큰을 받습니다.")

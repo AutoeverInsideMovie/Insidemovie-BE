@@ -34,6 +34,7 @@ public enum SuccessStatus {
     SEND_DAILY_BOXOFFICE_SUCCESS(HttpStatus.OK, "일간 박스오피스 조회 성공"),
     SEND_WEEKLY_BOXOFFICE_SUCCESS(HttpStatus.OK, "주간 박스오피스 조회 성공"),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
+    SEND_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "내 감정 평균 조회 성공"),
     SEARCH_MOVIES_SUCCESS(HttpStatus.OK, "영화 검색 성공"),
 
 

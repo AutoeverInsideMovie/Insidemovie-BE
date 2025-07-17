@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.dto.boxoffice;
 
-import com.insidemovie.backend.api.movie.entity.DailyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
 import lombok.Builder;
 import lombok.Getter;
 import java.time.LocalDate;
@@ -19,7 +19,7 @@ public class DailyBoxOfficeResponseDTO {
             .base(BaseBoxOfficeItemDTO.builder()
                 .id(e.getId())
                 .rnum(e.getRnum())
-                .rank(e.getRank())
+                .rank(e.getMovieRank())
                 .rankInten(e.getRankInten())
                 .rankOldAndNew(e.getRankOldAndNew())
                 .movieCd(e.getMovieCd())

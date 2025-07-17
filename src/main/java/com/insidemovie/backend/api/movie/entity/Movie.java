@@ -27,7 +27,6 @@ public class Movie {
     @Column(name = "tmdb_id", unique = true)
     private Long tmdbMovieId;            // tmdb 영화 코드
 
-
     @Column(columnDefinition = "TEXT")
     private String overview;            // 영화 개요
 
@@ -41,7 +40,7 @@ public class Movie {
     private String actors;              // 출연진
 
     @Column(name = "genre_ids")
-    private List<Integer> genreIds;     // 장르
+    private List<Long> genreIds;     // 장르
 
     private String title;                // 영화 제목
     private String titleEn;              // 영문 영화 제목
@@ -82,7 +81,7 @@ public class Movie {
         this.voteAverage = voteAverage;
     }
     // 장르 수정
-    public void updateGenreIds(List<Integer> genreIds) {
+    public void updateGenreIds(List<Long> genreIds) {
         this.genreIds = genreIds;
     }
     // 국가 수정

@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.repository;
 
-import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WeeklyBoxOfficeRepository extends JpaRepository<WeeklyBoxOfficeEntity, Long> {

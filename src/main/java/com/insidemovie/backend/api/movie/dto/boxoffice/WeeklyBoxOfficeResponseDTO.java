@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.dto.boxoffice;
 
-import com.insidemovie.backend.api.movie.entity.WeeklyBoxOfficeEntity;
+import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,7 +18,7 @@ public class WeeklyBoxOfficeResponseDTO {
             .base(BaseBoxOfficeItemDTO.builder()
                 .id(e.getId())
                 .rnum(e.getRnum())
-                .rank(e.getRank())
+                .rank(e.getMovieRank())
                 .rankInten(e.getRankInten())
                 .rankOldAndNew(e.getRankOldAndNew())
                 .movieCd(e.getMovieCd())

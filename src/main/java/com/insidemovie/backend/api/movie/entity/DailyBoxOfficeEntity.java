@@ -17,6 +17,9 @@ public class DailyBoxOfficeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tmdb_movie_id")
+    private Long tmdbMovieId;
+
     private LocalDate targetDate;       // 조회 일자
     private String rnum;                // 순번
     private String movieRank;                // 해당 일자 박스오피스 순위

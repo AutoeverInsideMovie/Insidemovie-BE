@@ -73,8 +73,8 @@ public class Movie {
 //    @Builder.Default
 //    private List<Genre> genres = new ArrayList<>();
 
-    @Column(name = "genre_ids")
-    private List<Integer> genreIds; //장르
+    //@Column(name = "genre_ids")
+    //private List<Integer> genreIds; //장르
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -108,9 +108,9 @@ public class Movie {
         this.voteAverage = voteAverage;
     }
     // 장르 수정
-    public void updateGenreIds(List<Integer> genreIds) {
-        this.genreIds = genreIds;
-    }
+//    public void updateGenreIds(List<Integer> genreIds) {
+//        this.genreIds = genreIds;
+//    }
     // 국가 수정
     public void updateOriginalLanguage(String originalLanguage) {
         this.originalLanguage = originalLanguage;

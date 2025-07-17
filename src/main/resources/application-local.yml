@@ -1,10 +1,12 @@
 spring:
   config:
+
     activate:
       on-profile: local
   batch:
     jdbc:
       initialize-schema: never
+
   h2:
     console:
       enabled: true
@@ -19,3 +21,4 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update # 개발 환경: update
+

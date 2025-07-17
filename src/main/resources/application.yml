@@ -58,10 +58,13 @@ kobis:
 
 scheduler:
   cron:
-    daily: "0 0 1 * * ?" # 매일 오전 1시
-    weekly: "0 0 2 ? * MON" # 매주 월요일 오전 2시
+
+    daily: "0 0 1 * * ?"      # 매일 오전 1시
+    weekly: "0 0 2 ? * MON"   # 매주 월요일 오전 2시
   zone: "Asia/Seoul"
 
 movie:
   seed-enabled: false # 시딩 끝나면 false
-  update-enabled: true # 시딩 끝나면 true
+  update-enabled: true #시딩 끝나면 true
+
+

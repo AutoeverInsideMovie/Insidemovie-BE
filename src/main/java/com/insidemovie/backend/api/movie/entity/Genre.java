@@ -17,9 +17,13 @@ public class Genre {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //TMDB API 장르 ID */
+    @Column(name = "tmdb_id", nullable = false, unique = true)
+    private Long tmdbMovieId;
+
     private String genreNm;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "movie_id")
-    private Movie movie;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "movie_id")
+//    private Movie movie;
 }

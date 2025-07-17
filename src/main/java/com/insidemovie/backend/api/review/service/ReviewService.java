@@ -85,7 +85,7 @@ public class ReviewService {
             }
 
             Map<String, Double> probabilities = response.getProbabilities();
-
+            System.out.println("========================================" + response.getProbabilities());
             Emotion emotion = Emotion.builder()
                     .anger(probabilities.get("anger"))
                     .fear(probabilities.get("fear"))

@@ -62,7 +62,7 @@ public class MoviesService {
             movie.updateBackDropPath(dto.getBackDropPath());
             movie.updateVoteAverage(dto.getVoteAverage());
             movie.updateReleaseDate(dto.getReleaseDate());
-            movie.updateGenreIds(dto.getGenreIds());
+            //movie.updateGenreIds(dto.getGenreIds());
             movie.updateOriginalLanguage(dto.getOriginalLanguage());
         });
         List<Movie> newMovies = dtoMap.entrySet().stream()

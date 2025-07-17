@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +33,6 @@ public class Movie {
 
     @Column(name = "popularity")
     private Double popularity;          // tmdb 자체 인기도
-
 
     @Column(name = "original_language")
     private String originalLanguage;     // 국가

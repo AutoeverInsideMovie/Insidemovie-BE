@@ -3,6 +3,8 @@ package com.insidemovie.backend.api.movie.service;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.repository.GenreRepository;
+import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
 public class MovieService {
     private final MovieRepository movieRepository;
     private final RestTemplate restTemplate;
+    private final GenreRepository genreRepository;
+    private final MovieGenreRepository movieGenreRepository;
 
     @Value("${tmdb.api.base-url}")
     private String baseUrl;

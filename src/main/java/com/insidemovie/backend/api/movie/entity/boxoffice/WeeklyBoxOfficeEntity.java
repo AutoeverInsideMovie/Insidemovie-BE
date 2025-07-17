@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.entity.boxoffice;
 
+import com.insidemovie.backend.api.movie.entity.Movie;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,8 +16,9 @@ public class WeeklyBoxOfficeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tmdb_movie_id")
-    private Long tmdbMovieId;
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "tmdb_id", referencedColumnName = "tmdb_id")
+    private Movie movie;
 
     @Column(name = "year_week_time")
     private String yearWeekTime;    // 연도+주차 (YYYYIWww)

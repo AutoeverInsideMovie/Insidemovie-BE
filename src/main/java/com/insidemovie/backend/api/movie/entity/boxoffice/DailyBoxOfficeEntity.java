@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.entity.boxoffice;
 
+import com.insidemovie.backend.api.movie.entity.Movie;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -17,8 +18,9 @@ public class DailyBoxOfficeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "tmdb_movie_id")
-    private Long tmdbMovieId;
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "tmdb_id", referencedColumnName = "tmdb_id")
+    private Movie movie;
 
     private LocalDate targetDate;       // 조회 일자
     private String rnum;                // 순번

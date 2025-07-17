@@ -2,7 +2,6 @@ package com.insidemovie.backend.api.movie.dto.tmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -11,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class TmdbMovieDto {
+public class SearchMovieResponseDTO {
     private Long id;
     private String title;
     private String overview; //줄거리

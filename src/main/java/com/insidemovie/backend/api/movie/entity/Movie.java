@@ -27,7 +27,6 @@ public class Movie {
     @Column(name = "tmdb_id", unique = true)
     private Long tmdbMovieId;            // tmdb 영화 코드
 
-
     @Column(columnDefinition = "TEXT")
     private String overview;            // 영화 개요
 

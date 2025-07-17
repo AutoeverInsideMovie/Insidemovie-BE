@@ -67,7 +67,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/review/*").permitAll() // 영화에 대한 리뷰 목록 요청 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/boxoffice/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/movies/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)

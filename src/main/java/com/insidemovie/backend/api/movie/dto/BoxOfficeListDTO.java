@@ -1,4 +1,4 @@
-package com.insidemovie.backend.api.movie.dto.boxoffice;
+package com.insidemovie.backend.api.movie.dto;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,12 +1,9 @@
-package com.insidemovie.backend.api.movie.dto;
+package com.insidemovie.backend.api.movie.dto.tmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import lombok.*;
-import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter

@@ -136,6 +136,18 @@ public class MemberController {
         return ApiResponse.success_only(SuccessStatus.UPDATE_NICKNAME_SUCCESS);
     }
 
+    // 닉네임 중복 확인
+    @Operation(summary = "닉네임 중복 확인 API", description = "입력한 닉네임의 중복 여부를 확인합니다.")
+    @GetMapping("/check-nickname")
+    public ResponseEntity<ApiResponse<NicknameCheckResponseDTO>> checkNicknameDuplicate(
+            @RequestParam String nickname) {
+
+        boolean isDuplicated = memberService.isNicknameDuplicated(nickname);
+        return ApiResponse.success(SuccessStatus.CHECK_NICKNAME_SUCCESS,
+                new NicknameCheckResponseDTO(isDuplicated));
+    }
+
+
     // 비밀번호 변경
     @Operation(summary = "비밀번호 변경 API", description = "사용자의 비밀번호를 변경합니다.")
     @PutMapping("/password")

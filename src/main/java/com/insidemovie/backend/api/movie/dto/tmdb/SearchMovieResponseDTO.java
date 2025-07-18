@@ -30,8 +30,8 @@ public class SearchMovieResponseDTO {
     @JsonProperty("release_date")
     private LocalDate releaseDate;      // 개봉일
 
-    @JsonProperty("genre_ids")
-    private List<Integer> genreIds;     //장르
+//    @JsonProperty("genre_ids")
+//    private List<Integer> genreIds;     //장르
 
     @JsonProperty("original_language")
     private String originalLanguage;    // 국가

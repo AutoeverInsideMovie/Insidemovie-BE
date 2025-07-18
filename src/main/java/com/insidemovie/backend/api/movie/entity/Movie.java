@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Builder
@@ -39,8 +40,8 @@ public class Movie {
     @Column(length = 10000)
     private String actors;              // 출연진
 
-    @Column(name = "genre_ids")
-    private List<Long> genreIds;     // 장르
+//    @Column(name = "genre_ids")
+//    private Set<Integer> genreIds;     // 장르
 
     private String title;                // 영화 제목
     private String titleEn;              // 영문 영화 제목
@@ -81,9 +82,7 @@ public class Movie {
         this.voteAverage = voteAverage;
     }
     // 장르 수정
-    public void updateGenreIds(List<Long> genreIds) {
-        this.genreIds = genreIds;
-    }
+    //public void updateGenreIds(List<Long> genreIds) {this.genreIds = genreIds;}
     // 국가 수정
     public void updateOriginalLanguage(String originalLanguage) {
         this.originalLanguage = originalLanguage;

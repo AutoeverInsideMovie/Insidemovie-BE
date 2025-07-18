@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.entity;
 
+import com.insidemovie.backend.api.constant.GenreType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,14 +22,18 @@ public class MovieGenre {
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="genre_id")
-    private Genre genre;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name="genre_id")
+//    private Genre genre;
+    @Enumerated(EnumType.STRING)
+    @Column(name="genre", length=20)
+    private GenreType genreType;
 
-    private MovieGenre(Long id, Movie movie, Genre genre) {
+    private MovieGenre(Long id, Movie movie, GenreType genreType) {
         this.id = id;
         this.movie = movie;
-        this.genre = genre;
+        this.genreType = genreType;
     }
+
 
 }

@@ -153,6 +153,18 @@ public class MemberController {
         return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
     }
 
+    // 프로필 이미지 변경
+    @Operation(summary = "프로필 이미지 변경 API", description = "프로필 이미지를 변경합니다.")
+    @PatchMapping("/emotion")
+    public ResponseEntity<ApiResponse<Void>> updateProfileEmotion(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody ProfileEmotionUpdateRequestDto requestDto) {
+
+        memberService.updateProfileEmotion(userDetails.getUsername(), requestDto.getProfileEmotion());
+        return ApiResponse.success_only(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS);
+    }
+
+
     // 내가 작성한 리뷰 조회
     @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
     @GetMapping("/my-review")

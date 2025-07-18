@@ -63,7 +63,7 @@ public class MemberService {
     }
 
     @Transactional
-    public Map<String, Object> kakaoSignup(String kakaoAccessToken, String nickname) {
+    public void kakaoSignup(String kakaoAccessToken, String nickname) {
 
         // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
         if (kakaoAccessToken == null || kakaoAccessToken.isBlank()) {
@@ -72,6 +72,11 @@ public class MemberService {
 
         // 카카오 액세스 토큰을 사용해서 사용자 정보 가져오기
         KakaoUserInfoDto userInfo = oAuthService.getKakaoUserInfo(kakaoAccessToken);
+
+        // 만약 이미 해당 이메일로 가입된 정보가 있다면 예외처리
+        if (memberRepository.findBySocialId(userInfo.getId()).isPresent()) {
+            throw new BadRequestException(ErrorStatus.ALREADY_MEMBER_EXIST_EXCEPTION.getMessage());
+        }
 
         // 사용자 정보 저장
         Member member = Member.builder()
@@ -83,25 +88,6 @@ public class MemberService {
                 .build();
 
         memberRepository.save(member);
-
-        // 인증 객체 생성 (비밀번호 없이 Social 인증 사용자용)
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                member.getEmail(), null,
-                List.of(() -> "ROLE_USER")
-        );
-
-        // JWT 발급
-        String accessToken = jwtProvider.generateAccessToken(authentication);
-        String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
-
-        member.updateRefreshtoken(refreshToken);
-
-        // 로그인 시 응답 데이터 구성
-        Map<String, Object> result = new HashMap<>();
-        result.put("accessToken", accessToken);
-        result.put("refreshToken", refreshToken);
-
-        return result;
     }
 
     @Transactional

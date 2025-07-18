@@ -97,14 +97,14 @@ public class MemberController {
     // 카카오 회원가입
     @Operation(summary = "카카오 회원가입 API", description = "카카오 AccessToken으로 사용자 정보를 조회하고 회원가입을 처리합니다.")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카카오 로그인 성공")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카카오 회원가입 성공")
     })
     @PostMapping("/kakao-signup")
-    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
+    public ResponseEntity<ApiResponse<Void>> signup(@RequestBody Map<String, String> body) {
         String token = body.get("accessToken");
         String nickname = body.get("nickname");
-        Map<String, Object> result = memberService.kakaoSignup(token, nickname);
-        return ApiResponse.success(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS, result);
+        memberService.kakaoSignup(token, nickname);
+        return ApiResponse.success_only(SuccessStatus.SEND_KAKAO_REGISTER_SUCCESS);
     }
 
     // 사용자 정보 조회

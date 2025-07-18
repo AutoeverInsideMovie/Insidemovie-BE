@@ -69,7 +69,7 @@ public class MovieDetailService {
         }
 
         List<String> genreNames = genres.stream()
-                .map(mg -> mg.getGenre().getGenreNm())
+                .map(mg ->mg.getGenreType().name())
                 .collect(Collectors.toList());
 
         MovieDetailResDto resDto = new MovieDetailResDto();

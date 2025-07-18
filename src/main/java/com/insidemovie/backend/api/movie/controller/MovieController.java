@@ -1,17 +1,14 @@
 package com.insidemovie.backend.api.movie.controller;
 
 
-import com.insidemovie.backend.api.constant.GenreType;
-import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
-import com.insidemovie.backend.api.movie.dto.PageResDto;
-
-
 import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
+import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
+import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieWrapperDTO;
 import com.insidemovie.backend.api.movie.service.MovieDetailService;
 import com.insidemovie.backend.api.movie.service.MovieLikeService;
-
 import com.insidemovie.backend.api.movie.service.MovieService;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;
@@ -22,10 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/movies")
@@ -55,8 +48,8 @@ public class MovieController {
     }
 
     @Operation(
-      summary = "영화에 저장된 감정 상태 값 조회",
-      description = "영화에 저장된 5가지 감정 상태 값을 조회합니다."
+            summary = "영화에 저장된 감정 상태 값 조회",
+            description = "영화에 저장된 5가지 감정 상태 값을 조회합니다."
     )
     @GetMapping("/emotions/{movieId}")
     public ResponseEntity<ApiResponse<MovieEmotionSummaryResponseDTO>> getMovieEmotions(
@@ -79,17 +72,18 @@ public class MovieController {
     public ResponseEntity<ApiResponse<Void>> toggleMovieLike(
             @PathVariable Long movieId,
             @AuthenticationPrincipal UserDetails userDetails
-            ) {
+    ) {
         movieLikeService.toggleMovieLike(movieId, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.SEND_MOVIE_LIKE_SUCCESS);
     }
 
     @Operation(summary = "영화 타이틀 검색", description = "타이틀로 영화를 검색합니다.")
     @GetMapping("/search/title")
-    public ResponseEntity<ApiResponse<PageResDto<MovieSearchResDto>>> MovieSearchTitle(@RequestParam String title,@RequestParam int page, @RequestParam int pageSize){
-        PageResDto<MovieSearchResDto> result = movieService.movieSearchTitle(title,page, pageSize);
-        return ApiResponse.success(SuccessStatus.SEARCH_MOVIES_SUCCESS,result);
+    public ResponseEntity<ApiResponse<PageResDto<MovieSearchResDto>>> MovieSearchTitle(@RequestParam String title, @RequestParam int page, @RequestParam int pageSize) {
+        PageResDto<MovieSearchResDto> result = movieService.movieSearchTitle(title, page, pageSize);
+        return ApiResponse.success(SuccessStatus.SEARCH_MOVIES_SUCCESS, result);
     }
+
     /*
      * TODO: 영화 장르와, 타이틀로 검색했을때 검색되도록
      *   - "액"이 포함된 영화 타이틀을 검색하고 싶어도 액션으로 인식되어 액션 영화 나옴
@@ -97,11 +91,24 @@ public class MovieController {
      */
     @Operation(summary = "영화 검색", description = "영화를 검색합니다.")
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PageResDto<MovieSearchResDto>>> MovieSearchGenre(@RequestParam String q, @RequestParam int page, @RequestParam int pageSize){
-        PageResDto<MovieSearchResDto> result = movieService.searchByQuery(q,page, pageSize);
-        return ApiResponse.success(SuccessStatus.SEARCH_MOVIES_SUCCESS,result);
+    public ResponseEntity<ApiResponse<PageResDto<MovieSearchResDto>>> MovieSearchGenre(@RequestParam String q, @RequestParam int page, @RequestParam int pageSize) {
+        PageResDto<MovieSearchResDto> result = movieService.searchByQuery(q, page, pageSize);
+        return ApiResponse.success(SuccessStatus.SEARCH_MOVIES_SUCCESS, result);
     }
 
+    // 인기순으로 정렬된 영화 목록 제공 API
+    @Operation(
+            summary = "인기순 정렬 영화 목록 제공 API",
+            description = "TMDB popularity로 정렬하여 인기 영화 목록을 제공합니다."
+    )
 
+    @GetMapping("/popular")
+    public ResponseEntity<ApiResponse<SearchMovieWrapperDTO>> getPopularMovies(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+
+        SearchMovieWrapperDTO dto = movieService.getPopularMovies(page, pageSize);
+        return ApiResponse.success(SuccessStatus.SEND_POPULAR_MOVIES_SUCCESS, dto);
+    }
 }
 

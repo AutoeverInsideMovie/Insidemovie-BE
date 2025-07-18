@@ -18,6 +18,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     List<Movie> findAllByTmdbMovieIdIn(Collection<Long> tmdbIds);
     Optional<Movie> findByTmdbMovieId(Long tmdbMovieId);
+    Page<Movie> findAllByOrderByPopularityDesc(Pageable pageable);
 
     @Query("""
       SELECT m

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Tag(name="Review", description = "Review 관련 API 입니다.")
-@RequestMapping("/api/v1/review")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class ReviewController {
 
@@ -29,16 +29,19 @@ public class ReviewController {
 
     @Operation(
             summary = "리뷰 등록 API", description = "새로운 리뷰를 등록합니다.")
-    @PostMapping
-    public ResponseEntity<ApiResponse<Long>> createReview(@RequestBody ReviewCreateDTO reviewCreateDTO, @AuthenticationPrincipal UserDetails userDetails){
+    @PostMapping("/movies/{movieId}/reviews")
+    public ResponseEntity<ApiResponse<Long>> createReview(
+            @PathVariable Long movieId,
+            @RequestBody ReviewCreateDTO reviewCreateDTO,
+            @AuthenticationPrincipal UserDetails userDetails){
 
-        Long id = reviewService.createReview(reviewCreateDTO, userDetails.getUsername());
+        Long id = reviewService.createReview(movieId, reviewCreateDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.CREATE_REVIEW_SUCCESS, id);
     }
 
     @Operation(
             summary = "리뷰 목록 조회 API", description = "특정 영화에 대한 리뷰 목록을 조회합니다.")
-    @GetMapping("/{movieId}")
+    @GetMapping("/movies/{movieId}/reviews")
     public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByMovie(
             @PathVariable Long movieId,
             @RequestParam(defaultValue = "0") int page,
@@ -54,16 +57,19 @@ public class ReviewController {
 
     @Operation(
             summary = "리뷰 수정 API", description = "리뷰를 수정 합니다.")
-    @PutMapping
-    public ResponseEntity<ApiResponse<Void>> modifyArticle(@RequestBody ReviewUpdateDTO articleUpdateDTO, @AuthenticationPrincipal UserDetails userDetails) {
+    @PutMapping("/reviews/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> modifyArticle(
+            @PathVariable Long reviewId,
+            @RequestBody ReviewUpdateDTO articleUpdateDTO,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        reviewService.modifyReview(articleUpdateDTO, userDetails.getUsername());
+        reviewService.modifyReview(reviewId, articleUpdateDTO, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.MODIFY_REVIEW_SUCCESS);
     }
 
     @Operation(
             summary = "리뷰 삭제 API", description = "리뷰를 삭제 합니다.")
-    @DeleteMapping("/{reviewId}")
+    @DeleteMapping("/reviews/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(@PathVariable Long reviewId, @AuthenticationPrincipal UserDetails userDetails) {
 
         reviewService.deleteReview(reviewId, userDetails.getUsername());
@@ -74,7 +80,7 @@ public class ReviewController {
             summary = "리뷰 좋아요 토글 API",
             description = "리뷰에 좋아요 또는 좋아요 취소를 합니다."
     )
-    @PostMapping("/like/{reviewId}")
+    @PostMapping("/reviews/{reviewId}/like")
     public ResponseEntity<ApiResponse<Void>> toggleReviewLike(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal UserDetails userDetails) {

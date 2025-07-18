@@ -89,7 +89,7 @@ public class SecurityConfig {
                 // Public GET
                 .requestMatchers(
                         HttpMethod.GET,
-                        "/api/v1/review/**",
+                        "/api/v1/movies/*/reviews",
                         "/api/v1/movies/**"
                 ).permitAll()
 

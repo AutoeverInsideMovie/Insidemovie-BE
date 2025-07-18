@@ -44,9 +44,9 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "회원가입 성공")
     })
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody MemberSignupRequestDto requestDto) {
-        memberService.signup(requestDto);
-        return ApiResponse.success_only(SuccessStatus.SEND_REGISTER_SUCCESS);
+    public ResponseEntity<?> signup(@Valid @RequestBody MemberSignupRequestDto requestDto) {
+        Map<String, Object> result = memberService.signup(requestDto);
+        return ApiResponse.success(SuccessStatus.SEND_REGISTER_SUCCESS, result);
     }
 
     @Operation(summary = "로그인 API", description = "이메일로 로그인을 처리합니다.")
@@ -93,11 +93,11 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카카오 회원가입 성공")
     })
     @PostMapping("/kakao-signup")
-    public ResponseEntity<ApiResponse<Void>> signup(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
         String token = body.get("accessToken");
         String nickname = body.get("nickname");
-        memberService.kakaoSignup(token, nickname);
-        return ApiResponse.success_only(SuccessStatus.SEND_KAKAO_REGISTER_SUCCESS);
+        Map<String, Object> result = memberService.kakaoSignup(token, nickname);
+        return ApiResponse.success(SuccessStatus.SEND_KAKAO_REGISTER_SUCCESS, result);
     }
 
     // 사용자 정보 조회
@@ -146,6 +146,18 @@ public class MemberController {
         memberService.updatePassword(userDetails.getUsername(), requestDto);
         return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
     }
+
+    // 프로필 이미지 변경
+    @Operation(summary = "프로필 이미지 변경 API", description = "프로필 이미지를 변경합니다.")
+    @PatchMapping("/emotion")
+    public ResponseEntity<ApiResponse<Void>> updateProfileEmotion(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody ProfileEmotionUpdateRequestDto requestDto) {
+
+        memberService.updateProfileEmotion(userDetails.getUsername(), requestDto.getProfileEmotion());
+        return ApiResponse.success_only(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS);
+    }
+
 
     // 내가 작성한 리뷰 조회
     @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")

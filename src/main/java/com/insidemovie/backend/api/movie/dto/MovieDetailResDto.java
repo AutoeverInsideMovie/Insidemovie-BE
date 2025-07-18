@@ -17,6 +17,7 @@ public class MovieDetailResDto {
     private String posterPath;
     private String backdropPath;
     private Double voteAverage;
-    private String originalLanguage; //국가
+    private String originalLanguage; // 국가
+    private Boolean isLike; // 좋아요 여부
     private List<String> genre;
 }

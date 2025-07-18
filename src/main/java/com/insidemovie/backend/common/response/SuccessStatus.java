@@ -29,6 +29,7 @@ public enum SuccessStatus {
     MEMBER_BAN_SUCCESS(HttpStatus.OK, "회원 정지 성공"),
     MEMBER_UNBAN_SUCCESS(HttpStatus.OK, "회원 정지 해제 성공"),
     SEND_MOVIE_DETAIL_SUCCESS(HttpStatus.OK, "영화 상세 조회 성공"),
+    SEND_MOVIE_LIKE_SUCCESS(HttpStatus.OK, "영화 좋아요 토글 성공"),
     SEND_REPORT_LIST_SUCCESS(HttpStatus.OK, "신고 목록 조회 성공"),
     REPORT_ACCEPTED(HttpStatus.OK, "신고 수용 성공"),
     REPORT_REJECTED(HttpStatus.OK, "신고 수용 기각"),
@@ -38,6 +39,9 @@ public enum SuccessStatus {
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
     SEND_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "내 감정 평균 조회 성공"),
     SEND_MOVIE_EMOTION_SUCCESS(HttpStatus.OK, "영화 감정 상태 조회 성공"),
+    SEND_INITIAL_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "초기 감정 상태 등록 완료"),
+    UPDATE_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "사용자 감정 상태 업데이트 완료"),
+    UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 변경 성공"),
 
 
     /** 201 CREATED */

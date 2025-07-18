@@ -23,8 +23,18 @@ public class MovieController {
 
     @Operation(summary = "영화 상세 조회", description = "TMDB ID로 영화 상세정보를 조회합니다")
     @GetMapping("/detail/{tmdbId}")
-    public ResponseEntity<ApiResponse<MovieDetailResDto>> getMovieDetail(@PathVariable Long tmdbId){
-        MovieDetailResDto dto= movieDetailService.getMovieDetail(tmdbId);
+    public ResponseEntity<ApiResponse<MovieDetailResDto>> getMovieDetail(
+            @PathVariable Long tmdbId,
+            @AuthenticationPrincipal UserDetails userDetails){
+
+        MovieDetailResDto dto;
+
+        if (userDetails != null) {
+            dto = movieDetailService.getMovieDetail(tmdbId, userDetails.getUsername());
+        } else {
+            dto = movieDetailService.getMovieDetail(tmdbId);
+        }
+
         return ApiResponse.success(SuccessStatus.SEND_MOVIE_DETAIL_SUCCESS,dto);
     }
 

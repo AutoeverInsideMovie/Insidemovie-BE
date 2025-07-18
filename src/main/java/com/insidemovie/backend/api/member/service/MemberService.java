@@ -42,7 +42,7 @@ public class MemberService {
 
     // 이메일 회원가입 메서드
     @Transactional
-    public void signup(MemberSignupRequestDto requestDto) {
+    public Map<String, Object> signup(MemberSignupRequestDto requestDto) {
 
         // 만약 이미 해당 이메일로 가입된 정보가 있다면 예외처리
         if (memberRepository.findByEmail(requestDto.getEmail()).isPresent()) {
@@ -60,10 +60,15 @@ public class MemberService {
 
         Member member = requestDto.toEntity(encodedPassword);
         memberRepository.save(member);
+
+        // 회원가입 시 응답 데이터 구성
+        Map<String, Object> result = new HashMap<>();
+        result.put("memberId", member.getId());
+        return result;
     }
 
     @Transactional
-    public void kakaoSignup(String kakaoAccessToken, String nickname) {
+    public Map<String, Object> kakaoSignup(String kakaoAccessToken, String nickname) {
 
         // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
         if (kakaoAccessToken == null || kakaoAccessToken.isBlank()) {
@@ -88,6 +93,11 @@ public class MemberService {
                 .build();
 
         memberRepository.save(member);
+
+        // 회원가입 시 응답 데이터 구성
+        Map<String, Object> result = new HashMap<>();
+        result.put("memberId", member.getId());
+        return result;
     }
 
     @Transactional

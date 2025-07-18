@@ -51,9 +51,9 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "회원가입 성공")
     })
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Void>> signup(@Valid @RequestBody MemberSignupRequestDto requestDto) {
-        memberService.signup(requestDto);
-        return ApiResponse.success_only(SuccessStatus.SEND_REGISTER_SUCCESS);
+    public ResponseEntity<?> signup(@Valid @RequestBody MemberSignupRequestDto requestDto) {
+        Map<String, Object> result = memberService.signup(requestDto);
+        return ApiResponse.success(SuccessStatus.SEND_REGISTER_SUCCESS, result);
     }
 
     @Operation(summary = "로그인 API", description = "이메일로 로그인을 처리합니다.")
@@ -100,11 +100,11 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "카카오 회원가입 성공")
     })
     @PostMapping("/kakao-signup")
-    public ResponseEntity<ApiResponse<Void>> signup(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> signup(@RequestBody Map<String, String> body) {
         String token = body.get("accessToken");
         String nickname = body.get("nickname");
-        memberService.kakaoSignup(token, nickname);
-        return ApiResponse.success_only(SuccessStatus.SEND_KAKAO_REGISTER_SUCCESS);
+        Map<String, Object> result = memberService.kakaoSignup(token, nickname);
+        return ApiResponse.success(SuccessStatus.SEND_KAKAO_REGISTER_SUCCESS, result);
     }
 
     // 사용자 정보 조회

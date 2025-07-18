@@ -232,6 +232,12 @@ public class MemberService {
         member.updateNickname(newNickname);
     }
 
+    // 닉네임 중복 확인
+    @Transactional(readOnly = true)
+    public boolean isNicknameDuplicated(String nickname) {
+        return memberRepository.existsByNickname(nickname);
+    }
+
     // 비밀번호 변경
     @Transactional
     public void updatePassword(String email, PasswordUpdateRequestDTO dto) {

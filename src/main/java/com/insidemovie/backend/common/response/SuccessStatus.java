@@ -13,6 +13,7 @@ public enum SuccessStatus {
     SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
     SEND_TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
     SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
+    SEND_KAKAO_REGISTER_SUCCESS(HttpStatus.OK, "카카오 회원가입 성공"),
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
     SEND_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 목록 조회 성공"),
     MODIFY_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 수정 성공"),

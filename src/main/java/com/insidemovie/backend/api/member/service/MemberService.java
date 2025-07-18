@@ -66,6 +66,34 @@ public class MemberService {
     }
 
     @Transactional
+    public void kakaoSignup(String kakaoAccessToken, String nickname) {
+
+        // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
+        if (kakaoAccessToken == null || kakaoAccessToken.isBlank()) {
+            throw new BadRequestException(ErrorStatus.KAKAO_LOGIN_FAILED.getMessage());
+        }
+
+        // 카카오 액세스 토큰을 사용해서 사용자 정보 가져오기
+        KakaoUserInfoDto userInfo = oAuthService.getKakaoUserInfo(kakaoAccessToken);
+
+        // 만약 이미 해당 이메일로 가입된 정보가 있다면 예외처리
+        if (memberRepository.findBySocialId(userInfo.getId()).isPresent()) {
+            throw new BadRequestException(ErrorStatus.ALREADY_MEMBER_EXIST_EXCEPTION.getMessage());
+        }
+
+        // 사용자 정보 저장
+        Member member = Member.builder()
+                .socialId(userInfo.getId())
+                .email("kakao_" + userInfo.getId() + "@social.com")
+                .nickname(nickname)
+                .socialType("KAKAO")
+                .authority(Authority.ROLE_USER)
+                .build();
+
+        memberRepository.save(member);
+    }
+
+    @Transactional
     public Map<String, Object> kakaoLogin(String kakaoAccessToken) {
 
         // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
@@ -78,7 +106,7 @@ public class MemberService {
 
         // 사용자 정보 저장
         Member member = memberRepository.findBySocialId(userInfo.getId())
-                .orElseGet(() -> kakaoRegister(userInfo));  // 없으면 회원가입
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 인증 객체 생성 (비밀번호 없이 Social 인증 사용자용)
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -98,19 +126,6 @@ public class MemberService {
         result.put("refreshToken", refreshToken);
 
         return result;
-    }
-
-    // 새 유저 회원가입 처리
-    private Member kakaoRegister(KakaoUserInfoDto dto) {
-        Member member = Member.builder()
-                .socialId(dto.getId())
-                .email("kakao_" + dto.getId() + "@social.com")
-                .nickname(dto.getNickname())
-                .socialType("KAKAO")
-                .authority(Authority.ROLE_USER)
-                .build();
-
-        return memberRepository.save(member);
     }
 
     @Transactional

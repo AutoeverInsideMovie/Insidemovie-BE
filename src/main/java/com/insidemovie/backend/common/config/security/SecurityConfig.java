@@ -73,6 +73,7 @@ public class SecurityConfig {
                     "/api/v1/member/login",
                     "/api/v1/member/kakao-accesstoken",
                     "/api/v1/member/kakao-login",
+                    "/api/v1/member/kakao-signup",
                     "/api/v1/member/token-reissue"
                 ).permitAll()
 

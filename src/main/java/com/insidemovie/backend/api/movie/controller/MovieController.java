@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.controller;
 
+import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.service.MovieDetailService;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MovieController {
     private final MovieService movieService;
     private final MovieDetailService movieDetailService;
+    private final MovieService movieService;
 
     @Operation(summary = "영화 상세 조회", description = "TMDB ID로 영화 상세정보를 조회합니다")
     @GetMapping("/detail/{tmdbId}")
@@ -40,5 +42,12 @@ public class MovieController {
     ) {
         MovieEmotionSummaryResponseDTO dto = movieService.getMovieEmotions(movieId);
         return ApiResponse.success(SuccessStatus.SEND_MOVIE_EMOTION_SUCCESS, dto);
+    }
+
+    @Operation(summary = "영화 감정 평균 조회", description = "해당 영화에 작성된 모든 리뷰의 감정 평균과 대표 감정을 조회합니다")
+    @GetMapping("/{movieId}/emotion-summary")
+    public ResponseEntity<ApiResponse<EmotionAvgDTO>> getMovieEmotionSummary(@PathVariable Long movieId) {
+        EmotionAvgDTO summary = movieService.getMovieEmotionSummary(movieId);
+        return ApiResponse.success(SuccessStatus.SEND_EMOTION_SUMMARY_SUCCESS, summary);
     }
 }

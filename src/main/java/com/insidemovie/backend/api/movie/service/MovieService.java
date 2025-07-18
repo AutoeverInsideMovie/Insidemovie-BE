@@ -1,12 +1,20 @@
 package com.insidemovie.backend.api.movie.service;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
+import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.GenreDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
+import com.insidemovie.backend.api.movie.repository.GenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepository;
+import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.api.review.repository.EmotionRepository;
+import com.insidemovie.backend.common.exception.NotFoundException;
+import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +26,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,6 +36,9 @@ public class MovieService {
 
     private final MovieRepository movieRepository;
     private final RestTemplate restTemplate;
+    private final GenreRepository genreRepository;
+    private final MovieGenreRepository movieGenreRepository;
+    private final EmotionRepository emotionRepository
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
 
     @Value("${tmdb.api.base-url}")
@@ -214,6 +222,53 @@ public class MovieService {
             || !Objects.equals(movie.getOriginalLanguage(), dto.getOriginalLanguage())
             || !Objects.equals(movie.getReleaseDate(),
                 dto.getReleaseDate() != null ? dto.getReleaseDate() : null);
+    }
+
+    // 영화에 달린 리뷰들의 감정 평균 조회
+    @Transactional
+    public EmotionAvgDTO getMovieEmotionSummary(Long movieId) {
+
+        // 감정 평균 조회
+        EmotionAvgDTO avg = emotionRepository.findAverageEmotionsByMovieId(movieId)
+                .orElseGet(() -> EmotionAvgDTO.builder()
+                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).neutral(0.0)
+                        .repEmotionType(EmotionType.NEUTRAL)
+                        .build());
+
+        // 대표 감정 계산
+        EmotionType rep = calculateRepEmotion(avg);
+        avg.setRepEmotionType(rep);
+
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+        // 요약 엔티티 조회 or 생성
+        MovieEmotionSummary summary = movieEmotionSummaryRepository
+                .findByMovieId(movieId)
+                .orElseGet(() -> MovieEmotionSummary.builder()
+                        .movie(movie)
+                        .build());
+
+        // 엔티티 업데이트 및 저장
+        summary.updateFromDTO(avg);
+        movieEmotionSummaryRepository.save(summary);
+
+        return avg;
+    }
+
+    // 대표 감정 계산 메서드
+    private EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
+        Map<EmotionType, Double> scores = Map.of(
+                EmotionType.JOY, dto.getJoy(),
+                EmotionType.SADNESS, dto.getSadness(),
+                EmotionType.ANGER, dto.getAnger(),
+                EmotionType.FEAR, dto.getFear(),
+                EmotionType.NEUTRAL, dto.getNeutral()
+        );
+
+        return scores.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(EmotionType.NEUTRAL);
     }
 
     /**

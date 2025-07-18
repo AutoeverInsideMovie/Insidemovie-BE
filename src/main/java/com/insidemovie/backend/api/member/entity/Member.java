@@ -1,6 +1,7 @@
 package com.insidemovie.backend.api.member.entity;
 
 import com.insidemovie.backend.api.constant.Authority;
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.report.entity.Report;
 import com.insidemovie.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -57,6 +58,10 @@ public class Member extends BaseTimeEntity {
     @Builder.Default
     private Boolean isBanned = false;  // 정지
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "profile_emotion")
+    private EmotionType profileEmotion;  // 프로필 이미지
+
     @Builder
     public Member(String email, String password, String nickname, Authority authority) {
         this.email = email;
@@ -75,10 +80,10 @@ public class Member extends BaseTimeEntity {
         this.nickname = nickname;
     }
 
-    // 메인 감정 변경
-//    public void updateMainEmotion(EmotionType mainEmotion) {
-//        this.mainEmotion = mainEmotion;
-//    }
+    // 프로필 이미지 변경
+    public void updateProfileEmotion(EmotionType emotionType) {
+        this.profileEmotion = emotionType;
+    }
 
     // 비밀번호 변경
     public void updatePassword(String newPassword) {

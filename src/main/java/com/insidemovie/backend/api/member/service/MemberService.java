@@ -243,6 +243,15 @@ public class MemberService {
         member.updatePassword(encoded);
     }
 
+    // 프로필 이미지 변경
+    @Transactional
+    public void updateProfileEmotion(String email, EmotionType emotionType) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        member.updateProfileEmotion(emotionType);
+    }
+
     @Transactional
     public void logout(String email) {
         int updated = memberRepository.clearRefreshTokenByUserEmail(email);

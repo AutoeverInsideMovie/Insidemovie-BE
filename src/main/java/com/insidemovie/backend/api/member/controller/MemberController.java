@@ -1,8 +1,9 @@
 package com.insidemovie.backend.api.member.controller;
 
-import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
-import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
+import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
+import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
 import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;
@@ -24,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
@@ -104,6 +104,7 @@ public class MemberController {
             responseCode = "401", description = "인증 실패 (토큰이 없거나 만료됨)"
         )
     })
+
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal UserDetails userDetails) {
@@ -168,5 +169,23 @@ public class MemberController {
         String email = userDetails.getUsername(); // 현재 로그인한 사용자 이메일
         EmotionAvgDTO result = memberService.getMyEmotionSummary(email);
         return ApiResponse.success(SuccessStatus.SEND_EMOTION_SUMMARY_SUCCESS, result);
+    }
+
+    @Operation(
+            summary = "초기 사용자의 감정 상태 등록",
+            description = "초기 사용자의 감정 상태를 `MemberEmotionSummary`에 저장함."
+    )
+    @PostMapping("/signup/emotion")
+    public ResponseEntity<ApiResponse<MemberEmotionSummaryResponseDTO>> postInitialEmotionSummary(
+            @Valid @RequestBody MemberEmotionSummaryRequestDTO requestDTO
+    ) {
+        MemberEmotionSummaryResponseDTO response =
+            memberService.saveInitialEmotionSummary(
+                requestDTO
+            );
+        return ApiResponse.success(
+            SuccessStatus.SEND_INITIAL_EMOTION_SUMMARY_SUCCESS,
+            response
+        );
     }
 }

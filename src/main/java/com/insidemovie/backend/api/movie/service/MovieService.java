@@ -6,15 +6,13 @@ import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 
-import com.insidemovie.backend.api.movie.dto.GenreDto;
+import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
-import com.insidemovie.backend.api.movie.entity.Genre;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 
-import com.insidemovie.backend.api.movie.repository.GenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepository;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
@@ -47,7 +45,6 @@ public class MovieService {
 
     private final MovieRepository movieRepository;
     private final RestTemplate restTemplate;
-    private final GenreRepository genreRepository;
     private final MovieGenreRepository movieGenreRepository;
     private final EmotionRepository emotionRepository;
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
@@ -134,7 +131,7 @@ public class MovieService {
         movieGenreRepository.deleteByMovie(movie);
         //새 매핑 생성: DTO→enum→MovieGenre
         detail.getGenres().stream()
-                .map(GenreDto::getId)                  // List<Long>
+                .map(TmdbGenreResponseDto::getId)                  // List<Long>
                 .map(Long::intValue)                   // int
                 .map(id -> GenreType.fromId(id)        // TMDB ID → GenreType enum
                         .orElseThrow(() ->

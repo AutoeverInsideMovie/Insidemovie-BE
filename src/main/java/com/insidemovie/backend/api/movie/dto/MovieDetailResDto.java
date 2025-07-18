@@ -1,6 +1,5 @@
 package com.insidemovie.backend.api.movie.dto;
 
-import com.insidemovie.backend.api.movie.entity.Genre;
 import lombok.*;
 
 import java.util.List;

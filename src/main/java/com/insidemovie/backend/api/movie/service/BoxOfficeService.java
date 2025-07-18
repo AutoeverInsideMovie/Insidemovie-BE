@@ -32,7 +32,6 @@ import java.util.stream.StreamSupport;
 @Slf4j
 public class BoxOfficeService {
 
-    private final TmdbClient tmdbClient;
     private final MovieService movieService;
     @Value("${kobis.api.key}")         private String kobisApiKey;
     @Value("${tmdb.api.base-url}")    private String tmdbBaseUrl;

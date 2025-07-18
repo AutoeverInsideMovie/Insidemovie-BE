@@ -188,4 +188,21 @@ public class MemberController {
             response
         );
     }
+
+    @Operation(
+        summary = "사용자의 감정 상태 수정",
+        description = "기존 저장된 감정 상태와 요청받은 감정 상태를 평균 내어 업데이트함."
+    )
+    @PatchMapping("/emotion/update")
+    public ResponseEntity<ApiResponse<MemberEmotionSummaryResponseDTO>> patchEmotionSummary(
+            @Valid @RequestBody MemberEmotionSummaryRequestDTO requestDTO
+    ) {
+        //TODO: JWT 토큰 적용
+        MemberEmotionSummaryResponseDTO response =
+            memberService.updateEmotionSummary(requestDTO);
+        return ApiResponse.success(
+            SuccessStatus.UPDATE_EMOTION_SUMMARY_SUCCESS,
+            response
+        );
+    }
 }

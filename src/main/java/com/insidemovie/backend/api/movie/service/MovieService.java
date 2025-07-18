@@ -1,4 +1,5 @@
 package com.insidemovie.backend.api.movie.service;
+import com.insidemovie.backend.api.constant.GenreType;
 import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.constant.EmotionType;
@@ -289,14 +290,14 @@ public class MovieService {
         return new PageResDto<>(dto);
     }
 
-    private MovieSearchResDto convertEntityToDto(Movie movie){
+    private MovieSearchResDto convertEntityToDto(Movie movie) {
         MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
         movieSearchResDto.setId(movie.getId());
         movieSearchResDto.setTitle(movie.getTitle());
         movieSearchResDto.setPosterPath(movie.getPosterPath());
         movieSearchResDto.setVoteAverage(movie.getVoteAverage());
         return movieSearchResDto;
-
+    }
     // 영화에 달린 리뷰들의 감정 평균 조회
     @Transactional
     public EmotionAvgDTO getMovieEmotionSummary(Long movieId) {

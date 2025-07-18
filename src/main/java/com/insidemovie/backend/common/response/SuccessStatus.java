@@ -29,6 +29,7 @@ public enum SuccessStatus {
     MEMBER_BAN_SUCCESS(HttpStatus.OK, "회원 정지 성공"),
     MEMBER_UNBAN_SUCCESS(HttpStatus.OK, "회원 정지 해제 성공"),
     SEND_MOVIE_DETAIL_SUCCESS(HttpStatus.OK, "영화 상세 조회 성공"),
+    SEND_MOVIE_LIKE_SUCCESS(HttpStatus.OK, "영화 좋아요 토글 성공"),
     SEND_REPORT_LIST_SUCCESS(HttpStatus.OK, "신고 목록 조회 성공"),
     REPORT_ACCEPTED(HttpStatus.OK, "신고 수용 성공"),
     REPORT_REJECTED(HttpStatus.OK, "신고 수용 기각"),

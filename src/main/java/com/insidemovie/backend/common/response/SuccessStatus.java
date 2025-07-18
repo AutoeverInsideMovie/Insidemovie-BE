@@ -13,6 +13,7 @@ public enum SuccessStatus {
     SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
     SEND_TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
     SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
+    SEND_KAKAO_REGISTER_SUCCESS(HttpStatus.OK, "카카오 회원가입 성공"),
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
     SEND_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 목록 조회 성공"),
     MODIFY_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 수정 성공"),
@@ -37,6 +38,7 @@ public enum SuccessStatus {
     SEND_WEEKLY_BOXOFFICE_SUCCESS(HttpStatus.OK, "주간 박스오피스 조회 성공"),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
     SEND_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "내 감정 평균 조회 성공"),
+    SEND_MOVIE_EMOTION_SUCCESS(HttpStatus.OK, "영화 감정 상태 조회 성공"),
 
 
     /** 201 CREATED */

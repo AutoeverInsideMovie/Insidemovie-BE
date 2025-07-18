@@ -20,36 +20,37 @@ public class MemberEmotionSummary {
     private Long memberId;
 
     @MapsId
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne
     @JoinColumn(name = "member_id")
     private Member member;
 
-    @Column(nullable = false)
-    private Float joy = 0.0f;
-
-    @Column(nullable = false)
-    private Float sadness = 0.0f;
-
-    @Column(nullable = false)
-    private Float anger = 0.0f;
-
-    @Column(nullable = false)
-    private Float fear = 0.0f;
-
-    @Column(nullable = false)
-    private Float neutral = 0.0f;
+    private Float joy;
+    private Float sadness;
+    private Float fear;
+    private Float anger;
+    private Float neutral;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private EmotionType repEmotionType = EmotionType.NEUTRAL;
+    private EmotionType repEmotionType; // 대표 감정
 
-    @PrePersist
-    private void ensureDefaults() {
-        // null 방어는 사실 필요 없도록 primitive 초기화 사용
-        if (repEmotionType == null) {
-            repEmotionType = EmotionType.NEUTRAL;
-        }
-    }
+//    @Column(nullable = false)
+//    private Float joy = 0.0f;
+//
+//    @Column(nullable = false)
+//    private Float sadness = 0.0f;
+//
+//    @Column(nullable = false)
+//    private Float anger = 0.0f;
+//
+//    @Column(nullable = false)
+//    private Float fear = 0.0f;
+//
+//    @Column(nullable = false)
+//    private Float neutral = 0.0f;
+//
+//    @Enumerated(EnumType.STRING)
+//    @Column(nullable = false)
+//    private EmotionType repEmotionType = EmotionType.NEUTRAL;
 
     // 평균 감정 정보를 DTO로부터 갱신
     public void updateFromDTO(EmotionAvgDTO dto) {
@@ -59,9 +60,5 @@ public class MemberEmotionSummary {
         this.fear           = dto.getFear().floatValue();
         this.neutral        = dto.getNeutral().floatValue();
         this.repEmotionType = dto.getRepEmotionType();
-    }
-
-    private Float fromDouble(double value) {
-        return (float) value;
     }
 }

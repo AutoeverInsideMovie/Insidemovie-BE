@@ -1,8 +1,11 @@
 package com.insidemovie.backend.api.movie.controller;
 
+import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
+import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.service.MovieDetailService;
 import com.insidemovie.backend.api.movie.service.MovieLikeService;
+import com.insidemovie.backend.api.movie.service.MovieService;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,12 +15,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/movies")
 @Tag(name = "Movies", description = "영화 관련 API")
 @RequiredArgsConstructor
 public class MovieController {
+    private final MovieService movieService;
     private final MovieDetailService movieDetailService;
     private final MovieLikeService movieLikeService;
 
@@ -36,6 +44,24 @@ public class MovieController {
         }
 
         return ApiResponse.success(SuccessStatus.SEND_MOVIE_DETAIL_SUCCESS,dto);
+
+    @Operation(
+      summary = "영화에 저장된 감정 상태 값 조회",
+      description = "영화에 저장된 5가지 감정 상태 값을 조회합니다."
+    )
+    @GetMapping("/emotions/{movieId}")
+    public ResponseEntity<ApiResponse<MovieEmotionSummaryResponseDTO>> getMovieEmotions(
+            @PathVariable Long movieId
+    ) {
+        MovieEmotionSummaryResponseDTO dto = movieService.getMovieEmotions(movieId);
+        return ApiResponse.success(SuccessStatus.SEND_MOVIE_EMOTION_SUCCESS, dto);
+    }
+
+    @Operation(summary = "영화 감정 평균 조회", description = "해당 영화에 작성된 모든 리뷰의 감정 평균과 대표 감정을 조회합니다")
+    @GetMapping("/{movieId}/emotion-summary")
+    public ResponseEntity<ApiResponse<EmotionAvgDTO>> getMovieEmotionSummary(@PathVariable Long movieId) {
+        EmotionAvgDTO summary = movieService.getMovieEmotionSummary(movieId);
+        return ApiResponse.success(SuccessStatus.SEND_EMOTION_SUMMARY_SUCCESS, summary);
     }
 
     // 영화 좋아요

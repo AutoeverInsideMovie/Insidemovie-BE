@@ -11,6 +11,7 @@ public enum ErrorStatus {
     /** 400 BAD_REQUEST */
     VALIDATION_REQUEST_MISSING_EXCEPTION(HttpStatus.BAD_REQUEST, "요청 값이 입력되지 않았습니다."),
     ALREADY_EMAIL_EXIST_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 가입된 이메일입니다."),
+    ALREADY_MEMBER_EXIST_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 가입된 회원입니다."),
     PASSWORD_MISMATCH_EXCEPTION(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     KAKAO_LOGIN_FAILED(HttpStatus.BAD_REQUEST, "카카오 로그인에 실패했습니다."),
     KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "카카오 토큰 요청에 실패했습니다."),

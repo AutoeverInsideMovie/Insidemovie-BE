@@ -33,7 +33,7 @@ public class MovieController {
     @GetMapping("/detail/{tmdbId}")
     public ResponseEntity<ApiResponse<MovieDetailResDto>> getMovieDetail(
             @PathVariable Long tmdbId,
-            @AuthenticationPrincipal UserDetails userDetails){
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         MovieDetailResDto dto;
 
@@ -43,7 +43,8 @@ public class MovieController {
             dto = movieDetailService.getMovieDetail(tmdbId);
         }
 
-        return ApiResponse.success(SuccessStatus.SEND_MOVIE_DETAIL_SUCCESS,dto);
+        return ApiResponse.success(SuccessStatus.SEND_MOVIE_DETAIL_SUCCESS, dto);
+    }
 
     @Operation(
       summary = "영화에 저장된 감정 상태 값 조회",

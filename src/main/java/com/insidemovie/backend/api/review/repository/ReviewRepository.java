@@ -43,4 +43,24 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 숨김 처리된 리뷰 수
     long countByIsConcealedTrue();
 
+    // 일별 작성 수
+    @Query(value = """
+        SELECT DATE(created_at) AS date, COUNT(*) AS count
+        FROM review
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+        """, nativeQuery = true)
+    List<Object[]> countReviewsDaily();
+
+    // 월별 작성 수
+    @Query(value = """
+        SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS count
+        FROM review
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+        """, nativeQuery = true)
+    List<Object[]> countReviewsMonthly();
+
 }

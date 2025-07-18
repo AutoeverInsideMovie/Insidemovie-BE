@@ -38,7 +38,7 @@ public class MovieService {
     private final RestTemplate restTemplate;
     private final GenreRepository genreRepository;
     private final MovieGenreRepository movieGenreRepository;
-    private final EmotionRepository emotionRepository
+    private final EmotionRepository emotionRepository;
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
 
     @Value("${tmdb.api.base-url}")

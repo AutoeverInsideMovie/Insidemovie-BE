@@ -1,7 +1,7 @@
 package com.insidemovie.backend.api.movie.dto.tmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.insidemovie.backend.api.movie.dto.GenreDto;
+import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -44,7 +44,7 @@ public class MovieDetailDTO {
     private Double popularity;             // 인기 지표
 
     @JsonProperty("genres")
-    private List<GenreDto> genres;         // GenreDto 는 tmdb 패키지에 선언된 클래스여야 합니다.
+    private List<TmdbGenreResponseDto> genres;         // GenreDto 는 tmdb 패키지에 선언된 클래스여야 합니다.
 
     @JsonProperty("release_date")
     private LocalDate releaseDate;         // 개봉일

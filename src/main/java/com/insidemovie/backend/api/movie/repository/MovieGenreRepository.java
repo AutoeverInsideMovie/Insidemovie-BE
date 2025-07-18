@@ -1,7 +1,6 @@
 package com.insidemovie.backend.api.movie.repository;
 
 import com.insidemovie.backend.api.constant.GenreType;
-import com.insidemovie.backend.api.movie.entity.Genre;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import org.springframework.data.domain.Page;

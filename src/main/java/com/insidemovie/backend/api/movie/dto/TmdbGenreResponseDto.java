@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenreDto { //tmdb에서 오는 장르 정보
+public class TmdbGenreResponseDto { //tmdb에서 오는 장르 정보
     //tmdb ID
     private Long id;
     //장르 이름 "Action", "Drama"

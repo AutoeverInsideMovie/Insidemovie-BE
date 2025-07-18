@@ -5,6 +5,8 @@ import com.insidemovie.backend.api.constant.Authority;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
+import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
+import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.entity.MemberEmotionSummary;
 import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryRepository;
@@ -39,6 +41,7 @@ public class MemberService {
     private final OAuthService oAuthService;
     private final EmotionRepository emotionRepository;
     private final MemberEmotionSummaryRepository memberEmotionSummaryRepository;
+    private final MemberEmotionSummaryRepository emotionSummaryRepository;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -284,4 +287,59 @@ public class MemberService {
                 .orElse(EmotionType.NEUTRAL);
     }
 
+    @Transactional
+    public MemberEmotionSummaryResponseDTO saveInitialEmotionSummary(
+            MemberEmotionSummaryRequestDTO dto
+    ) {
+        // 사용자 조회
+        Member member = memberRepository.findById(dto.getMemberId())
+            .orElseThrow(() -> new NotFoundException(
+                "사용자를 찾을 수 없습니다."));
+
+        // 중복 등록 방지
+        if (emotionSummaryRepository.existsByMemberId(member.getId())) {
+            throw new BadRequestException("이미 감정 상태가 등록되어 있습니다.");
+        }
+
+        // 대표 감정 계산 (가장 점수가 높은 타입)
+        EmotionType rep = findMaxEmotion(
+            dto.getJoy(), dto.getSadness(), dto.getFear(),
+            dto.getAnger(), dto.getNeutral()
+            );
+
+        // 엔티티 생성 및 저장
+        MemberEmotionSummary summary = MemberEmotionSummary.builder()
+            .member(member)
+            .joy(dto.getJoy())
+            .sadness(dto.getSadness())
+            .fear(dto.getFear())
+            .anger(dto.getAnger())
+            .neutral(dto.getNeutral())
+            .repEmotionType(rep)
+            .build();
+
+        emotionSummaryRepository.save(summary);
+
+        // 결과 DTO 반환
+        return MemberEmotionSummaryResponseDTO.builder()
+            .memberId(member.getId())
+            .repEmotion(rep.name())
+            .build();
+    }
+
+    public static EmotionType findMaxEmotion(
+                Float joy, Float sadness, Float fear,
+                Float anger, Float neutral
+        ) {
+            return Map.<EmotionType, Float>of(
+                EmotionType.JOY,    joy,
+                EmotionType.SADNESS,sadness,
+                EmotionType.FEAR,   fear,
+                EmotionType.ANGER,  anger,
+                EmotionType.NEUTRAL,neutral
+            ).entrySet().stream()
+             .max(Map.Entry.comparingByValue())
+             .orElseThrow()  // 혹은 기본값 설정
+             .getKey();
+        }
 }

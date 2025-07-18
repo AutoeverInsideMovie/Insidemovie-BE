@@ -76,3 +76,4 @@ public class MovieController {
         return ApiResponse.success_only(SuccessStatus.SEND_MOVIE_LIKE_SUCCESS);
     }
 }
+

@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Builder
 public class ReviewCreateDTO {
 
-    private Long movieId;
     private String content;
     private double rating;
     private boolean spoiler;

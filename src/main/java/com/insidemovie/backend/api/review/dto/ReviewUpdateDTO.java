@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Builder
 public class ReviewUpdateDTO {
 
-    private Long reviewId;
     private String content;
     private double rating;
     private boolean spoiler;

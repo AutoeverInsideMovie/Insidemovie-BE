@@ -7,8 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface MovieLikeRepository extends JpaRepository<MovieLike, Long> {
     // 특정 회원이 좋아요 한 영화 목록을 페이징하여 조회
     Page<MovieLike> findByMember(Member member, Pageable pageable);
+
+    // 영화 좋아요 여부 확인
+    Optional<MovieLike> findByMovie_IdAndMember_Id(Long movieId, Long memberId);
 }

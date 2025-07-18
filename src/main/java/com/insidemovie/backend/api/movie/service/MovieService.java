@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -372,6 +373,51 @@ public class MovieService {
                 dto.setDominantEmotion("NONE");
                 return dto;
             });
+    }
 
+    /**
+     * DB에 저장된 영화를 popularity 내림차순으로 페이징 조회하여
+     * SearchMovieWrapperDTO 형태로 반환
+     */
+    public SearchMovieWrapperDTO getPopularMovies(int page, int pageSize) {
+        int zeroBasedPage = page > 0 ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(
+            zeroBasedPage,
+            pageSize,
+            Sort.by(Sort.Direction.DESC, "popularity")
+        );
+
+        Page<Movie> moviePage = movieRepository.findAllByOrderByPopularityDesc(pageable);
+
+        List<SearchMovieResponseDTO> results = moviePage.stream()
+            .map(this::convertEntityToSearchMovieResponseDTO)
+            .collect(Collectors.toList());
+
+        SearchMovieWrapperDTO wrapper = new SearchMovieWrapperDTO();
+        wrapper.setPage(page);
+        wrapper.setResults(results);
+        wrapper.setTotalPages(moviePage.getTotalPages());
+        wrapper.setTotalResults((int) moviePage.getTotalElements());
+        return wrapper;
+    }
+
+    /**
+     * Movie 엔티티를 TMDB SearchMovieResponseDTO 형태로 매핑
+     */
+    private SearchMovieResponseDTO convertEntityToSearchMovieResponseDTO(Movie movie) {
+        SearchMovieResponseDTO dto = new SearchMovieResponseDTO();
+        dto.setId(movie.getTmdbMovieId());
+        dto.setTitle(movie.getTitle());
+        dto.setOverview(movie.getOverview());
+        dto.setPosterPath(movie.getPosterPath());
+        dto.setBackDropPath(movie.getBackdropPath());
+        dto.setVoteAverage(movie.getVoteAverage());
+        dto.setVoteCount(movie.getVoteCount());
+        dto.setReleaseDate(movie.getReleaseDate());
+        dto.setOriginalLanguage(movie.getOriginalLanguage());
+        dto.setPopularity(movie.getPopularity());
+        // DB에는 adult 정보가 없으므로 기본값 false 설정
+        dto.setAdult(false);
+        return dto;
     }
 }

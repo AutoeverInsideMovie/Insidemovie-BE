@@ -44,6 +44,7 @@ public enum SuccessStatus {
     UPDATE_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "사용자 감정 상태 업데이트 완료"),
     UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 변경 성공"),
     CHECK_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 중복 여부 확인 성공"),
+    SEND_POPULAR_MOVIES_SUCCESS(HttpStatus.OK, "인기 영화 조회 성공"),
 
 
 

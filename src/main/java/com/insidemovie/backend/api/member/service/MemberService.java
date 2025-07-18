@@ -63,7 +63,7 @@ public class MemberService {
     }
 
     @Transactional
-    public Map<String, Object> kakaoLogin(String kakaoAccessToken) {
+    public Map<String, Object> kakaoSignup(String kakaoAccessToken, String nickname) {
 
         // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
         if (kakaoAccessToken == null || kakaoAccessToken.isBlank()) {
@@ -74,8 +74,15 @@ public class MemberService {
         KakaoUserInfoDto userInfo = oAuthService.getKakaoUserInfo(kakaoAccessToken);
 
         // 사용자 정보 저장
-        Member member = memberRepository.findBySocialId(userInfo.getId())
-                .orElseGet(() -> kakaoRegister(userInfo));  // 없으면 회원가입
+        Member member = Member.builder()
+                .socialId(userInfo.getId())
+                .email("kakao_" + userInfo.getId() + "@social.com")
+                .nickname(nickname)
+                .socialType("KAKAO")
+                .authority(Authority.ROLE_USER)
+                .build();
+
+        memberRepository.save(member);
 
         // 인증 객체 생성 (비밀번호 없이 Social 인증 사용자용)
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -97,17 +104,39 @@ public class MemberService {
         return result;
     }
 
-    // 새 유저 회원가입 처리
-    private Member kakaoRegister(KakaoUserInfoDto dto) {
-        Member member = Member.builder()
-                .socialId(dto.getId())
-                .email("kakao_" + dto.getId() + "@social.com")
-                .nickname(dto.getNickname())
-                .socialType("KAKAO")
-                .authority(Authority.ROLE_USER)
-                .build();
+    @Transactional
+    public Map<String, Object> kakaoLogin(String kakaoAccessToken) {
 
-        return memberRepository.save(member);
+        // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
+        if (kakaoAccessToken == null || kakaoAccessToken.isBlank()) {
+            throw new BadRequestException(ErrorStatus.KAKAO_LOGIN_FAILED.getMessage());
+        }
+
+        // 카카오 액세스 토큰을 사용해서 사용자 정보 가져오기
+        KakaoUserInfoDto userInfo = oAuthService.getKakaoUserInfo(kakaoAccessToken);
+
+        // 사용자 정보 저장
+        Member member = memberRepository.findBySocialId(userInfo.getId())
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        // 인증 객체 생성 (비밀번호 없이 Social 인증 사용자용)
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                member.getEmail(), null,
+                List.of(() -> "ROLE_USER")
+        );
+
+        // JWT 발급
+        String accessToken = jwtProvider.generateAccessToken(authentication);
+        String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
+
+        member.updateRefreshtoken(refreshToken);
+
+        // 로그인 시 응답 데이터 구성
+        Map<String, Object> result = new HashMap<>();
+        result.put("accessToken", accessToken);
+        result.put("refreshToken", refreshToken);
+
+        return result;
     }
 
     @Transactional

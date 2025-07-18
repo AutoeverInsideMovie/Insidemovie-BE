@@ -62,7 +62,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 안함 (JWT 대비용)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/api-doc").permitAll() // H2, Swagger 인증 허용
-                        .requestMatchers("/api/v1/member/signup", "/api/v1/member/reissue", "/api/v1/member/login", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue").permitAll() // 회원가입, 로그인 인증 허용
+                        .requestMatchers("/api/v1/member/signup", "/api/v1/member/reissue", "/api/v1/member/login", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/kakao-signup", "/api/v1/member/token-reissue").permitAll() // 회원가입, 로그인 인증 허용
                         .requestMatchers(HttpMethod.POST, "/api/v1/report/**").hasRole("USER")
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/review/*").permitAll() // 영화에 대한 리뷰 목록 요청 허용

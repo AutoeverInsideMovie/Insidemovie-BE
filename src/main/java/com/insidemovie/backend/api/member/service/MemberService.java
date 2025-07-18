@@ -287,6 +287,7 @@ public class MemberService {
                 .orElse(EmotionType.NEUTRAL);
     }
 
+    // 초기 사용자 감정 상태 저장
     @Transactional
     public MemberEmotionSummaryResponseDTO saveInitialEmotionSummary(
             MemberEmotionSummaryRequestDTO dto
@@ -318,13 +319,8 @@ public class MemberService {
             .repEmotionType(rep)
             .build();
 
-        emotionSummaryRepository.save(summary);
-
-        // 결과 DTO 반환
-        return MemberEmotionSummaryResponseDTO.builder()
-            .memberId(member.getId())
-            .repEmotion(rep)
-            .build();
+        MemberEmotionSummary saved = emotionSummaryRepository.save(summary);
+        return MemberEmotionSummaryResponseDTO.fromEntity(saved);
     }
 
     public static EmotionType findMaxEmotion(

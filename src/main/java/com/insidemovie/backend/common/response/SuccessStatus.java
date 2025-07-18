@@ -37,6 +37,7 @@ public enum SuccessStatus {
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
     SEND_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "내 감정 평균 조회 성공"),
     SEND_MOVIE_EMOTION_SUCCESS(HttpStatus.OK, "영화 감정 상태 조회 성공"),
+    SEND_INITIAL_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "초기 감정 상태 등록 완료"),
 
 
     /** 201 CREATED */

@@ -38,10 +38,12 @@ public enum SuccessStatus {
     SEND_WEEKLY_BOXOFFICE_SUCCESS(HttpStatus.OK, "주간 박스오피스 조회 성공"),
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
     SEND_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "내 감정 평균 조회 성공"),
+    SEARCH_MOVIES_SUCCESS(HttpStatus.OK, "영화 검색 성공"),
     SEND_MOVIE_EMOTION_SUCCESS(HttpStatus.OK, "영화 감정 상태 조회 성공"),
     SEND_INITIAL_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "초기 감정 상태 등록 완료"),
     UPDATE_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "사용자 감정 상태 업데이트 완료"),
     UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 변경 성공"),
+
 
 
     /** 201 CREATED */

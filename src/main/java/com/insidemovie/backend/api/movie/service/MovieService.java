@@ -1,24 +1,34 @@
 package com.insidemovie.backend.api.movie.service;
-
+import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+
 import com.insidemovie.backend.api.movie.dto.GenreDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
+import com.insidemovie.backend.api.movie.entity.Genre;
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
+
 import com.insidemovie.backend.api.movie.repository.GenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepository;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+
 import com.insidemovie.backend.api.review.repository.EmotionRepository;
+
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -120,6 +130,22 @@ public class MovieService {
         applyDetailToMovie(movie, detail);
         movieRepository.save(movie);
 
+        movieGenreRepository.deleteByMovie(movie);
+        //새 매핑 생성: DTO→enum→MovieGenre
+        detail.getGenres().stream()
+                .map(GenreDto::getId)                  // List<Long>
+                .map(Long::intValue)                   // int
+                .map(id -> GenreType.fromId(id)        // TMDB ID → GenreType enum
+                        .orElseThrow(() ->
+                                new NotFoundException("Unknown Genre ID: " + id)))
+                .forEach(gt -> {
+                    MovieGenre mg = MovieGenre.builder()
+                            .movie(movie)
+                            .genreType(gt)                  // @Enumerated(EnumType.STRING) 필드
+                            .build();
+                    movieGenreRepository.save(mg);
+                });
+
         log.info("[TMDB 연동] 저장 완료: TMDB ID={}", tmdbId);
     }
 
@@ -147,11 +173,12 @@ public class MovieService {
         movie.updateReleaseDate(detail.getReleaseDate());
         movie.updatePopularity(detail.getPopularity());
 
+
         // 장르 ID 리스트
-        List<Long> genreIds = detail.getGenres().stream()
-            .map(GenreDto::getId)
-            .collect(Collectors.toList());
-        movie.updateGenreIds(genreIds);
+//        List<Long> genreIds = detail.getGenres().stream()
+//            .map(GenreDto::getId)
+//            .collect(Collectors.toList());
+//        movie.updateGenreIds(genreIds);
 
         movie.setTitleEn(detail.getOriginalTitle());
 
@@ -218,11 +245,57 @@ public class MovieService {
             || !Objects.equals(movie.getPosterPath(), dto.getPosterPath())
             || !Objects.equals(movie.getBackdropPath(), dto.getBackDropPath())
             || !Objects.equals(movie.getVoteAverage(), dto.getVoteAverage())
-            || !Objects.equals(movie.getGenreIds(), dto.getGenreIds())
+            //|| !Objects.equals(movie.getGenreIds(), dto.getGenreIds())
             || !Objects.equals(movie.getOriginalLanguage(), dto.getOriginalLanguage())
             || !Objects.equals(movie.getReleaseDate(),
                 dto.getReleaseDate() != null ? dto.getReleaseDate() : null);
     }
+
+
+    public PageResDto<MovieSearchResDto> movieSearchTitle(String title, Integer page, Integer pageSize){
+        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+
+        Page<Movie> movies = movieRepository.findByTitleContainingIgnoreCase(title, pageable);
+        if(movies.isEmpty()){
+            throw new NotFoundException("제목이 '" + title + "'인 영화를 찾을 수 없습니다.");
+        }
+        Page<MovieSearchResDto> movieSearchResDtos = movies.map(this::convertEntityToDto);
+        return new PageResDto<>(movieSearchResDtos);
+    }
+    /*
+     * TODO: 영화 장르와, 타이틀로 검색했을때 검색되도록
+     *   - "액"이 포함된 영화 타이틀을 검색하고 싶어도 액션으로 인식되어 액션 영화 나옴
+     *   - 수정 방안 생각중
+     */
+    public PageResDto<MovieSearchResDto> searchByQuery(String q, Integer page, Integer pageSize) {
+        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+        // 1) q로 매칭되는 GenreType 리스트
+        List<GenreType> matched = Arrays.stream(GenreType.values())
+                .filter(gt -> gt.name().contains(q))
+                .toList();
+
+        Page<Movie> moviePage;
+        if (!matched.isEmpty()) {
+            // 장르 검색: MovieGenre 페이지 조회 → Movie 페이지로 변환
+            Page<MovieGenre> mgPage = movieGenreRepository.findByGenreTypeIn(matched, pageable);
+            moviePage = mgPage.map(MovieGenre::getMovie);
+        } else {
+            // 제목 검색
+            moviePage = movieRepository.findByTitleContainingIgnoreCase(q, pageable);
+        }
+        Page<MovieSearchResDto> dto = moviePage.map(this::convertEntityToDto);
+        return new PageResDto<>(dto);
+    }
+
+    private MovieSearchResDto convertEntityToDto(Movie movie){
+        MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
+        movieSearchResDto.setId(movie.getId());
+        movieSearchResDto.setTitle(movie.getTitle());
+        movieSearchResDto.setPosterPath(movie.getPosterPath());
+        movieSearchResDto.setVoteAverage(movie.getVoteAverage());
+        return movieSearchResDto;
 
     // 영화에 달린 리뷰들의 감정 평균 조회
     @Transactional
@@ -298,5 +371,6 @@ public class MovieService {
                 dto.setDominantEmotion("NONE");
                 return dto;
             });
+
     }
 }

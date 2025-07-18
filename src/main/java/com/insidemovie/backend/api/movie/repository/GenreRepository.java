@@ -9,6 +9,5 @@ import java.util.Optional;
 @Repository
 public interface GenreRepository extends JpaRepository<Genre,Long> {
     boolean existsByTmdbMovieId(Long tmdbId); //존재여부 체크
-    List<Genre> findAllByTmdbMovieIdIn(List<Long> tmdbMovieIds);
-    Optional<Genre> findByTmdbMovieId(Long tmdbId);
+    Optional<Genre> existsByGenreNm(String genre);
 }

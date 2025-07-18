@@ -98,6 +98,12 @@ public class SecurityConfig {
                         "/api/v1/member/signup/emotion"
                 ).permitAll()
 
+                // Public PATCH
+                .requestMatchers(
+                        HttpMethod.PATCH,
+                        "/api/v1/member/emotion/**"
+                ).permitAll()
+
                 // All other requests require authentication
                 .anyRequest().authenticated()
             )

@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class MovieController {
     private final MovieService movieService;
     private final MovieDetailService movieDetailService;
-    private final MovieService movieService;
 
     @Operation(summary = "영화 상세 조회", description = "TMDB ID로 영화 상세정보를 조회합니다")
     @GetMapping("/detail/{tmdbId}")

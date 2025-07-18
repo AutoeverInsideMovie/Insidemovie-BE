@@ -4,6 +4,7 @@ import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.GenreDto;
+import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
@@ -21,7 +22,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
@@ -38,7 +38,7 @@ public class MovieService {
     private final RestTemplate restTemplate;
     private final GenreRepository genreRepository;
     private final MovieGenreRepository movieGenreRepository;
-    private final EmotionRepository emotionRepository;
+    private final EmotionRepository emotionRepository
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
 
     @Value("${tmdb.api.base-url}")
@@ -271,4 +271,32 @@ public class MovieService {
                 .orElse(EmotionType.NEUTRAL);
     }
 
+    /**
+     * 영화에 저장된 5가지 감정 상태를 조회해 DTO로 반환
+     */
+    @Transactional
+    public MovieEmotionSummaryResponseDTO getMovieEmotions(Long movieId) {
+        return movieEmotionSummaryRepository.findByMovieId(movieId)
+            .map(summary -> {
+                MovieEmotionSummaryResponseDTO dto = new MovieEmotionSummaryResponseDTO();
+                dto.setJoy(summary.getJoy());
+                dto.setSadness(summary.getSadness());
+                dto.setFear(summary.getFear());
+                dto.setAnger(summary.getAnger());
+                dto.setNeutral(summary.getNeutral());
+                dto.setDominantEmotion(summary.getDominantEmotion().name());
+                return dto;
+            })
+            .orElseGet(() -> {
+                // 데이터가 없을 때 빈 DTO 반환
+                MovieEmotionSummaryResponseDTO dto = new MovieEmotionSummaryResponseDTO();
+                dto.setJoy(0f);
+                dto.setSadness(0f);
+                dto.setFear(0f);
+                dto.setAnger(0f);
+                dto.setNeutral(0f);
+                dto.setDominantEmotion("NONE");
+                return dto;
+            });
+    }
 }

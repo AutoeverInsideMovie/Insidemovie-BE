@@ -2,13 +2,11 @@ package com.insidemovie.backend.api.member.controller;
 
 import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
-import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
 import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;
 import com.insidemovie.backend.api.movie.service.MovieLikeService;
-import com.insidemovie.backend.api.review.controller.ReviewController;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.response.ApiResponse;
@@ -18,7 +16,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,7 +26,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController
@@ -38,9 +34,6 @@ import java.util.Map;
 @Tag(name="Member", description = "Member 관련 API 입니다.")
 public class MemberController {
     private final MemberService memberService;
-    private final MemberRepository memberRepository;
-    private final JwtProvider jwtProvider;
-    private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
     private final ReviewService reviewService;
     private final MovieLikeService movieLikeService;

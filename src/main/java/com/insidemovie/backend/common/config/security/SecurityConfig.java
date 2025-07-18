@@ -79,7 +79,7 @@ public class SecurityConfig {
                 // Role-based
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                // Public POST
+                // USER POST
                 .requestMatchers(
                         HttpMethod.POST,
                         "/api/v1/report/**"
@@ -90,6 +90,12 @@ public class SecurityConfig {
                         HttpMethod.GET,
                         "/api/v1/review/**",
                         "/api/v1/movies/**"
+                ).permitAll()
+
+                // Public POST
+                .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/v1/member/signup/emotion"
                 ).permitAll()
 
                 // All other requests require authentication

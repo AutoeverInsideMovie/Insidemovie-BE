@@ -5,6 +5,8 @@ import com.insidemovie.backend.api.constant.Authority;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
+import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
+import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.entity.MemberEmotionSummary;
 import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryRepository;
@@ -14,6 +16,7 @@ import com.insidemovie.backend.common.exception.BadRequestException;
 import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,9 +29,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +41,7 @@ public class MemberService {
     private final OAuthService oAuthService;
     private final EmotionRepository emotionRepository;
     private final MemberEmotionSummaryRepository memberEmotionSummaryRepository;
+    private final MemberEmotionSummaryRepository emotionSummaryRepository;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -318,4 +321,109 @@ public class MemberService {
                 .orElse(EmotionType.NEUTRAL);
     }
 
+    // 초기 사용자 감정 상태 저장
+    @Transactional
+    public MemberEmotionSummaryResponseDTO saveInitialEmotionSummary(
+            MemberEmotionSummaryRequestDTO dto
+    ) {
+        // 사용자 조회
+        Member member = memberRepository.findById(dto.getMemberId())
+            .orElseThrow(() -> new NotFoundException(
+                "사용자를 찾을 수 없습니다."));
+
+        // 중복 등록 방지
+        if (emotionSummaryRepository.existsByMemberId(member.getId())) {
+            throw new BadRequestException("이미 감정 상태가 등록되어 있습니다.");
+        }
+
+        // 대표 감정 계산 (가장 점수가 높은 타입)
+        EmotionType rep = findMaxEmotion(
+            dto.getJoy(), dto.getSadness(), dto.getFear(),
+            dto.getAnger(), dto.getNeutral()
+            );
+
+        // 엔티티 생성 및 저장
+        MemberEmotionSummary summary = MemberEmotionSummary.builder()
+            .member(member)
+            .joy(dto.getJoy())
+            .sadness(dto.getSadness())
+            .fear(dto.getFear())
+            .anger(dto.getAnger())
+            .neutral(dto.getNeutral())
+            .repEmotionType(rep)
+            .build();
+
+        MemberEmotionSummary saved = emotionSummaryRepository.save(summary);
+        return MemberEmotionSummaryResponseDTO.fromEntity(saved);
+    }
+
+    public static EmotionType findMaxEmotion(
+                Float joy, Float sadness, Float fear,
+                Float anger, Float neutral
+        ) {
+            return Map.<EmotionType, Float>of(
+                EmotionType.JOY,    joy,
+                EmotionType.SADNESS,sadness,
+                EmotionType.FEAR,   fear,
+                EmotionType.ANGER,  anger,
+                EmotionType.NEUTRAL,neutral
+            ).entrySet().stream()
+             .max(Map.Entry.comparingByValue())
+             .orElseThrow()  // 혹은 기본값 설정
+             .getKey();
+        }
+
+    /**
+     * 기존 MemberEmotionSummary를 조회 후,
+     * 요청으로 받은 5개 감정 값과 평균 내어 저장하고 반환.
+     */
+    @Transactional
+    public MemberEmotionSummaryResponseDTO updateEmotionSummary(MemberEmotionSummaryRequestDTO dto) {
+        // 기존 엔티티 조회
+        MemberEmotionSummary summary = memberEmotionSummaryRepository
+            .findById(dto.getMemberId())
+            .orElseThrow(() -> new EntityNotFoundException("MemberEmotionSummary not found for id=" + dto.getMemberId()));
+
+        // 필드별 평균 계산 → EmotionAvgDTO 생성
+        double avgJoy     = avg(summary.getJoy(),     dto.getJoy());
+        double avgSadness = avg(summary.getSadness(), dto.getSadness());
+        double avgAnger   = avg(summary.getAnger(),   dto.getAnger());
+        double avgFear    = avg(summary.getFear(),    dto.getFear());
+        double avgNeutral = avg(summary.getNeutral(), dto.getNeutral());
+
+        // 대표 감정 타입은 평균 값 중 최대인 것으로 판단
+        EmotionType repType = Stream.of(
+                new AbstractMap.SimpleEntry<>(EmotionType.JOY,     avgJoy),
+                new AbstractMap.SimpleEntry<>(EmotionType.SADNESS, avgSadness),
+                new AbstractMap.SimpleEntry<>(EmotionType.ANGER,   avgAnger),
+                new AbstractMap.SimpleEntry<>(EmotionType.FEAR,    avgFear),
+                new AbstractMap.SimpleEntry<>(EmotionType.NEUTRAL, avgNeutral)
+            )
+            .max(Comparator.comparingDouble(Map.Entry::getValue))
+            .map(Map.Entry::getKey)
+            .orElse(EmotionType.NEUTRAL);
+
+        EmotionAvgDTO avgDto = EmotionAvgDTO.builder()
+            .joy(avgJoy)
+            .sadness(avgSadness)
+            .anger(avgAnger)
+            .fear(avgFear)
+            .neutral(avgNeutral)
+            .repEmotionType(repType)
+            .build();
+
+        // 엔티티에 한 번에 반영
+        summary.updateFromDTO(avgDto);
+
+        // 저장
+        MemberEmotionSummary updated = memberEmotionSummaryRepository.save(summary);
+
+        // DTO 변환 후 반환
+        return MemberEmotionSummaryResponseDTO.fromEntity(updated);
+    }
+
+    // 두 값의 평균 (소수점 유지)
+    private double avg(double a, double b) {
+        return (a + b) / 2.0;
+    }
 }

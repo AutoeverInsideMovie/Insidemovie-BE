@@ -13,6 +13,7 @@ public enum SuccessStatus {
     SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
     SEND_TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
     SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
+    SEND_KAKAO_REGISTER_SUCCESS(HttpStatus.OK, "카카오 회원가입 성공"),
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
     SEND_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 목록 조회 성공"),
     MODIFY_REVIEW_SUCCESS(HttpStatus.OK,"리뷰 수정 성공"),
@@ -22,11 +23,13 @@ public enum SuccessStatus {
     UPDATE_PASSWORD_SUCCESS(HttpStatus.OK, "비밀번호 수정 성공"),
     SEND_REVIEW_LIKE_SUCCESS(HttpStatus.OK, "리뷰 좋아요 토글 성공"),
     SEND_MY_REVIEW_SUCCESS(HttpStatus.OK, "내 리뷰 목록 조회 성공"),
+    SEND_MY_MOVIE_SUCCESS(HttpStatus.OK, "내 영화 좋아요 목록 조회 성공"),
     REPORT_CREATE_SUCCESS(HttpStatus.OK, "신고 접수 성공"),
     SEND_MEMBER_LIST_SUCCESS(HttpStatus.OK, "사용자 목록 조회 성공"),
     MEMBER_BAN_SUCCESS(HttpStatus.OK, "회원 정지 성공"),
     MEMBER_UNBAN_SUCCESS(HttpStatus.OK, "회원 정지 해제 성공"),
     SEND_MOVIE_DETAIL_SUCCESS(HttpStatus.OK, "영화 상세 조회 성공"),
+    SEND_MOVIE_LIKE_SUCCESS(HttpStatus.OK, "영화 좋아요 토글 성공"),
     SEND_REPORT_LIST_SUCCESS(HttpStatus.OK, "신고 목록 조회 성공"),
     REPORT_ACCEPTED(HttpStatus.OK, "신고 수용 성공"),
     REPORT_REJECTED(HttpStatus.OK, "신고 수용 기각"),
@@ -36,6 +39,10 @@ public enum SuccessStatus {
     LOGOUT_SUCCESS(HttpStatus.OK, "로그아웃 성공."),
     SEND_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "내 감정 평균 조회 성공"),
     SEARCH_MOVIES_SUCCESS(HttpStatus.OK, "영화 검색 성공"),
+    SEND_MOVIE_EMOTION_SUCCESS(HttpStatus.OK, "영화 감정 상태 조회 성공"),
+    SEND_INITIAL_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "초기 감정 상태 등록 완료"),
+    UPDATE_EMOTION_SUMMARY_SUCCESS(HttpStatus.OK, "사용자 감정 상태 업데이트 완료"),
+    UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 변경 성공"),
 
 
 

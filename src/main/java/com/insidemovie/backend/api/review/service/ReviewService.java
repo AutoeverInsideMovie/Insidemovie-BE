@@ -43,14 +43,14 @@ public class ReviewService {
 
     // 리뷰 작성 메서드
     @Transactional
-    public Long createReview(ReviewCreateDTO reviewCreateDTO, String memberEmail) {
+    public Long createReview(Long movieId, ReviewCreateDTO reviewCreateDTO, String memberEmail) {
 
         // 사용자 조회
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 영화 조회
-        Movie movie = movieRepository.findById(reviewCreateDTO.getMovieId())
+        Movie movie = movieRepository.findById(movieId)
             .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         // 기존에 작성한 리뷰가 있다면 예외 처리 (중복 방지)
@@ -179,14 +179,14 @@ public class ReviewService {
 
     // 리뷰 수정 메서드
     @Transactional
-    public void modifyReview(ReviewUpdateDTO reviewUpdateDTO, String memberEmail) {
+    public void modifyReview(Long reviewId, ReviewUpdateDTO reviewUpdateDTO, String memberEmail) {
 
         // 사용자 조회
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 리뷰 존재 여부 확인
-        Review review = reviewRepository.findById(reviewUpdateDTO.getReviewId())
+        Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
 
         // 작성자 본인인지 확인

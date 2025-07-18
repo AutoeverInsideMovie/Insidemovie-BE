@@ -3,6 +3,7 @@ package com.insidemovie.backend.api.admin.service;
 import com.insidemovie.backend.api.admin.dto.AdminDashboardDTO;
 import com.insidemovie.backend.api.admin.dto.AdminMemberDTO;
 import com.insidemovie.backend.api.admin.dto.AdminReportDTO;
+import com.insidemovie.backend.api.admin.dto.TimeCountDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.report.entity.Report;
@@ -17,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -89,15 +92,47 @@ public class AdminService {
     }
 
     // 대시보드 요약
+    @Transactional
     public AdminDashboardDTO getDashboardSummary() {
+
+        Long totalMembers = memberRepository.count();
+        Long bannedMembers = memberRepository.countByIsBannedTrue();
+        Long totalReviews = reviewRepository.count();
+        Long concealedReviews = reviewRepository.countByIsConcealedTrue();
+        Long unprocessedReports = reportRepository.countByStatus(ReportStatus.UNPROCESSED);
+
+        // 일별/월별 통계 변환
+        List<TimeCountDTO> dailyMemberCounts = mapToTimeCountDTO(memberRepository.countMembersDaily());
+        List<TimeCountDTO> monthlyMemberCounts = mapToTimeCountDTO(memberRepository.countMembersMonthly());
+
+        List<TimeCountDTO> dailyReviewCounts = mapToTimeCountDTO(reviewRepository.countReviewsDaily());
+        List<TimeCountDTO> monthlyReviewCounts = mapToTimeCountDTO(reviewRepository.countReviewsMonthly());
+
+        List<TimeCountDTO> dailyReportCounts = mapToTimeCountDTO(reportRepository.countReportsDaily());
+        List<TimeCountDTO> monthlyReportCounts = mapToTimeCountDTO(reportRepository.countReportsMonthly());
+
         return AdminDashboardDTO.builder()
                 .totalMembers(memberRepository.count())
                 .bannedMembers(memberRepository.countByIsBannedTrue())
                 .totalReviews(reviewRepository.count())
                 .concealedReviews(reviewRepository.countByIsConcealedTrue())
                 .unprocessedReports(reportRepository.countByStatus(ReportStatus.UNPROCESSED))
+
+                .dailyMemberCounts(dailyMemberCounts)
+                .monthlyMemberCounts(monthlyMemberCounts)
+                .dailyReviewCounts(dailyReviewCounts)
+                .monthlyReviewCounts(monthlyReviewCounts)
+                .dailyReportCounts(dailyReportCounts)
+                .monthlyReportCounts(monthlyReportCounts)
                 .build();
     }
 
-
+    private List<TimeCountDTO> mapToTimeCountDTO(List<Object[]> results) {
+        return results.stream()
+                .map(obj -> TimeCountDTO.builder()
+                        .date(obj[0].toString())
+                        .count(((Number) obj[1]).longValue())
+                        .build()
+                ).toList();
+    }
 }

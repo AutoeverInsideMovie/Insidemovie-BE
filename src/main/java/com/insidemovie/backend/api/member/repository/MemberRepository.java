@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
@@ -31,4 +32,24 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying
     @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.email = :email")
     int clearRefreshTokenByUserEmail(@Param("email") String email);
+
+    // 일별 가입 수
+    @Query(value = """
+        SELECT DATE(created_at) AS date, COUNT(*) AS count
+        FROM member
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+        """, nativeQuery = true)
+    List<Object[]> countMembersDaily();
+
+    // 월별 가입 수
+    @Query(value = """
+        SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS count
+        FROM member
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+        """, nativeQuery = true)
+    List<Object[]> countMembersMonthly();
 }

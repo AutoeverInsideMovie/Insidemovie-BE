@@ -12,6 +12,7 @@ import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.service.MovieLikeService;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
+import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.PageResult;
@@ -180,13 +181,13 @@ public class MemberController {
     // 내가 작성한 리뷰 조회
     @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
     @GetMapping("/my-review")
-    public ResponseEntity<ApiResponse<PageResult<MyReviewResponseDTO>>> getMyReviews(
+
+    public ResponseEntity<ApiResponse<PageResDto<ReviewResponseDTO>>> getMyReviews(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int pageSize) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<MyReviewResponseDTO> pageData = reviewService.getMyReviews(userDetails.getUsername(), pageable);
+        PageResDto<ReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), page, pageSize);
 
         return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, PageResult.of(pageData));
     }

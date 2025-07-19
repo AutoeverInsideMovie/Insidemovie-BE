@@ -22,5 +22,5 @@ public class MemberEmotionSummaryRequestDTO {
     private Float anger;
 
     @NotNull @Min(0) @Max(1)
-    private Float neutral;
+    private Float disgust;
 }

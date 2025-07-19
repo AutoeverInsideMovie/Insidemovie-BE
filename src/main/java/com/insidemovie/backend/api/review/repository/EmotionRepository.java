@@ -18,7 +18,7 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
             COALESCE(AVG(e.sadness), 0.0),
             COALESCE(AVG(e.anger), 0.0),
             COALESCE(AVG(e.fear), 0.0),
-            COALESCE(AVG(e.neutral), 0.0)
+            COALESCE(AVG(e.disgust), 0.0)
         )
         FROM Emotion e
         WHERE e.review.member.id = :memberId
@@ -31,7 +31,7 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
             COALESCE(AVG(e.sadness), 0.0),
             COALESCE(AVG(e.anger), 0.0),
             COALESCE(AVG(e.fear), 0.0),
-            COALESCE(AVG(e.neutral), 0.0)
+            COALESCE(AVG(e.disgust), 0.0)
         )
         FROM Emotion e
         WHERE e.review.movie.id = :movieId

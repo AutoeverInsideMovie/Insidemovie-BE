@@ -27,7 +27,7 @@ public class EmotionRecommendationService {
                 "joy", userEmotion.getJoy(),
                 "anger", userEmotion.getAnger(),
                 "fear", userEmotion.getFear(),
-                "neutral", userEmotion.getNeutral(),
+                "disgust", userEmotion.getDisgust(),
                 "sadness", userEmotion.getSadness()
         ));
 
@@ -44,7 +44,7 @@ public class EmotionRecommendationService {
                             "sadness", movie.getSadness().doubleValue(),
                             "anger", movie.getAnger().doubleValue(),
                             "fear", movie.getFear().doubleValue(),
-                            "neutral", movie.getNeutral().doubleValue()
+                            "disgust", movie.getDisgust().doubleValue()
                     ));
 
                     // 유사도 계산
@@ -56,7 +56,7 @@ public class EmotionRecommendationService {
                         case SADNESS -> movie.getSadness().doubleValue();
                         case ANGER -> movie.getAnger().doubleValue();
                         case FEAR -> movie.getFear().doubleValue();
-                        case NEUTRAL -> movie.getNeutral().doubleValue();
+                        case DISGUST -> movie.getDisgust().doubleValue();
                     };
 
                     return new MovieRecommendationDTO(

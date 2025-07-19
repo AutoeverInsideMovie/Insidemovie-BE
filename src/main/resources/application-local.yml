@@ -20,5 +20,4 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: update # 개발 환경: update
-
+      ddl-auto: validate # 개발 환경: update

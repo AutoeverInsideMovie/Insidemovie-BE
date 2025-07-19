@@ -10,7 +10,7 @@ public class EmotionDTO {
     private Double anger;
     private Double fear;
     private Double joy;
-    private Double neutral;
+    private Double disgust;
     private Double sadness;
     private String repEmotion;
 }

@@ -251,14 +251,20 @@ public class MemberService {
     // 비밀번호 변경
     @Transactional
     public void updatePassword(String email, PasswordUpdateRequestDTO dto) {
-        if (!dto.getPassword().equals(dto.getConfirmPassword())) {
+        // 현재 비밀번호와 같은 경우 예외처리
+        if (dto.getPassword().equals(dto.getNewPassword())) {
+            throw new BadRequestException(ErrorStatus.PASSWORD_SAME_EXCEPTION.getMessage());
+        }
+
+        // 비밀번호랑 비밀번호 재확인 값이 다를 경우 예외처리
+        if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
             throw new BadRequestException(ErrorStatus.PASSWORD_MISMATCH_EXCEPTION.getMessage());
         }
 
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
-        String encoded = passwordEncoder.encode(dto.getPassword());
+        String encoded = passwordEncoder.encode(dto.getNewPassword());
         member.updatePassword(encoded);
     }
 

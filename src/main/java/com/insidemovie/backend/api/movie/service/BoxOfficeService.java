@@ -106,7 +106,7 @@ public class BoxOfficeService {
         String showRange = targetDt + "~" + targetDt;
         return BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
             .boxofficeType("일별")
-            .showRange(showRange)
+
             .items(items)
             .build();
     }
@@ -210,7 +210,6 @@ public class BoxOfficeService {
         // 6) 응답
         return BoxOfficeListDTO.<WeeklyBoxOfficeResponseDTO>builder()
             .boxofficeType("주간")
-            .showRange(yearWeek)
             .items(items)
             .build();
     }
@@ -285,7 +284,7 @@ public class BoxOfficeService {
 
         return BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
             .boxofficeType("일별")
-            .showRange(targetDt + "~" + targetDt)
+            .targetDt(targetDt)
             .items(items)
             .build();
     }
@@ -297,7 +296,7 @@ public class BoxOfficeService {
     public BoxOfficeListDTO<WeeklyBoxOfficeResponseDTO> getSavedWeeklyBoxOffice(
             String targetDt, String weekGb, int itemPerPage
     ) {
-        // 1) 파라미터가 없으면 가장 최근 저장된 yearWeekTime 조회
+        // 파라미터가 없으면 가장 최근 저장된 yearWeekTime 조회
         String yearWeek = Optional.ofNullable(targetDt)
             .filter(dt -> !dt.isBlank())
             .map(dt -> {
@@ -317,7 +316,7 @@ public class BoxOfficeService {
                               ))
             );
 
-        // 2) 페이징 조회
+        // 페이징 조회
         Pageable pageReq = PageRequest.of(0, itemPerPage, Sort.by("movieRank"));
         Page<WeeklyBoxOfficeEntity> page = weeklyRepo.findByYearWeekTime(yearWeek, pageReq);
 
@@ -334,7 +333,7 @@ public class BoxOfficeService {
 
         return BoxOfficeListDTO.<WeeklyBoxOfficeResponseDTO>builder()
             .boxofficeType("주간")
-            .showRange(yearWeek)
+            .targetDt(yearWeek)
             .items(items)
             .build();
     }

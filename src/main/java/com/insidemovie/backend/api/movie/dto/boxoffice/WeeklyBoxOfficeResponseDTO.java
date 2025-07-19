@@ -9,9 +9,6 @@ import lombok.Getter;
 @Builder
 public class WeeklyBoxOfficeResponseDTO {
     private BaseBoxOfficeItemDTO base;
-    private String yearWeekTime;
-    private String boxofficeType;
-    private String showRange;
 
     public static WeeklyBoxOfficeResponseDTO fromEntity(WeeklyBoxOfficeEntity e) {
         return WeeklyBoxOfficeResponseDTO.builder()
@@ -36,7 +33,6 @@ public class WeeklyBoxOfficeResponseDTO {
                 .scrnCnt(e.getScrnCnt())
                 .showCnt(e.getShowCnt())
                 .build())
-            .yearWeekTime(e.getYearWeekTime())
             .build();
     }
 }

@@ -5,6 +5,7 @@ import com.insidemovie.backend.api.constant.Authority;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.member.entity.Member;
@@ -19,7 +20,6 @@ import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

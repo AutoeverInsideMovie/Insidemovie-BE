@@ -1,9 +1,9 @@
 package com.insidemovie.backend.api.member.controller;
 
 import com.insidemovie.backend.api.member.dto.*;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
-import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
 import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;

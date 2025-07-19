@@ -5,7 +5,9 @@ import com.insidemovie.backend.api.review.dto.ReviewCreateDTO;
 import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
 import com.insidemovie.backend.api.review.dto.ReviewUpdateDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
+import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ApiResponse;
+import com.insidemovie.backend.common.response.ErrorStatus;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -54,6 +56,21 @@ public class ReviewController {
         Page<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageRequest, userEmail);
         return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, reviewPage);
     }
+
+    @Operation(summary = "내 리뷰 단건 조회", description = "영화에 대해 내가 작성한 리뷰(있으면)를 반환")
+    @GetMapping("/movies/{movieId}/reviews/my")
+    public ResponseEntity<ApiResponse<ReviewResponseDTO>> getMyReview(
+            @PathVariable Long movieId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        if (userDetails == null) {
+            throw new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage());
+        }
+
+        ReviewResponseDTO dto = reviewService.getMyReview(movieId, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, dto);
+    }
+
 
     @Operation(
             summary = "리뷰 수정 API", description = "리뷰를 수정 합니다.")

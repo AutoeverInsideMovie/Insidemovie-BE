@@ -26,6 +26,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 특정 회원이 작성한 리뷰 목록을 페이징하여 조회
     Page<Review> findByMember(Member member, Pageable pageable);
 
+    // 내 리뷰 제외
+    Page<Review> findByMovieAndIdNot(Movie movie, Long id, Pageable pageable);
+
     // 특정 회원이 작성한 리뷰 개수를 반환
     long countByMember(Member member);
 

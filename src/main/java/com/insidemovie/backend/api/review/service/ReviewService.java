@@ -177,6 +177,24 @@ public class ReviewService {
         });
     }
 
+    // 내 리뷰 단건 조회
+    @Transactional
+    public ReviewResponseDTO getMyReview(Long movieId, String memberEmail) {
+        if (memberEmail == null || memberEmail.isBlank()) {
+            throw new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage());
+        }
+
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+
+        Review review = reviewRepository.findByMemberAndMovie(member, movie)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
+
+        return toResponseDTO(review, member.getId());
+    }
+
     // 리뷰 수정 메서드
     @Transactional
     public void modifyReview(Long reviewId, ReviewUpdateDTO reviewUpdateDTO, String memberEmail) {
@@ -275,5 +293,50 @@ public class ReviewService {
         );
     }
 
+    private ReviewResponseDTO toResponseDTO(Review review, Long currentUserId) {
+        boolean myReview = (currentUserId != null && review.getMember().getId().equals(currentUserId));
+        boolean myLike = (currentUserId != null &&
+                reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), currentUserId));
+
+        EmotionDTO emotionDTO = emotionRepository.findByReviewId(review.getId())
+                .map(e -> {
+                    Map<String, Double> probs = Map.of(
+                            "anger", e.getAnger(),
+                            "fear", e.getFear(),
+                            "joy", e.getJoy(),
+                            "neutral", e.getNeutral(),
+                            "sadness", e.getSadness()
+                    );
+                    String rep = probs.entrySet().stream()
+                            .max(Map.Entry.comparingByValue())
+                            .map(Map.Entry::getKey)
+                            .orElse("neutral");
+                    return EmotionDTO.builder()
+                            .anger(probs.get("anger"))
+                            .fear(probs.get("fear"))
+                            .joy(probs.get("joy"))
+                            .neutral(probs.get("neutral"))
+                            .sadness(probs.get("sadness"))
+                            .repEmotion(rep)
+                            .build();
+                })
+                .orElse(null);
+
+        return ReviewResponseDTO.builder()
+                .reviewId(review.getId())
+                .content(review.getContent())
+                .rating(review.getRating())
+                .spoiler(review.isSpoiler())
+                .createdAt(review.getCreatedAt())
+                .likeCount(review.getLikeCount()) // 필요하면 review.getLikeCount()
+                .nickname(review.getMember().getNickname())
+                .memberId(review.getMember().getId())
+                .movieId(review.getMovie().getId())
+                .myReview(myReview)
+                .modify(review.isModify())
+                .myLike(myLike)
+                .emotion(emotionDTO)
+                .build();
+    }
 
 }

@@ -335,8 +335,8 @@ public class MovieService {
                 dto.getSadness() == 0.0 &&
                 dto.getAnger() == 0.0 &&
                 dto.getFear() == 0.0 &&
-                dto.getNeutral() == 0.0) {
-            return EmotionType.NEUTRAL;
+                dto.getDisgust() == 0.0) {
+            return EmotionType.DISGUST;
         }
 
         Map<EmotionType, Double> scores = Map.of(

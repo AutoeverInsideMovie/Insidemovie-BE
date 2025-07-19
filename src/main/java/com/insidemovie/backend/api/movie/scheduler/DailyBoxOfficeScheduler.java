@@ -32,6 +32,6 @@ public class DailyBoxOfficeScheduler {
             .itemPerPage(10)
             .build();
 
-        boxOfficeService.getDailyBoxOffice(req);
+        boxOfficeService.fetchAndStoreDailyBoxOffice(req);
     }
 }

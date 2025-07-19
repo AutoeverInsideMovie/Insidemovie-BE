@@ -5,7 +5,6 @@ import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieGenre;
-import com.insidemovie.backend.api.movie.repository.GenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieLikeRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
@@ -22,14 +21,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MovieDetailService {
     private final MovieRepository movieRepository;
-    private final GenreRepository genreRepository;
     private final MovieGenreRepository movieGenreRepository;
     private final MovieLikeRepository movieLikeRepository;
     private final MemberRepository memberRepository;
 
     //영화 상세 조회
     public MovieDetailResDto getMovieDetail(Long id){
-        Movie movie = movieRepository.findByTmdbMovieId(id)
+        Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         List<MovieGenre> genres = movieGenreRepository.findByMovieId(movie.getId());
@@ -56,7 +54,7 @@ public class MovieDetailService {
 
     //영화 상세 조회 - 로그인
     public MovieDetailResDto getMovieDetail(Long id, String userEmail) {
-        Movie movie = movieRepository.findByTmdbMovieId(id)
+        Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Member member = memberRepository.findByEmail(userEmail)

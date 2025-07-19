@@ -110,71 +110,51 @@ public class ReviewService {
             String memberEmail
     ) {
 
-        Long tempUserId = null;
-        if (memberEmail != null && !memberEmail.isBlank()) {
-            Optional<Member> opt = memberRepository.findByEmail(memberEmail.trim());
-            if (opt.isPresent()) {
-                tempUserId = opt.get().getId();
-            }
-        }
-        final Long userId = tempUserId;
-
         // 영화 조회
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
-        // 리뷰 목록 조회 (페이징)
-        Page<Review> reviews = reviewRepository.findByMovie(movie, pageable);
+        Long currentUserId = null;  // 로그인 사용자 ID
+        Long myReviewId = null;     // 내 리뷰가 있을 경우 그 리뷰 PK
 
-        // 리뷰 → DTO 매핑
-        return reviews.map(review -> {
-            boolean myReview = (userId != null && review.getMember().getId().equals(userId));
-            boolean myLike = (userId != null &&
-                    reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), userId));
+        // 2) 로그인 사용자라면 Member 조회 + 내 리뷰 ID 찾기
+        if (memberEmail != null && !memberEmail.isBlank()) {
+            Member member = memberRepository.findByEmail(memberEmail.trim())
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+            currentUserId = member.getId();
 
-            Optional<Emotion> optEmotion = emotionRepository.findByReviewId(review.getId());
-            EmotionDTO emotionDTO = null;
-            if (optEmotion.isPresent()) {
-                Emotion e = optEmotion.get();
+            // 존재하면 ID, 없으면 null
+            myReviewId = reviewRepository.findByMemberAndMovie(member, movie)
+                    .map(Review::getId)
+                    .orElse(null);
+        }
 
-                Map<String, Double> probs = Map.of(
-                        "anger", e.getAnger(),
-                        "fear", e.getFear(),
-                        "joy", e.getJoy(),
-                        "neutral", e.getNeutral(),
-                        "sadness", e.getSadness()
-                );
+        // 내 리뷰 ID 가 있으면 제외하여 조회
+        Page<Review> page = (myReviewId != null)
+                ? reviewRepository.findByMovieAndIdNot(movie, myReviewId, pageable)
+                : reviewRepository.findByMovie(movie, pageable);
 
-                String rep = probs.entrySet().stream()
-                        .max(Map.Entry.comparingByValue())
-                        .map(Map.Entry::getKey)
-                        .orElse("neutral"); // 최대값이 없는 경우 neutral로 설정
+        final Long uid = currentUserId;
 
-                emotionDTO = EmotionDTO.builder()
-                        .anger(probs.get("anger"))
-                        .fear(probs.get("fear"))
-                        .joy(probs.get("joy"))
-                        .neutral(probs.get("neutral"))
-                        .sadness(probs.get("sadness"))
-                        .repEmotion(rep)
-                        .build();
-            }
+        return page.map(r -> toResponseDTO(r, uid));
+    }
 
-            return ReviewResponseDTO.builder()
-                    .reviewId(review.getId())
-                    .content(review.getContent())
-                    .rating(review.getRating())
-                    .spoiler(review.isSpoiler())
-                    .createdAt(review.getCreatedAt())
-                    .likeCount(review.getLikes().size())
-                    .nickname(review.getMember().getNickname())
-                    .memberId(review.getMember().getId())
-                    .myReview(myReview)
-                    .modify(review.isModify())
-                    .myLike(myLike)
-                    .emotion(emotionDTO)
-                    .build();
-        });
+    // 내 리뷰 단건 조회
+    @Transactional
+    public ReviewResponseDTO getMyReview(Long movieId, String memberEmail) {
+        if (memberEmail == null || memberEmail.isBlank()) {
+            throw new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage());
+        }
+
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+
+        Review review = reviewRepository.findByMemberAndMovie(member, movie)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
+
+        return toResponseDTO(review, member.getId());
     }
 
     // 리뷰 수정 메서드
@@ -275,5 +255,50 @@ public class ReviewService {
         );
     }
 
+    private ReviewResponseDTO toResponseDTO(Review review, Long currentUserId) {
+        boolean myReview = (currentUserId != null && review.getMember().getId().equals(currentUserId));
+        boolean myLike = (currentUserId != null &&
+                reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), currentUserId));
+
+        EmotionDTO emotionDTO = emotionRepository.findByReviewId(review.getId())
+                .map(e -> {
+                    Map<String, Double> probs = Map.of(
+                            "anger", e.getAnger(),
+                            "fear", e.getFear(),
+                            "joy", e.getJoy(),
+                            "neutral", e.getNeutral(),
+                            "sadness", e.getSadness()
+                    );
+                    String rep = probs.entrySet().stream()
+                            .max(Map.Entry.comparingByValue())
+                            .map(Map.Entry::getKey)
+                            .orElse("neutral");
+                    return EmotionDTO.builder()
+                            .anger(probs.get("anger"))
+                            .fear(probs.get("fear"))
+                            .joy(probs.get("joy"))
+                            .neutral(probs.get("neutral"))
+                            .sadness(probs.get("sadness"))
+                            .repEmotion(rep)
+                            .build();
+                })
+                .orElse(null);
+
+        return ReviewResponseDTO.builder()
+                .reviewId(review.getId())
+                .content(review.getContent())
+                .rating(review.getRating())
+                .spoiler(review.isSpoiler())
+                .createdAt(review.getCreatedAt())
+                .likeCount(review.getLikeCount())
+                .nickname(review.getMember().getNickname())
+                .memberId(review.getMember().getId())
+                .movieId(review.getMovie().getId())
+                .myReview(myReview)
+                .modify(review.isModify())
+                .myLike(myLike)
+                .emotion(emotionDTO)
+                .build();
+    }
 
 }

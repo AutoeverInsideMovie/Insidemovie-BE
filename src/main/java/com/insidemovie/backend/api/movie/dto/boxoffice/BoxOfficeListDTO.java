@@ -9,6 +9,6 @@ import java.util.List;
 @Builder
 public class BoxOfficeListDTO<T> {
     private String boxofficeType;
-    private String showRange;
+    private String targetDt;
     private List<T> items; // DailyBoxOfficeResponseDTO 또는 WeeklyBoxOfficeResponseDTO
 }

@@ -1,9 +1,9 @@
 package com.insidemovie.backend.api.member.controller;
 
 import com.insidemovie.backend.api.member.dto.*;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
-import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
 import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;
@@ -105,7 +105,7 @@ public class MemberController {
     @GetMapping("/profile")
     public ResponseEntity<?> getMemberInfo(@AuthenticationPrincipal User principal) {
         MemberInfoDto memberInfoDto = memberService.getMemberInfo(principal.getUsername());
-        return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberInfoDto);
+        return ApiResponse.success(SuccessStatus.SEND_MEMBER_SUCCESS, memberInfoDto);
     }
 
     @Operation(summary = "로그아웃 API", description = "사용자의 refreshToken을 무효화하고 로그아웃 처리합니다.\n input으로 사용자의 토큰을 받습니다.")

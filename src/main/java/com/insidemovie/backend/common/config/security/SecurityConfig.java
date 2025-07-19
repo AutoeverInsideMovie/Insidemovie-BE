@@ -74,7 +74,8 @@ public class SecurityConfig {
                     "/api/v1/member/kakao-accesstoken",
                     "/api/v1/member/kakao-login",
                     "/api/v1/member/kakao-signup",
-                    "/api/v1/member/token-reissue"
+                    "/api/v1/member/token-reissue",
+                    "/api/v1/member/check-nickname"
                 ).permitAll()
 
                 // Role-based
@@ -90,7 +91,8 @@ public class SecurityConfig {
                 .requestMatchers(
                         HttpMethod.GET,
                         "/api/v1/movies/*/reviews",
-                        "/api/v1/movies/**"
+                        "/api/v1/movies/**",
+                        "/api/v1/boxoffice/**"
                 ).permitAll()
 
                 // Public POST

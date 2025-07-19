@@ -15,7 +15,7 @@ public class ReviewResponseDTO {
     private boolean spoiler;
     private LocalDateTime createdAt; // 리뷰 작성일
 
-    private int likeCount;
+    private long likeCount;
 
     private boolean myReview;  // 내가 작성한 리뷰면 true
     private boolean modify; // 내가 수정한 리뷰면 true

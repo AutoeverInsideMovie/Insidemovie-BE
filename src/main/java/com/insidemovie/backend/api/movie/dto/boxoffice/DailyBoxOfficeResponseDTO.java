@@ -9,10 +9,8 @@ import java.time.LocalDate;
 @Getter
 @Builder
 public class DailyBoxOfficeResponseDTO {
+    private Long movieId;
     private BaseBoxOfficeItemDTO base;
-    private LocalDate targetDate;
-    private String boxofficeType;
-    private String showRange;
 
     public static DailyBoxOfficeResponseDTO fromEntity(DailyBoxOfficeEntity e) {
         return DailyBoxOfficeResponseDTO.builder()
@@ -37,9 +35,6 @@ public class DailyBoxOfficeResponseDTO {
                 .scrnCnt(e.getScrnCnt())
                 .showCnt(e.getShowCnt())
                 .build())
-            .targetDate(e.getTargetDate())
-            .boxofficeType("일별")
-            .showRange(e.getTargetDate().toString() + "~" + e.getTargetDate().toString())
             .build();
     }
 }

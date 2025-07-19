@@ -4,17 +4,16 @@ import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
-import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 
-import com.insidemovie.backend.api.movie.dto.GenreDto;
+import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
+import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
-import com.insidemovie.backend.api.movie.entity.Genre;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 
-import com.insidemovie.backend.api.movie.repository.GenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepository;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
@@ -48,7 +47,6 @@ public class MovieService {
 
     private final MovieRepository movieRepository;
     private final RestTemplate restTemplate;
-    private final GenreRepository genreRepository;
     private final MovieGenreRepository movieGenreRepository;
     private final EmotionRepository emotionRepository;
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
@@ -135,7 +133,7 @@ public class MovieService {
         movieGenreRepository.deleteByMovie(movie);
         //새 매핑 생성: DTO→enum→MovieGenre
         detail.getGenres().stream()
-                .map(GenreDto::getId)                  // List<Long>
+                .map(TmdbGenreResponseDto::getId)                  // List<Long>
                 .map(Long::intValue)                   // int
                 .map(id -> GenreType.fromId(id)        // TMDB ID → GenreType enum
                         .orElseThrow(() ->
@@ -255,8 +253,7 @@ public class MovieService {
 
 
     public PageResDto<MovieSearchResDto> movieSearchTitle(String title, Integer page, Integer pageSize){
-        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
-        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         Page<Movie> movies = movieRepository.findByTitleContainingIgnoreCase(title, pageable);
         if(movies.isEmpty()){
@@ -271,8 +268,7 @@ public class MovieService {
      *   - 수정 방안 생각중
      */
     public PageResDto<MovieSearchResDto> searchByQuery(String q, Integer page, Integer pageSize) {
-        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
-        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
         // 1) q로 매칭되는 GenreType 리스트
         List<GenreType> matched = Arrays.stream(GenreType.values())
                 .filter(gt -> gt.name().contains(q))
@@ -290,6 +286,7 @@ public class MovieService {
         Page<MovieSearchResDto> dto = moviePage.map(this::convertEntityToDto);
         return new PageResDto<>(dto);
     }
+
 
     private MovieSearchResDto convertEntityToDto(Movie movie) {
         MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
@@ -380,9 +377,9 @@ public class MovieService {
      * SearchMovieWrapperDTO 형태로 반환
      */
     public SearchMovieWrapperDTO getPopularMovies(int page, int pageSize) {
-        int zeroBasedPage = page > 0 ? page - 1 : 0;
+
         Pageable pageable = PageRequest.of(
-            zeroBasedPage,
+            page,
             pageSize,
             Sort.by(Sort.Direction.DESC, "popularity")
         );
@@ -406,7 +403,7 @@ public class MovieService {
      */
     private SearchMovieResponseDTO convertEntityToSearchMovieResponseDTO(Movie movie) {
         SearchMovieResponseDTO dto = new SearchMovieResponseDTO();
-        dto.setId(movie.getTmdbMovieId());
+        dto.setId(movie.getId());
         dto.setTitle(movie.getTitle());
         dto.setOverview(movie.getOverview());
         dto.setPosterPath(movie.getPosterPath());
@@ -420,4 +417,46 @@ public class MovieService {
         dto.setAdult(false);
         return dto;
     }
+
+    public PageResDto<RecommendedMovieResDto> getRecommendedMoviesByLatest(GenreType genreType, Integer page, Integer pageSize){
+        Pageable pageable = PageRequest.of(page, pageSize);
+
+        Page<Movie> moviePage = movieRepository.findMoviesByGenreTypeOrderByReleaseDateDesc(genreType, pageable);
+        if (moviePage.isEmpty()) {
+            throw new NotFoundException("해당 장르의 영화가 없습니다: " + genreType.name());
+        }
+
+        return new PageResDto<RecommendedMovieResDto> (moviePage.map(movie -> {
+            RecommendedMovieResDto dto = new RecommendedMovieResDto();
+            dto.setId(movie.getId());
+            dto.setTitle(movie.getTitle());
+            dto.setPosterPath(movie.getPosterPath());
+            dto.setVoteAverage(movie.getVoteAverage());
+            dto.setReleaseDate(movie.getReleaseDate());
+            return dto;
+        }));
+    }
+
+    public PageResDto<RecommendedMovieResDto> getRecommendedMoviesByPopularity(GenreType genreType, Integer page, Integer pageSize){
+        Pageable pageable = PageRequest.of(page, pageSize);
+
+        Page<Movie> moviePage = movieRepository.findMoviesByGenreTypeOrderByVoteAverageDesc(genreType, pageable);
+        if (moviePage.isEmpty()) {
+            throw new NotFoundException("해당 장르의 영화가 없습니다: " + genreType.name());
+        }
+
+        Page<RecommendedMovieResDto> dto = moviePage.map(movie -> {
+            RecommendedMovieResDto resDto = new RecommendedMovieResDto();
+            resDto.setId(movie.getId());
+            resDto.setTitle(movie.getTitle());
+            resDto.setPosterPath(movie.getPosterPath());
+            resDto.setVoteAverage(movie.getVoteAverage());
+            resDto.setReleaseDate(movie.getReleaseDate());
+            return resDto;
+        });
+
+        PageResDto<RecommendedMovieResDto> result = new PageResDto<>(dto);
+        return result;
+    }
+
 }

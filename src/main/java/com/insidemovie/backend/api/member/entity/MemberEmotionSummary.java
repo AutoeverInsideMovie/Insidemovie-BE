@@ -1,7 +1,7 @@
 package com.insidemovie.backend.api.member.entity;
 
 import com.insidemovie.backend.api.constant.EmotionType;
-import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import jakarta.persistence.*;
 import lombok.*;
 

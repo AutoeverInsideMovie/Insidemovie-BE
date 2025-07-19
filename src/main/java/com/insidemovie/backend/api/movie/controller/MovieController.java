@@ -1,10 +1,12 @@
 package com.insidemovie.backend.api.movie.controller;
 
 
-import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+import com.insidemovie.backend.api.constant.GenreType;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
+import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieWrapperDTO;
 import com.insidemovie.backend.api.movie.service.MovieDetailService;
@@ -30,18 +32,18 @@ public class MovieController {
     private final MovieLikeService movieLikeService;
 
 
-    @Operation(summary = "영화 상세 조회", description = "TMDB ID로 영화 상세정보를 조회합니다")
-    @GetMapping("/detail/{tmdbId}")
+    @Operation(summary = "영화 상세 조회", description = "ID로 영화 상세정보를 조회합니다")
+    @GetMapping("/detail/{id}")
     public ResponseEntity<ApiResponse<MovieDetailResDto>> getMovieDetail(
-            @PathVariable Long tmdbId,
+            @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
 
         MovieDetailResDto dto;
 
         if (userDetails != null) {
-            dto = movieDetailService.getMovieDetail(tmdbId, userDetails.getUsername());
+            dto = movieDetailService.getMovieDetail(id, userDetails.getUsername());
         } else {
-            dto = movieDetailService.getMovieDetail(tmdbId);
+            dto = movieDetailService.getMovieDetail(id);
         }
 
         return ApiResponse.success(SuccessStatus.SEND_MOVIE_DETAIL_SUCCESS, dto);
@@ -104,11 +106,29 @@ public class MovieController {
 
     @GetMapping("/popular")
     public ResponseEntity<ApiResponse<SearchMovieWrapperDTO>> getPopularMovies(
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int pageSize) {
 
         SearchMovieWrapperDTO dto = movieService.getPopularMovies(page, pageSize);
         return ApiResponse.success(SuccessStatus.SEND_POPULAR_MOVIES_SUCCESS, dto);
     }
+
+    @Operation(summary = "영화 장르별 최신순 추천", description = "장르별로 영화를 최신순으로 추천합니다.")
+    @GetMapping("/recommend/latest")
+    public ResponseEntity<ApiResponse<PageResDto<RecommendedMovieResDto>>> getRecommendedMoviesByLatest(@RequestParam GenreType genre, @RequestParam int page, @RequestParam int pageSize) {
+
+        PageResDto<RecommendedMovieResDto> dto = movieService.getRecommendedMoviesByLatest(genre, page, pageSize);
+        return ApiResponse.success(SuccessStatus.SEND_GENRE_MOVIES_SUCCESS, dto);
+    }
+
+    @Operation(summary = "영화 장르별 평점순 추천", description = "장르별로 영화를 평점순으로 추천합니다.")
+    @GetMapping("/recommend/popular")
+    public ResponseEntity<ApiResponse<PageResDto<RecommendedMovieResDto>>> getRecommendedMoviesByPopularity(@RequestParam GenreType genre, @RequestParam int page, @RequestParam int pageSize) {
+
+        PageResDto<RecommendedMovieResDto> dto = movieService.getRecommendedMoviesByPopularity(genre, page, pageSize);
+        return ApiResponse.success(SuccessStatus.SEND_GENRE_MOVIES_SUCCESS, dto);
+    }
+
+
 }
 

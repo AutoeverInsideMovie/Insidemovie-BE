@@ -253,8 +253,7 @@ public class MovieService {
 
 
     public PageResDto<MovieSearchResDto> movieSearchTitle(String title, Integer page, Integer pageSize){
-        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
-        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         Page<Movie> movies = movieRepository.findByTitleContainingIgnoreCase(title, pageable);
         if(movies.isEmpty()){
@@ -269,8 +268,7 @@ public class MovieService {
      *   - 수정 방안 생각중
      */
     public PageResDto<MovieSearchResDto> searchByQuery(String q, Integer page, Integer pageSize) {
-        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
-        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
         // 1) q로 매칭되는 GenreType 리스트
         List<GenreType> matched = Arrays.stream(GenreType.values())
                 .filter(gt -> gt.name().contains(q))
@@ -379,9 +377,9 @@ public class MovieService {
      * SearchMovieWrapperDTO 형태로 반환
      */
     public SearchMovieWrapperDTO getPopularMovies(int page, int pageSize) {
-        int zeroBasedPage = page > 0 ? page - 1 : 0;
+
         Pageable pageable = PageRequest.of(
-            zeroBasedPage,
+            page,
             pageSize,
             Sort.by(Sort.Direction.DESC, "popularity")
         );
@@ -421,8 +419,7 @@ public class MovieService {
     }
 
     public PageResDto<RecommendedMovieResDto> getRecommendedMoviesByLatest(GenreType genreType, Integer page, Integer pageSize){
-        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
-        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         Page<Movie> moviePage = movieRepository.findMoviesByGenreTypeOrderByReleaseDateDesc(genreType, pageable);
         if (moviePage.isEmpty()) {
@@ -441,8 +438,7 @@ public class MovieService {
     }
 
     public PageResDto<RecommendedMovieResDto> getRecommendedMoviesByPopularity(GenreType genreType, Integer page, Integer pageSize){
-        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
-        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         Page<Movie> moviePage = movieRepository.findMoviesByGenreTypeOrderByVoteAverageDesc(genreType, pageable);
         if (moviePage.isEmpty()) {

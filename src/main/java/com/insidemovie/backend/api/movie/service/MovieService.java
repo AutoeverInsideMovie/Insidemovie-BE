@@ -6,6 +6,7 @@ import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 
+import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
@@ -288,6 +289,7 @@ public class MovieService {
         return new PageResDto<>(dto);
     }
 
+
     private MovieSearchResDto convertEntityToDto(Movie movie) {
         MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
         movieSearchResDto.setId(movie.getId());
@@ -416,5 +418,9 @@ public class MovieService {
         // DB에는 adult 정보가 없으므로 기본값 false 설정
         dto.setAdult(false);
         return dto;
+    }
+
+    public RecommendedMovieResDto recommendedMovie(GenreType genreType, Integer page, Integer pageSize){
+
     }
 }

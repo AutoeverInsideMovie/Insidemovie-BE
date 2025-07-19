@@ -7,10 +7,12 @@ import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryReques
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
+import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.service.MovieLikeService;
+import com.insidemovie.backend.api.movie.service.MovieService;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.response.ApiResponse;
@@ -42,6 +44,7 @@ public class MemberController {
     private final OAuthService oAuthService;
     private final ReviewService reviewService;
     private final MovieLikeService movieLikeService;
+    private final MovieService movieService;
 
     @Operation(
             summary = "이메일 회원가입 API", description = "회원정보를 받아 사용자를 등록합니다.")
@@ -246,5 +249,18 @@ public class MemberController {
             SuccessStatus.UPDATE_EMOTION_SUMMARY_SUCCESS,
             response
         );
+    }
+
+    // 내가 관람한 한 영화 조회
+    @Operation(summary = "내가 관람 한 영화 목록 조회", description = "로그인한 사용자의 관람 영화 목록을 페이징하여 조회합니다.")
+    @GetMapping("/my-watch-movie")
+    public ResponseEntity<ApiResponse<PageResDto<MovieSearchResDto>>>getMyWatchedMovies(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+
+        PageResDto<MovieSearchResDto> result = movieService.getMyWatchedMovies(userDetails.getUsername(), page, pageSize);
+
+        return ApiResponse.success(SuccessStatus.SEND_WATCHED_MOVIES_SUCCESS, result);
     }
 }

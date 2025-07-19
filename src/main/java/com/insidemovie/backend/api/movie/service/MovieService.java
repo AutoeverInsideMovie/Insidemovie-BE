@@ -1,13 +1,12 @@
 package com.insidemovie.backend.api.movie.service;
 import com.insidemovie.backend.api.constant.GenreType;
-import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
-import com.insidemovie.backend.api.movie.dto.PageResDto;
+import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.movie.dto.*;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 
-import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
-import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
 import com.insidemovie.backend.api.movie.entity.Movie;
@@ -18,8 +17,10 @@ import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepositor
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 
+import com.insidemovie.backend.api.review.entity.Review;
 import com.insidemovie.backend.api.review.repository.EmotionRepository;
 
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
@@ -50,6 +51,8 @@ public class MovieService {
     private final MovieGenreRepository movieGenreRepository;
     private final EmotionRepository emotionRepository;
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
+    private final ReviewRepository reviewRepository;
+    private final MemberRepository memberRepository;
 
     @Value("${tmdb.api.base-url}")
     private String baseUrl;
@@ -467,6 +470,29 @@ public class MovieService {
 
         PageResDto<RecommendedMovieResDto> result = new PageResDto<>(dto);
         return result;
+    }
+
+    public PageResDto<MovieSearchResDto> getMyWatchedMovies(String memberEmail, Integer page, Integer pageSize){
+        Pageable pageable = PageRequest.of(page, pageSize);
+
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+        Page<Review> moviePage = reviewRepository.findByMember(member, pageable);
+
+        Page<MovieSearchResDto> dto = moviePage.map(movielike ->{
+            Movie movie = movielike.getMovie();
+            EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
+            EmotionType mainEmotion = avg.getRepEmotionType();
+            return MovieSearchResDto.builder()
+                    .id(movie.getId())
+                    .posterPath(movie.getPosterPath())
+                    .title(movie.getTitle())
+                    .voteAverage(movie.getVoteAverage())
+                    .mainEmotion(mainEmotion)
+                    .build();
+        });
+        return new PageResDto<>(dto);
+
     }
 
 }

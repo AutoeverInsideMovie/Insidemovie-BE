@@ -48,7 +48,6 @@ public class MovieLikeService {
             Movie movie = movielike.getMovie();
             EmotionAvgDTO avg = movieService.getMovieEmotionSummary(movie.getId());
             EmotionType mainEmotion = avg.getRepEmotionType();
-            MyMovieResponseDTO resDto = new MyMovieResponseDTO();
             return MyMovieResponseDTO.builder()
                     .movieReactionId(movielike.getId())
                     .movieId(movie.getId())

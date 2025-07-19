@@ -9,6 +9,7 @@ import lombok.Getter;
 @Builder
 public class WeeklyBoxOfficeResponseDTO {
     private BaseBoxOfficeItemDTO base;
+    private Long movieId;
 
     public static WeeklyBoxOfficeResponseDTO fromEntity(WeeklyBoxOfficeEntity e) {
         return WeeklyBoxOfficeResponseDTO.builder()

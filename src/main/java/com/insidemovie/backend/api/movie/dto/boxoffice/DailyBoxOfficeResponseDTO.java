@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Getter
 @Builder
 public class DailyBoxOfficeResponseDTO {
+    private Long movieId;
     private BaseBoxOfficeItemDTO base;
 
     public static DailyBoxOfficeResponseDTO fromEntity(DailyBoxOfficeEntity e) {

@@ -18,13 +18,13 @@ public class DailyBoxOfficeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "tmdb_id", referencedColumnName = "tmdb_id")
     private Movie movie;
 
     private LocalDate targetDate;       // 조회 일자
     private String rnum;                // 순번
-    private String movieRank;                // 해당 일자 박스오피스 순위
+    private String movieRank;           // 해당 일자 박스오피스 순위
     private String rankInten;           // 전일 대비 순위 증감분
     private String rankOldAndNew;       // 랭킹 신규 진입 여부(OLD or NEW)
     private String movieCd;             // 영화 대표 코드
@@ -34,10 +34,31 @@ public class DailyBoxOfficeEntity {
     private String salesInten;          // 전일 대비 매출액 증감분
     private String salesChange;         // 전일 대비 매출액 증감 비율
     private String salesAcc;            // 누적 매출액
+    private String salesAmt;            // 매출액
     private String audiCnt;             // 해당일 관객수
     private String audiInten;           // 전일 대비 관객수 증감분
     private String audiChange;          // 전일 대비 관객수 증감 비율
     private String audiAcc;             // 누적 관객수
     private String scrnCnt;             // 해당일 상영한 스크린 수
     private String showCnt;             // 해당일 상영된 횟수
+
+    public void updateFrom(DailyBoxOfficeEntity other) {
+        this.rnum            = other.rnum;
+        this.movieRank       = other.movieRank;
+        this.rankInten       = other.rankInten;
+        this.rankOldAndNew   = other.rankOldAndNew;
+        this.openDate        = other.openDate;
+        this.salesShare      = other.salesShare;
+        this.salesInten      = other.salesInten;
+        this.salesChange     = other.salesChange;
+        this.salesAcc        = other.salesAcc;
+        this.audiCnt         = other.audiCnt;
+        this.audiInten       = other.audiInten;
+        this.audiChange      = other.audiChange;
+        this.audiAcc         = other.audiAcc;
+        this.scrnCnt         = other.scrnCnt;
+        this.showCnt         = other.showCnt;
+        this.salesAmt        = other.salesAmt;
+        this.salesShare      = other.salesShare;
+    }
 }

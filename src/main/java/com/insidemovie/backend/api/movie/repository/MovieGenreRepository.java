@@ -26,4 +26,5 @@ public interface MovieGenreRepository extends JpaRepository<MovieGenre, Long> {
     Page<MovieGenre> findByGenreTypeIn(List<GenreType> genreType, Pageable pageable);
     Page<MovieGenre> findByGenreType(GenreType genreType, Pageable pageable);
 
+    List<MovieGenre> findByMovie(Movie movie);
 }

@@ -62,8 +62,8 @@ kobis:
 
 scheduler:
   cron:
-    daily: "0 0 1 * * ?"
-    weekly: "0 0 2 ? * MON"
+    daily: "0 09 20 * * ?"
+    weekly: "0 09 20 * * ?"
     request_movie: "0 45 14 * * *"
   zone: "Asia/Seoul"
 

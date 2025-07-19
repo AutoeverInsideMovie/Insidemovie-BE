@@ -19,4 +19,7 @@ public interface MovieLikeRepository extends JpaRepository<MovieLike, Long> {
 
     // 영화 + 유저 존재 여부 확인
     Boolean existsByMovie_IdAndMember_Id(Long movieId, Long memberId);
+
+    // 좋아요 한 영화 개수 조회
+    int countByMember_Id(Long memberId);
 }

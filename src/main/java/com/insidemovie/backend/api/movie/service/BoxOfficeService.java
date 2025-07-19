@@ -1,6 +1,7 @@
 package com.insidemovie.backend.api.movie.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
@@ -9,6 +10,7 @@ import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
+import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.movie.repository.WeeklyBoxOfficeRepository;
 import com.insidemovie.backend.common.exception.BaseException;
@@ -28,6 +30,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -37,12 +40,14 @@ import java.util.stream.StreamSupport;
 @Slf4j
 public class BoxOfficeService {
 
-    private final MovieService movieService;
-    @Value("${kobis.api.key}")         private String kobisApiKey;
+    @Value("${kobis.api.key}")
+    private String kobisApiKey;
 
+    private final MovieService movieService;
     private final DailyBoxOfficeRepository dailyRepo;
     private final WeeklyBoxOfficeRepository weeklyRepo;
     private final MovieRepository movieRepo;
+    private final MovieGenreRepository movieGenreRepository;
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -358,5 +363,119 @@ public class BoxOfficeService {
             .targetDt(yearWeek)
             .items(items)
             .build();
+    }
+
+     /**
+     * 저장된 일간 박스오피스 영화의 MovieDetailResDto 리스트 반환
+     */
+    @Transactional
+    public MovieDetailResDto getDailyMovieDetailByMovieId(Long movieId, String targetDt) {
+        // 1) movieId → Movie 엔티티 조회
+        Movie movie = movieRepo.findById(movieId)
+            .orElseThrow(() -> new BaseException(
+                ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                String.format("영화를 찾을 수 없습니다. movieId=%d", movieId)
+            ));
+
+        // 2) Movie 에서 tmdbId 확보
+        Long tmdbId = movie.getTmdbMovieId();
+        if (tmdbId == null) {
+            throw new BaseException(
+                ErrorStatus.NOT_FOUND_DAILY_MOIVE.getHttpStatus(),
+                "해당 영화에 연동된 TMDB ID가 없습니다."
+            );
+        }
+
+        // 3) targetDt → LocalDate 변환
+        LocalDate date = LocalDate.parse(targetDt, FMT);
+
+        // 4) 일간 박스오피스 레코드 조회
+        DailyBoxOfficeEntity box = dailyRepo
+            .findByMovie_TmdbMovieIdAndTargetDate(tmdbId, date)
+            .orElseThrow(() -> new BaseException(
+                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
+                String.format("해당 날짜(%s)의 일간 박스오피스 정보를 찾을 수 없습니다.", targetDt)
+            ));
+
+        // 5) MovieDetailResDto 변환
+        return toMovieDetailResDto(movie);
+    }
+
+    /**
+     * 저장된 주간 박스오피스 영화의 MovieDetailResDto 리스트 반환
+     */
+    @Transactional
+    public MovieDetailResDto getWeeklyMovieDetailByMovieId(
+            Long movieId, String targetDt, String weekGb
+    ) {
+        // movieId → Movie 엔티티 조회
+        Movie movie = movieRepo.findById(movieId)
+            .orElseThrow(() -> new BaseException(
+                ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                String.format("영화를 찾을 수 없습니다. movieId=%d", movieId)
+            ));
+
+        // Movie 에서 tmdbId 확보
+        Long tmdbId = movie.getTmdbMovieId();
+        if (tmdbId == null) {
+            throw new BaseException(
+                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                "해당 영화에 연동된 TMDB ID가 없습니다."
+            );
+        }
+
+        // targetDt → yearWeek 계산 (없으면 최신)
+        String yearWeek = Optional.ofNullable(targetDt)
+            .filter(dt -> !dt.isBlank())
+            .map(dt -> {
+                LocalDate d = LocalDate.parse(dt, FMT);
+                WeekFields wf = WeekFields.ISO;
+                int w = d.get(wf.weekOfWeekBasedYear());
+                int y = d.get(wf.weekBasedYear());
+                return String.format("%04dIW%02d", y, w);
+            })
+            .orElseGet(() ->
+                weeklyRepo.findFirstByOrderByYearWeekTimeDesc()
+                          .map(WeeklyBoxOfficeEntity::getYearWeekTime)
+                          .orElseThrow(() -> new BaseException(
+                              ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                              "저장된 주간 박스오피스 데이터가 없습니다."
+                          ))
+            );
+
+        // 주간 박스오피스 레코드 조회
+        WeeklyBoxOfficeEntity box = weeklyRepo
+            .findByMovie_TmdbMovieIdAndYearWeekTime(tmdbId, yearWeek)
+            .orElseThrow(() -> new BaseException(
+                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                String.format("연주차(%s)의 주간 박스오피스 정보를 찾을 수 없습니다.", yearWeek)
+            ));
+
+        // 5) MovieDetailResDto 변환
+        return toMovieDetailResDto(movie);
+    }
+
+    /**
+     * Movie 엔티티 → MovieDetailResDto 매핑 헬퍼
+     */
+    private MovieDetailResDto toMovieDetailResDto(Movie movie) {
+        MovieDetailResDto dto = new MovieDetailResDto();
+        dto.setId(movie.getId());
+        dto.setTitle(movie.getTitle());
+        dto.setOverview(movie.getOverview());
+        dto.setPosterPath(movie.getPosterPath());
+        dto.setBackdropPath(movie.getBackdropPath());
+        dto.setVoteAverage(movie.getVoteAverage());
+        dto.setOriginalLanguage(movie.getOriginalLanguage());
+        dto.setIsLike(false);  // 좋아요 기능 연동 시 변경
+
+        List<String> genres = movieGenreRepository
+            .findByMovie(movie)
+            .stream()
+            .map(mg -> mg.getGenreType().name())
+            .collect(Collectors.toList());
+        dto.setGenre(genres);
+
+        return dto;
     }
 }

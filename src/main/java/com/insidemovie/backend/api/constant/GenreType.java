@@ -25,9 +25,11 @@ public enum GenreType {
     서부(37);
 
     private final int tmdbId;
+
     GenreType(int tmdbId){
         this.tmdbId = tmdbId;
     }
+
     public int getId(){
         return tmdbId;
     }

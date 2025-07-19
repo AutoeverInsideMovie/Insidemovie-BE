@@ -20,6 +20,7 @@ public enum ErrorStatus {
     INTERNAL_USERINFO_PARSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "카카오 사용자 정보 파싱에 실패했습니다."),
     DUPLICATE_REVIEW_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 해당 영화에 작성한 리뷰가 존재합니다."),
     DUPLICATE_REPORT_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 신고한 리뷰입니다."),
+    BAD_REQUEST_ALREADY_LOGOUT(HttpStatus.BAD_REQUEST, "이미 로그아웃 된 사용자입니다."),
 
     /** 401 UNAUTHORIZED */
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),

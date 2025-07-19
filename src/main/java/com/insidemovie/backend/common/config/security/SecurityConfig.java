@@ -114,6 +114,9 @@ public class SecurityConfig {
             // JWT filter
             .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
 
+            // Spring Security 로그아웃 기능 비활성화
+            .logout(AbstractHttpConfigurer::disable)
+
             // Return 401 on unauthorized
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))

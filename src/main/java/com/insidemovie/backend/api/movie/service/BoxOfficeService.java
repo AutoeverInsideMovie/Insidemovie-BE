@@ -17,6 +17,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -24,6 +28,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -40,7 +45,6 @@ public class BoxOfficeService {
 
     private final DailyBoxOfficeRepository dailyRepo;
     private final WeeklyBoxOfficeRepository weeklyRepo;
-    private final RestTemplate restTemplate;
     private final MovieRepository movieRepo;
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -257,5 +261,81 @@ public class BoxOfficeService {
                 .build()
             )
             .collect(Collectors.toList());
+    }
+
+    /**
+     * 저장된 일간 박스오피스 조회
+     */
+    @Transactional
+    public BoxOfficeListDTO<DailyBoxOfficeResponseDTO> getSavedDailyBoxOffice(String targetDt, int itemPerPage) {
+        LocalDate date = LocalDate.parse(targetDt, FMT);
+        Pageable pageable = PageRequest.of(0, itemPerPage, Sort.by("movieRank"));
+        Page<DailyBoxOfficeEntity> page = dailyRepo.findByTargetDate(date, pageable);
+
+        List<DailyBoxOfficeResponseDTO> items = page.stream()
+            .map(DailyBoxOfficeResponseDTO::fromEntity)
+            .collect(Collectors.toList());
+
+        if (items.isEmpty()) {
+            throw new BaseException(
+                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
+                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
+            );
+        }
+
+        return BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
+            .boxofficeType("일별")
+            .showRange(targetDt + "~" + targetDt)
+            .items(items)
+            .build();
+    }
+
+    /**
+     * 저장된 주간 박스오피스 조회
+     */
+    @Transactional
+    public BoxOfficeListDTO<WeeklyBoxOfficeResponseDTO> getSavedWeeklyBoxOffice(
+            String targetDt, String weekGb, int itemPerPage
+    ) {
+        // 1) 파라미터가 없으면 가장 최근 저장된 yearWeekTime 조회
+        String yearWeek = Optional.ofNullable(targetDt)
+            .filter(dt -> !dt.isBlank())
+            .map(dt -> {
+                LocalDate date = LocalDate.parse(dt, FMT);
+                WeekFields wf = WeekFields.ISO;
+                int week = date.get(wf.weekOfWeekBasedYear());
+                int year = date.get(wf.weekBasedYear());
+                return String.format("%04dIW%02d", year, week);
+            })
+            .orElseGet(() ->
+                weeklyRepo.findFirstByOrderByYearWeekTimeDesc()
+                          .map(WeeklyBoxOfficeEntity::getYearWeekTime)
+                          .orElseThrow(() ->
+                              new BaseException(
+                                  ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                                  "저장된 박스오피스 데이터가 없습니다."
+                              ))
+            );
+
+        // 2) 페이징 조회
+        Pageable pageReq = PageRequest.of(0, itemPerPage, Sort.by("movieRank"));
+        Page<WeeklyBoxOfficeEntity> page = weeklyRepo.findByYearWeekTime(yearWeek, pageReq);
+
+        List<WeeklyBoxOfficeResponseDTO> items = page.stream()
+            .map(WeeklyBoxOfficeResponseDTO::fromEntity)
+            .collect(Collectors.toList());
+
+        if (items.isEmpty()) {
+            throw new BaseException(
+                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getMessage()
+            );
+        }
+
+        return BoxOfficeListDTO.<WeeklyBoxOfficeResponseDTO>builder()
+            .boxofficeType("주간")
+            .showRange(yearWeek)
+            .items(items)
+            .build();
     }
 }

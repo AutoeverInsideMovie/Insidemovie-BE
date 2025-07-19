@@ -403,7 +403,7 @@ public class MovieService {
      */
     private SearchMovieResponseDTO convertEntityToSearchMovieResponseDTO(Movie movie) {
         SearchMovieResponseDTO dto = new SearchMovieResponseDTO();
-        dto.setId(movie.getTmdbMovieId());
+        dto.setId(movie.getId());
         dto.setTitle(movie.getTitle());
         dto.setOverview(movie.getOverview());
         dto.setPosterPath(movie.getPosterPath());

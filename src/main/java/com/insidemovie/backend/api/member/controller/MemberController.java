@@ -192,7 +192,7 @@ public class MemberController {
 
         PageResDto<ReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), page, pageSize);
 
-        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, PageResult.of(pageData));
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
     }
 
     // 내가 좋아요 한 영화 조회

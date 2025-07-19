@@ -15,8 +15,6 @@ import java.util.Optional;
 
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
-
-    List<Movie> findAllByTmdbMovieIdIn(Collection<Long> tmdbIds);
     Optional<Movie> findByTmdbMovieId(Long tmdbMovieId);
     Page<Movie> findAllByOrderByPopularityDesc(Pageable pageable);
 
@@ -42,4 +40,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             Pageable pageable
     );
 
+    @Query("SELECT mg.movie FROM MovieGenre mg WHERE mg.genreType = :genreType ORDER BY mg.movie.releaseDate DESC")
+    Page<Movie> findMoviesByGenreTypeOrderByReleaseDateDesc(@Param("genreType") GenreType genreType, Pageable pageable);
+
+    @Query("SELECT mg.movie FROM MovieGenre mg WHERE mg.genreType = :genreType ORDER BY mg.movie.voteAverage DESC")
+    Page<Movie> findMoviesByGenreTypeOrderByVoteAverageDesc(@Param("genreType") GenreType genreType, Pageable pageable);
 }

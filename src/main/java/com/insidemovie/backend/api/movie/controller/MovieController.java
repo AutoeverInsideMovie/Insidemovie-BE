@@ -1,10 +1,14 @@
 package com.insidemovie.backend.api.movie.controller;
 
 
+
+import com.insidemovie.backend.api.constant.GenreType;
+import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
+import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieWrapperDTO;
 import com.insidemovie.backend.api.movie.service.MovieDetailService;
@@ -110,5 +114,21 @@ public class MovieController {
         SearchMovieWrapperDTO dto = movieService.getPopularMovies(page, pageSize);
         return ApiResponse.success(SuccessStatus.SEND_POPULAR_MOVIES_SUCCESS, dto);
     }
+    @Operation(summary = "영화 장르별 최신순 추천", description = "장르별로 영화를 최신순으로 추천합니다.")
+    @GetMapping("/recommend/latest")
+    public ResponseEntity<ApiResponse<PageResDto<RecommendedMovieResDto>>> getRecommendedMoviesByLatest(@RequestParam GenreType genre, @RequestParam int page, @RequestParam int pageSize) {
+
+        PageResDto<RecommendedMovieResDto> dto = movieService.getRecommendedMoviesByLatest(genre, page, pageSize);
+        return ApiResponse.success(SuccessStatus.SEND_GENRE_MOVIES_SUCCESS, dto);
+    }
+    @Operation(summary = "영화 장르별 평점순 추천", description = "장르별로 영화를 평점순으로 추천합니다.")
+    @GetMapping("/recommend/popular")
+    public ResponseEntity<ApiResponse<PageResDto<RecommendedMovieResDto>>> getRecommendedMoviesByPopularity(@RequestParam GenreType genre, @RequestParam int page, @RequestParam int pageSize) {
+
+        PageResDto<RecommendedMovieResDto> dto = movieService.getRecommendedMoviesByPopularity(genre, page, pageSize);
+        return ApiResponse.success(SuccessStatus.SEND_GENRE_MOVIES_SUCCESS, dto);
+    }
+
+
 }
 

@@ -22,9 +22,6 @@ public class MovieGenre {
     @JoinColumn(name = "movie_id")
     private Movie movie;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name="genre_id")
-//    private Genre genre;
     @Enumerated(EnumType.STRING)
     @Column(name="genre", length=20)
     private GenreType genreType;

@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.controller;
 
+import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/boxoffice")
@@ -42,6 +44,27 @@ public class BoxOfficeController {
         );
     }
 
+    /**
+     * 일간 박스오피스 영화 한 편의 상세정보 조회
+     */
+    @GetMapping("/daily/detail")
+    public ResponseEntity<ApiResponse<MovieDetailResDto>> getDailyMovieDetail(
+        @RequestParam Long movieId,
+        @RequestParam(value="targetDt", required=false, defaultValue="") String targetDt
+    ) {
+        String defaultDt = targetDt.isBlank()
+            ? LocalDate.now().minusDays(1).format(FMT)
+            : targetDt;
+
+        MovieDetailResDto dto = boxOfficeService
+            .getDailyMovieDetailByMovieId(movieId, defaultDt);
+
+        return ApiResponse.success(
+            SuccessStatus.SEND_BOXOFFICE_MOVIE_DETAIL_SUCCESS,
+            dto
+        );
+    }
+
     // 주간 박스오피스 조회
     @GetMapping("/weekly")
     public ResponseEntity<ApiResponse<BoxOfficeListDTO<WeeklyBoxOfficeResponseDTO>>> getWeekly(
@@ -54,6 +77,28 @@ public class BoxOfficeController {
         return ApiResponse.success(
             SuccessStatus.SEND_WEEKLY_BOXOFFICE_SUCCESS,
             response
+        );
+    }
+
+    /**
+     * 주간 박스오피스 영화 한 편의 상세정보 조회
+     */
+    @GetMapping("/weekly/detail")
+    public ResponseEntity<ApiResponse<MovieDetailResDto>> getWeeklyMovieDetail(
+        @RequestParam Long movieId,
+        @RequestParam(value="targetDt", required=false, defaultValue="") String targetDt,
+        @RequestParam(defaultValue="0") String weekGb
+    ) {
+        String defaultDt = targetDt.isBlank()
+            ? LocalDate.now().minusWeeks(1).format(FMT)
+            : targetDt;
+
+        MovieDetailResDto dto = boxOfficeService
+            .getWeeklyMovieDetailByMovieId(movieId, defaultDt, weekGb);
+
+        return ApiResponse.success(
+            SuccessStatus.SEND_BOXOFFICE_MOVIE_DETAIL_SUCCESS,
+            dto
         );
     }
 }

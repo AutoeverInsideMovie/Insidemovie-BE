@@ -14,10 +14,10 @@ import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +30,7 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/api/v1/member")
 @Tag(name="Member", description = "Member 관련 API 입니다.")
 public class MemberController {
@@ -108,20 +109,19 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.SEND_MEMBER_SUCCESS, memberInfoDto);
     }
 
-    @Operation(summary = "로그아웃 API", description = "사용자의 refreshToken을 무효화하고 로그아웃 처리합니다.\n input으로 사용자의 토큰을 받습니다.")
+    @Operation(
+        summary = "로그아웃 API",
+        description = "사용자의 refreshToken을 무효화하고 로그아웃 처리합니다. JWT 인증이 필요하며, 요청 바디에 사용자의 email을 입력해주세요."
+    )
     @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200", description = "로그아웃 성공"
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "401", description = "인증 실패 (토큰이 없거나 만료됨)"
-        )
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그아웃 성공"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 로그아웃이 된 사용자입니다.")
     })
-
-    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal UserDetails userDetails) {
-        memberService.logout(userDetails.getUsername());
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestParam("email") String email
+    ) {
+        memberService.logout(email);
         return ApiResponse.success_only(SuccessStatus.LOGOUT_SUCCESS);
     }
 

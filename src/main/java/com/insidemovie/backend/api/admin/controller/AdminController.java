@@ -6,6 +6,7 @@ import com.insidemovie.backend.api.admin.dto.AdminReportDTO;
 import com.insidemovie.backend.api.admin.service.AdminService;
 import com.insidemovie.backend.api.report.service.ReportService;
 import com.insidemovie.backend.common.response.ApiResponse;
+import com.insidemovie.backend.common.response.PageResult;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +28,7 @@ public class AdminController {
     @Operation(
             summary = "회원 목록 조회 API", description = "회원 목록을 조회합니다.")
     @GetMapping("/members")
-    public ResponseEntity<ApiResponse<Page<AdminMemberDTO>>> getMembers(
+    public ResponseEntity<ApiResponse<PageResult<AdminMemberDTO>>> getMembers(
             @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
@@ -35,7 +36,7 @@ public class AdminController {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         Page<AdminMemberDTO> memberPage = adminService.getMembers(keyword, pageRequest);
-        return ApiResponse.success(SuccessStatus.SEND_MEMBER_LIST_SUCCESS, memberPage);
+        return ApiResponse.success(SuccessStatus.SEND_MEMBER_LIST_SUCCESS, PageResult.of(memberPage));
     }
 
     @Operation(summary = "회원 정지", description = "특정 회원을 정지시킵니다.")
@@ -54,13 +55,13 @@ public class AdminController {
 
     @Operation(summary = "신고 목록 조회", description = "전체 리뷰 신고 목록을 조회합니다.")
     @GetMapping("/reports")
-    public ResponseEntity<ApiResponse<Page<AdminReportDTO>>> getReportList(
+    public ResponseEntity<ApiResponse<PageResult<AdminReportDTO>>> getReportList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
-        Page<AdminReportDTO> reportList = adminService.getAllReports(pageRequest);
-        return ApiResponse.success(SuccessStatus.SEND_REPORT_LIST_SUCCESS, reportList);
+        Page<AdminReportDTO> reportPage = adminService.getAllReports(pageRequest);
+        return ApiResponse.success(SuccessStatus.SEND_REPORT_LIST_SUCCESS, PageResult.of(reportPage));
     }
 
     @Operation(summary = "신고 수용", description = "신고를 수용합니다.")

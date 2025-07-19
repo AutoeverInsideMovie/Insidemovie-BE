@@ -10,4 +10,6 @@ public interface WeeklyBoxOfficeRepository extends JpaRepository<WeeklyBoxOffice
     Page<WeeklyBoxOfficeEntity> findByYearWeekTime(String yearWeekTime, Pageable pageable);
     Optional<WeeklyBoxOfficeEntity> findFirstByOrderByYearWeekTimeDesc();
     Optional<WeeklyBoxOfficeEntity> findByYearWeekTimeAndMovieCd(String yearWeekTime, String movieCd);
+
+    Optional<WeeklyBoxOfficeEntity> findByMovie_TmdbMovieIdAndYearWeekTime(Long tmdbMovieId, String yearWeekTime);
 }

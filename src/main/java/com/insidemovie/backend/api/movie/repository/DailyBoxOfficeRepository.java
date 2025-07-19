@@ -11,4 +11,6 @@ public interface DailyBoxOfficeRepository extends JpaRepository<DailyBoxOfficeEn
     void deleteByTargetDate(LocalDate date);
     Page<DailyBoxOfficeEntity> findByTargetDate(LocalDate date, Pageable pageable);
     Optional<DailyBoxOfficeEntity> findByTargetDateAndMovieCd(LocalDate targetDate, String movieCd);
+
+    Optional<DailyBoxOfficeEntity> findByMovie_TmdbMovieIdAndTargetDate(Long tmdbMovieId, LocalDate date);
 }

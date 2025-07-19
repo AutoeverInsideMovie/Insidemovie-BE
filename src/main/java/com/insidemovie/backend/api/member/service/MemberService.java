@@ -251,21 +251,26 @@ public class MemberService {
     // 비밀번호 변경
     @Transactional
     public void updatePassword(String email, PasswordUpdateRequestDTO dto) {
-        // 현재 비밀번호와 같은 경우 예외처리
-        if (dto.getPassword().equals(dto.getNewPassword())) {
-            throw new BadRequestException(ErrorStatus.PASSWORD_SAME_EXCEPTION.getMessage());
-        }
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 비밀번호랑 비밀번호 재확인 값이 다를 경우 예외처리
         if (!dto.getNewPassword().equals(dto.getConfirmNewPassword())) {
             throw new BadRequestException(ErrorStatus.PASSWORD_MISMATCH_EXCEPTION.getMessage());
         }
 
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+        // 현재 비밀번호가 일치하지 않는 경우 예외처리
+        if (!passwordEncoder.matches(dto.getPassword(), member.getPassword())) {
+            throw new BadRequestException(ErrorStatus.PASSWORD_MISMATCH_EXCEPTION.getMessage());
+        }
 
-        String encoded = passwordEncoder.encode(dto.getNewPassword());
-        member.updatePassword(encoded);
+        // 현재 비밀번호와 변경할 비밀번호가 같은 경우 예외처리
+        if (passwordEncoder.matches(dto.getNewPassword(), member.getPassword())) {
+            throw new BadRequestException(ErrorStatus.PASSWORD_SAME_EXCEPTION.getMessage());
+        }
+
+        String newEncoded = passwordEncoder.encode(dto.getNewPassword());
+        member.updatePassword(newEncoded);
     }
 
     // 프로필 이미지 변경

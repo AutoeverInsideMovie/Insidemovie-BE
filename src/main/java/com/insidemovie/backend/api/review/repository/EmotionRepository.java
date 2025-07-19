@@ -1,12 +1,11 @@
 package com.insidemovie.backend.api.review.repository;
 
-import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.review.entity.Emotion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface EmotionRepository extends JpaRepository<Emotion, Long> {

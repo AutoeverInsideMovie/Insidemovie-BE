@@ -4,7 +4,7 @@ import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
-import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 
 import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;

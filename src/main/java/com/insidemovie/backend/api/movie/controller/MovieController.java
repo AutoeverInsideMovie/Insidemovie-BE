@@ -1,7 +1,7 @@
 package com.insidemovie.backend.api.movie.controller;
 
 
-import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;

@@ -33,6 +33,6 @@ public class WeeklyBoxOfficeScheduler {
             .itemPerPage(10)
             .build();
 
-        boxOfficeService.getWeeklyBoxOffice(req);
+        boxOfficeService.fetchAndStoreWeeklyBoxOffice(req);
     }
 }

@@ -122,8 +122,9 @@ public class MemberController {
     })
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestParam("email") String email
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
+        String email = userDetails.getUsername();
         memberService.logout(email);
         return ApiResponse.success_only(SuccessStatus.LOGOUT_SUCCESS);
     }

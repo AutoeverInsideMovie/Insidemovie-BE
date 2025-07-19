@@ -1,13 +1,13 @@
 package com.insidemovie.backend.api.member.repository;
 
 import com.insidemovie.backend.api.member.entity.Member;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -29,10 +29,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     // 정지된 회원 수
     long countByIsBannedTrue();
-
-    @Modifying
-    @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.email = :email")
-    int clearRefreshTokenByUserEmail(@Param("email") String email);
 
     // 누적 통계 특정 시점까지 전체 회원 수 (하루 단위 누적, 월 단위 누적 공통 사용)
     long countByCreatedAtLessThan(LocalDateTime dateTime);

@@ -15,10 +15,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -75,9 +72,9 @@ public class JwtProvider {
         // 권한 정보 추출
         List<String> roles = claims.get(AUTHORITIES_KEY, List.class);
 
-        Collection<? extends GrantedAuthority> authorities = roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        Collection<GrantedAuthority> authorities = roles.stream()
+            .map(SimpleGrantedAuthority::new)
+            .collect(Collectors.toList());
 
         // 인증 객체 생성 후 반환
         User principal = new User(claims.getSubject(), "", authorities);

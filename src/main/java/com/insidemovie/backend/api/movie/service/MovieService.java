@@ -6,6 +6,7 @@ import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 
+import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
@@ -288,6 +289,7 @@ public class MovieService {
         return new PageResDto<>(dto);
     }
 
+
     private MovieSearchResDto convertEntityToDto(Movie movie) {
         MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
         movieSearchResDto.setId(movie.getId());
@@ -417,4 +419,48 @@ public class MovieService {
         dto.setAdult(false);
         return dto;
     }
+
+    public PageResDto<RecommendedMovieResDto> getRecommendedMoviesByLatest(GenreType genreType, Integer page, Integer pageSize){
+        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+
+        Page<Movie> moviePage = movieRepository.findMoviesByGenreTypeOrderByReleaseDateDesc(genreType, pageable);
+        if (moviePage.isEmpty()) {
+            throw new NotFoundException("해당 장르의 영화가 없습니다: " + genreType.name());
+        }
+
+        return new PageResDto<RecommendedMovieResDto> (moviePage.map(movie -> {
+            RecommendedMovieResDto dto = new RecommendedMovieResDto();
+            dto.setId(movie.getId());
+            dto.setTitle(movie.getTitle());
+            dto.setPosterPath(movie.getPosterPath());
+            dto.setVoteAverage(movie.getVoteAverage());
+            dto.setReleaseDate(movie.getReleaseDate());
+            return dto;
+        }));
+    }
+
+    public PageResDto<RecommendedMovieResDto> getRecommendedMoviesByPopularity(GenreType genreType, Integer page, Integer pageSize){
+        int zeroBasedPage = (page != null && page > 0) ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(zeroBasedPage, pageSize);
+
+        Page<Movie> moviePage = movieRepository.findMoviesByGenreTypeOrderByVoteAverageDesc(genreType, pageable);
+        if (moviePage.isEmpty()) {
+            throw new NotFoundException("해당 장르의 영화가 없습니다: " + genreType.name());
+        }
+
+        Page<RecommendedMovieResDto> dto = moviePage.map(movie -> {
+            RecommendedMovieResDto resDto = new RecommendedMovieResDto();
+            resDto.setId(movie.getId());
+            resDto.setTitle(movie.getTitle());
+            resDto.setPosterPath(movie.getPosterPath());
+            resDto.setVoteAverage(movie.getVoteAverage());
+            resDto.setReleaseDate(movie.getReleaseDate());
+            return resDto;
+        });
+
+        PageResDto<RecommendedMovieResDto> result = new PageResDto<>(dto);
+        return result;
+    }
+
 }

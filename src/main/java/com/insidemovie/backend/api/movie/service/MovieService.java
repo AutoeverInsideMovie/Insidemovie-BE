@@ -303,8 +303,8 @@ public class MovieService {
         // 감정 평균 조회
         EmotionAvgDTO avg = emotionRepository.findAverageEmotionsByMovieId(movieId)
                 .orElseGet(() -> EmotionAvgDTO.builder()
-                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).neutral(0.0)
-                        .repEmotionType(EmotionType.NEUTRAL)
+                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
+                        .repEmotionType(EmotionType.DISGUST)
                         .build());
 
         // 대표 감정 계산
@@ -334,13 +334,13 @@ public class MovieService {
                 EmotionType.SADNESS, dto.getSadness(),
                 EmotionType.ANGER, dto.getAnger(),
                 EmotionType.FEAR, dto.getFear(),
-                EmotionType.NEUTRAL, dto.getNeutral()
+                EmotionType.DISGUST, dto.getDisgust()
         );
 
         return scores.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(EmotionType.NEUTRAL);
+                .orElse(EmotionType.DISGUST);
     }
 
     /**
@@ -355,7 +355,7 @@ public class MovieService {
                 dto.setSadness(summary.getSadness());
                 dto.setFear(summary.getFear());
                 dto.setAnger(summary.getAnger());
-                dto.setNeutral(summary.getNeutral());
+                dto.setDisgust(summary.getDisgust());
                 dto.setDominantEmotion(summary.getDominantEmotion().name());
                 return dto;
             })
@@ -366,7 +366,7 @@ public class MovieService {
                 dto.setSadness(0f);
                 dto.setFear(0f);
                 dto.setAnger(0f);
-                dto.setNeutral(0f);
+                dto.setDisgust(0f);
                 dto.setDominantEmotion("NONE");
                 return dto;
             });

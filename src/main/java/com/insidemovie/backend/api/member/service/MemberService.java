@@ -306,8 +306,8 @@ public class MemberService {
         EmotionAvgDTO avg = emotionRepository
                 .findAverageEmotionsByMemberId(memberId)
                 .orElseGet(() -> EmotionAvgDTO.builder()
-                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).neutral(0.0)
-                        .repEmotionType(EmotionType.NEUTRAL)
+                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
+                        .repEmotionType(EmotionType.DISGUST)
                         .build()
                 );
 
@@ -338,14 +338,14 @@ public class MemberService {
                 EmotionType.SADNESS, dto.getSadness(),
                 EmotionType.ANGER,   dto.getAnger(),
                 EmotionType.FEAR,    dto.getFear(),
-                EmotionType.NEUTRAL, dto.getNeutral()
+                EmotionType.DISGUST, dto.getDisgust()
         );
 
         // 최댓값 감정 리턴
         return scores.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(EmotionType.NEUTRAL);
+                .orElse(EmotionType.DISGUST);
     }
 
     // 초기 사용자 감정 상태 저장
@@ -366,7 +366,7 @@ public class MemberService {
         // 대표 감정 계산 (가장 점수가 높은 타입)
         EmotionType rep = findMaxEmotion(
             dto.getJoy(), dto.getSadness(), dto.getFear(),
-            dto.getAnger(), dto.getNeutral()
+            dto.getAnger(), dto.getDisgust()
             );
 
         // 엔티티 생성 및 저장
@@ -376,7 +376,7 @@ public class MemberService {
             .sadness(dto.getSadness())
             .fear(dto.getFear())
             .anger(dto.getAnger())
-            .neutral(dto.getNeutral())
+            .disgust(dto.getDisgust())
             .repEmotionType(rep)
             .build();
 
@@ -386,14 +386,14 @@ public class MemberService {
 
     public static EmotionType findMaxEmotion(
                 Float joy, Float sadness, Float fear,
-                Float anger, Float neutral
+                Float anger, Float disgust
         ) {
             return Map.<EmotionType, Float>of(
                 EmotionType.JOY,    joy,
                 EmotionType.SADNESS,sadness,
                 EmotionType.FEAR,   fear,
                 EmotionType.ANGER,  anger,
-                EmotionType.NEUTRAL,neutral
+                EmotionType.DISGUST,disgust
             ).entrySet().stream()
              .max(Map.Entry.comparingByValue())
              .orElseThrow()  // 혹은 기본값 설정
@@ -416,7 +416,7 @@ public class MemberService {
         double avgSadness = avg(summary.getSadness(), dto.getSadness());
         double avgAnger   = avg(summary.getAnger(),   dto.getAnger());
         double avgFear    = avg(summary.getFear(),    dto.getFear());
-        double avgNeutral = avg(summary.getNeutral(), dto.getNeutral());
+        double avgDisgust = avg(summary.getDisgust(), dto.getDisgust());
 
         // 대표 감정 타입은 평균 값 중 최대인 것으로 판단
         EmotionType repType = Stream.of(
@@ -424,18 +424,18 @@ public class MemberService {
                 new AbstractMap.SimpleEntry<>(EmotionType.SADNESS, avgSadness),
                 new AbstractMap.SimpleEntry<>(EmotionType.ANGER,   avgAnger),
                 new AbstractMap.SimpleEntry<>(EmotionType.FEAR,    avgFear),
-                new AbstractMap.SimpleEntry<>(EmotionType.NEUTRAL, avgNeutral)
+                new AbstractMap.SimpleEntry<>(EmotionType.DISGUST, avgDisgust)
             )
             .max(Comparator.comparingDouble(Map.Entry::getValue))
             .map(Map.Entry::getKey)
-            .orElse(EmotionType.NEUTRAL);
+            .orElse(EmotionType.DISGUST);
 
         EmotionAvgDTO avgDto = EmotionAvgDTO.builder()
             .joy(avgJoy)
             .sadness(avgSadness)
             .anger(avgAnger)
             .fear(avgFear)
-            .neutral(avgNeutral)
+            .disgust(avgDisgust)
             .repEmotionType(repType)
             .build();
 

@@ -12,7 +12,6 @@ import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.entity.MemberEmotionSummary;
 import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryRepository;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
-import com.insidemovie.backend.api.movie.entity.MovieLike;
 import com.insidemovie.backend.api.movie.repository.MovieLikeRepository;
 import com.insidemovie.backend.api.review.repository.EmotionRepository;
 import com.insidemovie.backend.common.exception.BadRequestException;
@@ -21,8 +20,6 @@ import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.domain.Page;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,7 +28,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -54,7 +50,6 @@ public class MemberService {
         // 만약 이미 해당 이메일로 가입된 정보가 있다면 예외처리
         if (memberRepository.findByEmail(requestDto.getEmail()).isPresent()) {
             throw new BadRequestException(ErrorStatus.ALREADY_EMAIL_EXIST_EXCEPTION.getMessage());
-
         }
 
         // 비밀번호랑 비밀번호 재확인 값이 다를 경우 예외처리
@@ -276,15 +271,26 @@ public class MemberService {
         member.updateProfileEmotion(emotionType);
     }
 
+    // 로그아웃
     @Transactional
     public void logout(String email) {
-        int updated = memberRepository.clearRefreshTokenByUserEmail(email);
-        if (updated == 0) {
+        // Member 로드
+        Member member = memberRepository.findByEmail(email)
+            .orElseThrow(() -> new BaseException(
+                ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getHttpStatus(),
+                ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()
+            ));
+
+        // 이미 로그아웃(토큰이 비어 있음) 상태면 에러
+        if (member.getRefreshToken() == null) {
             throw new BaseException(
-                    ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getHttpStatus(),
-                    ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()
+                ErrorStatus.BAD_REQUEST_ALREADY_LOGOUT.getHttpStatus(),
+                ErrorStatus.BAD_REQUEST_ALREADY_LOGOUT.getMessage()
             );
         }
+
+        // refreshToken 제거
+        member.updateRefreshtoken(null);
     }
 
     @Transactional

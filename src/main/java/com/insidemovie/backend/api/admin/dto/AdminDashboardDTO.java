@@ -25,4 +25,12 @@ public class AdminDashboardDTO {
     private List<TimeCountDTO> dailyReportCounts;
     private List<TimeCountDTO> monthlyReportCounts;
 
+    // 월별, 일별 누적 수
+    private List<TimeCountDTO> dailyMemberCumulativeCounts;
+    private List<TimeCountDTO> monthlyMemberCumulativeCounts;
+    private List<TimeCountDTO> dailyReviewCumulativeCounts;
+    private List<TimeCountDTO> monthlyReviewCumulativeCounts;
+    private List<TimeCountDTO> dailyReportCumulativeCounts;
+    private List<TimeCountDTO> monthlyReportCumulativeCounts;
+
 }

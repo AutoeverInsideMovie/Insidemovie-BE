@@ -4,7 +4,7 @@ import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
-import com.insidemovie.backend.api.member.dto.EmotionAvgDTO;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 
 import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
@@ -405,7 +405,7 @@ public class MovieService {
      */
     private SearchMovieResponseDTO convertEntityToSearchMovieResponseDTO(Movie movie) {
         SearchMovieResponseDTO dto = new SearchMovieResponseDTO();
-        dto.setId(movie.getTmdbMovieId());
+        dto.setId(movie.getId());
         dto.setTitle(movie.getTitle());
         dto.setOverview(movie.getOverview());
         dto.setPosterPath(movie.getPosterPath());

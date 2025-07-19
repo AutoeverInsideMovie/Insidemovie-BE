@@ -5,12 +5,15 @@ import com.insidemovie.backend.api.constant.Authority;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.jwt.JwtProvider;
 import com.insidemovie.backend.api.member.dto.*;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryResponseDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.entity.MemberEmotionSummary;
 import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryRepository;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.movie.entity.MovieLike;
+import com.insidemovie.backend.api.movie.repository.MovieLikeRepository;
 import com.insidemovie.backend.api.review.repository.EmotionRepository;
 import com.insidemovie.backend.common.exception.BadRequestException;
 import com.insidemovie.backend.common.exception.BaseException;
@@ -19,7 +22,7 @@ import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.data.domain.Page;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -42,6 +45,7 @@ public class MemberService {
     private final EmotionRepository emotionRepository;
     private final MemberEmotionSummaryRepository memberEmotionSummaryRepository;
     private final MemberEmotionSummaryRepository emotionSummaryRepository;
+    private final MovieLikeRepository movieLikeRepository;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -207,11 +211,22 @@ public class MemberService {
     // 사용자 정보 조회
     public MemberInfoDto getMemberInfo(String email) {
         Member member = memberRepository.findByEmail(email).orElseThrow(()-> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        // 사용자 대표 감정 조회
+        MemberEmotionSummary summary = memberEmotionSummaryRepository
+                .findById(member.getId())
+                .orElseThrow(() -> new EntityNotFoundException("MemberEmotionSummary not found for id=" + member.getId()));
+
+        // 좋아요 한 영화 개수 조회
+        int movieLikeCount = movieLikeRepository.countByMember_Id(member.getId());
+
         return MemberInfoDto.builder()
                 .memberId(member.getId())
                 .email(member.getEmail())
                 .nickname(member.getNickname())
                 .reportCount(member.getReportCount())
+                .likeCount(movieLikeCount)
+                .repEmotionType(summary.getRepEmotionType())
                 .authority(member.getAuthority())
                 .build();
     }

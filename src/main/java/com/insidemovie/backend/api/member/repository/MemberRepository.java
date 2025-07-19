@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,23 +34,28 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("UPDATE Member m SET m.refreshToken = NULL WHERE m.email = :email")
     int clearRefreshTokenByUserEmail(@Param("email") String email);
 
+    // 누적 통계 특정 시점까지 전체 회원 수 (하루 단위 누적, 월 단위 누적 공통 사용)
+    long countByCreatedAtLessThan(LocalDateTime dateTime);
+
     // 일별 가입 수
-    @Query(value = """
-        SELECT DATE(created_at) AS date, COUNT(*) AS count
-        FROM member
-        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-        """, nativeQuery = true)
-    List<Object[]> countMembersDaily();
+    @Query("""
+        SELECT DATE(m.createdAt), COUNT(m)
+        FROM Member m
+        WHERE m.createdAt >= :start AND m.createdAt < :end
+        GROUP BY DATE(m.createdAt)
+        ORDER BY DATE(m.createdAt)
+    """)
+    List<Object[]> countMembersDaily(@Param("start") LocalDateTime start,
+                                     @Param("end") LocalDateTime end);
 
     // 월별 가입 수
-    @Query(value = """
-        SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) AS count
-        FROM member
-        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-        GROUP BY month
-        ORDER BY month ASC
-        """, nativeQuery = true)
-    List<Object[]> countMembersMonthly();
+    @Query("""
+        SELECT FUNCTION('DATE_FORMAT', m.createdAt, '%Y-%m'), COUNT(m)
+        FROM Member m
+        WHERE m.createdAt >= :start AND m.createdAt < :end
+        GROUP BY FUNCTION('DATE_FORMAT', m.createdAt, '%Y-%m')
+        ORDER BY FUNCTION('DATE_FORMAT', m.createdAt, '%Y-%m')
+    """)
+    List<Object[]> countMembersMonthly(@Param("start") LocalDateTime start,
+                                       @Param("end") LocalDateTime end);
 }

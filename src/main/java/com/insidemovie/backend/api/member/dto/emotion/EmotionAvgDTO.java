@@ -1,12 +1,10 @@
-package com.insidemovie.backend.api.member.dto;
+package com.insidemovie.backend.api.member.dto.emotion;
 
 import com.insidemovie.backend.api.constant.EmotionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 @Getter
 @Builder

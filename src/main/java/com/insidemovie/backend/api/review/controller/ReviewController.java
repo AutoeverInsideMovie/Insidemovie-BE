@@ -58,7 +58,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "내 리뷰 단건 조회", description = "영화에 대해 내가 작성한 리뷰(있으면)를 반환")
-    @GetMapping("/movies/{movieId}/reviews/my")
+    @GetMapping("/movies/{movieId}/reviews/my-review")
     public ResponseEntity<ApiResponse<ReviewResponseDTO>> getMyReview(
             @PathVariable Long movieId,
             @AuthenticationPrincipal UserDetails userDetails) {

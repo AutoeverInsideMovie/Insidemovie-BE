@@ -14,6 +14,7 @@ import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryReposit
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.movie.repository.MovieLikeRepository;
 import com.insidemovie.backend.api.review.repository.EmotionRepository;
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.BadRequestException;
 import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.exception.NotFoundException;
@@ -42,6 +43,7 @@ public class MemberService {
     private final MemberEmotionSummaryRepository memberEmotionSummaryRepository;
     private final MemberEmotionSummaryRepository emotionSummaryRepository;
     private final MovieLikeRepository movieLikeRepository;
+    private final ReviewRepository reviewRepository;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -215,11 +217,15 @@ public class MemberService {
         // 좋아요 한 영화 개수 조회
         int movieLikeCount = movieLikeRepository.countByMember_Id(member.getId());
 
+        // 리뷰 작성 개수 반환
+        long watchMovieCount = reviewRepository.countByMember(member);
+
         return MemberInfoDto.builder()
                 .memberId(member.getId())
                 .email(member.getEmail())
                 .nickname(member.getNickname())
                 .reportCount(member.getReportCount())
+                .watchMovieCount((int) watchMovieCount)
                 .likeCount(movieLikeCount)
                 .repEmotionType(summary.getRepEmotionType())
                 .authority(member.getAuthority())

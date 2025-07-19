@@ -8,6 +8,7 @@ import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.ErrorStatus;
+import com.insidemovie.backend.common.response.PageResult;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -44,7 +45,7 @@ public class ReviewController {
     @Operation(
             summary = "리뷰 목록 조회 API", description = "특정 영화에 대한 리뷰 목록을 조회합니다.")
     @GetMapping("/movies/{movieId}/reviews")
-    public ResponseEntity<ApiResponse<Page<ReviewResponseDTO>>> getReviewsByMovie(
+    public ResponseEntity<ApiResponse<PageResult<ReviewResponseDTO>>> getReviewsByMovie(
             @PathVariable Long movieId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -54,7 +55,7 @@ public class ReviewController {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         Page<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageRequest, userEmail);
-        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, reviewPage);
+        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, PageResult.of(reviewPage));
     }
 
     @Operation(summary = "내 리뷰 단건 조회", description = "영화에 대해 내가 작성한 리뷰(있으면)를 반환")

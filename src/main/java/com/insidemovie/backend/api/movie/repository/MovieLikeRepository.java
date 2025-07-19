@@ -24,4 +24,7 @@ public interface MovieLikeRepository extends JpaRepository<MovieLike, Long> {
     // 좋아요 한 영화 개수 조회
     int countByMember_Id(Long memberId);
 
+    Page<MovieLike> findByMovie(Member member, Pageable pageable);
+
+
 }

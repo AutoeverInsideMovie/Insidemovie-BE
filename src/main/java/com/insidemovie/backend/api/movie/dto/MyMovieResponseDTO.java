@@ -1,11 +1,19 @@
 package com.insidemovie.backend.api.movie.dto;
 
-import lombok.Builder;
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.insidemovie.backend.api.constant.EmotionType;
+import lombok.*;
+
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MyMovieResponseDTO {
     private Long movieReactionId;
     private Long movieId;
+    private String posterPath;
+    private String title;
+    private Double voteAverage;
+    private EmotionType mainEmotion;
 }

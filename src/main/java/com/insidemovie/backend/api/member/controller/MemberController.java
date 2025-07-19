@@ -7,6 +7,8 @@ import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRespon
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.member.service.OAuthService;
 import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
+import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.service.MovieLikeService;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
@@ -188,13 +190,12 @@ public class MemberController {
     // 내가 좋아요 한 영화 조회
     @Operation(summary = "내가 좋아요 한 영화 목록 조회", description = "로그인한 사용자의 영화 좋아요 목록을 페이징하여 조회합니다.")
     @GetMapping("/my-movie")
-    public ResponseEntity<ApiResponse<Page<MyMovieResponseDTO>>> getMyMovies(
+    public ResponseEntity<ApiResponse<PageResDto<MyMovieResponseDTO>>>getMyMovies(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int pageSize) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<MyMovieResponseDTO> result = movieLikeService.getMyMovies(userDetails.getUsername(), pageable);
+        PageResDto<MyMovieResponseDTO> result = movieLikeService.getMyMovies(userDetails.getUsername(), page, pageSize);
 
         return ApiResponse.success(SuccessStatus.SEND_MY_MOVIE_SUCCESS, result);
     }

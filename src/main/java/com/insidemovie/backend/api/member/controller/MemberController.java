@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.member.controller;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.member.dto.*;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
@@ -14,6 +15,7 @@ import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
 import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.response.ApiResponse;
+import com.insidemovie.backend.common.response.PageResult;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -122,8 +124,9 @@ public class MemberController {
     })
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @RequestParam("email") String email
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
+        String email = userDetails.getUsername();
         memberService.logout(email);
         return ApiResponse.success_only(SuccessStatus.LOGOUT_SUCCESS);
     }
@@ -165,18 +168,20 @@ public class MemberController {
     // 프로필 이미지 변경
     @Operation(summary = "프로필 이미지 변경 API", description = "프로필 이미지를 변경합니다.")
     @PatchMapping("/emotion")
-    public ResponseEntity<ApiResponse<Void>> updateProfileEmotion(
+    public ResponseEntity<ApiResponse<Map<String, String>>> updateProfileEmotion(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ProfileEmotionUpdateRequestDto requestDto) {
 
-        memberService.updateProfileEmotion(userDetails.getUsername(), requestDto.getProfileEmotion());
-        return ApiResponse.success_only(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS);
+        EmotionType updated = memberService.updateProfileEmotion(userDetails.getUsername(), requestDto.getProfileEmotion());
+        Map<String, String> data = Map.of("profileEmotion", updated.name());
+        return ApiResponse.success(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS, data);
     }
 
 
     // 내가 작성한 리뷰 조회
     @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
     @GetMapping("/my-review")
+
     public ResponseEntity<ApiResponse<PageResDto<ReviewResponseDTO>>> getMyReviews(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -184,7 +189,7 @@ public class MemberController {
 
         PageResDto<ReviewResponseDTO> result = reviewService.getMyReviews(userDetails.getUsername(), page, pageSize);
 
-        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, result);
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, PageResult.of(pageData));
     }
 
     // 내가 좋아요 한 영화 조회

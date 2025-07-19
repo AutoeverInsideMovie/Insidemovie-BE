@@ -5,5 +5,5 @@ public enum EmotionType {
     SADNESS,
     ANGER,
     FEAR,
-    NEUTRAL
+    NEUTRAL,
 }

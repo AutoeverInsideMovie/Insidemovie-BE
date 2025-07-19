@@ -2,6 +2,7 @@ package com.insidemovie.backend.api.review.service;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.review.dto.*;
@@ -20,6 +21,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -239,20 +241,17 @@ public class ReviewService {
 
     // 내가 작성한 리뷰 목록 조회 메서드
     @Transactional
-    public Page<MyReviewResponseDTO> getMyReviews(String memberEmail, Pageable pageable) {
+    public PageResDto<ReviewResponseDTO> getMyReviews(String memberEmail,  Integer page, Integer pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         Page<Review> myReviews = reviewRepository.findByMember(member, pageable);
+        // currentUserId = 본인의 ID
+        Long currentUserId = member.getId();
+        Page<ReviewResponseDTO> dto = myReviews.map(review -> toResponseDTO(review, currentUserId));
 
-        return myReviews.map(review ->
-                MyReviewResponseDTO.builder()
-                        .reviewId(review.getId())
-                        .movieId(review.getMovie().getId())
-                        .content(review.getContent())
-                        .createdAt(review.getCreatedAt())
-                        .build()
-        );
+        return new PageResDto<>(dto);
     }
 
     private ReviewResponseDTO toResponseDTO(Review review, Long currentUserId) {

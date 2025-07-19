@@ -16,7 +16,7 @@ public class WeeklyBoxOfficeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "tmdb_id", referencedColumnName = "tmdb_id")
     private Movie movie;
 
@@ -40,4 +40,23 @@ public class WeeklyBoxOfficeEntity {
     private String audiAcc;         // 누적 관객수
     private String scrnCnt;         // 상영 스크린 수
     private String showCnt;         // 상영 횟수
+
+    public void updateFrom(WeeklyBoxOfficeEntity other) {
+        this.rnum            = other.rnum;
+        this.movieRank       = other.movieRank;
+        this.rankInten       = other.rankInten;
+        this.rankOldAndNew   = other.rankOldAndNew;
+        this.openDt          = other.openDt;
+        this.salesShare      = other.salesShare;
+        this.salesInten      = other.salesInten;
+        this.salesChange     = other.salesChange;
+        this.salesAcc        = other.salesAcc;
+        this.audiCnt         = other.audiCnt;
+        this.audiInten       = other.audiInten;
+        this.audiChange      = other.audiChange;
+        this.audiAcc         = other.audiAcc;
+        this.scrnCnt         = other.scrnCnt;
+        this.showCnt         = other.showCnt;
+        this.salesAmt       = other.salesAmt;
+    }
 }

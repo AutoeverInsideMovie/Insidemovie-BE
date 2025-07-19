@@ -1,9 +1,12 @@
 package com.insidemovie.backend.api.movie.repository;
 
 import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 
 public interface DailyBoxOfficeRepository extends JpaRepository<DailyBoxOfficeEntity, Long> {
     void deleteByTargetDate(LocalDate date);
+    Page<DailyBoxOfficeEntity> findByTargetDate(LocalDate date, Pageable pageable);
 }

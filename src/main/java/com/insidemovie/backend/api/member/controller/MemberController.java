@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.member.controller;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.member.dto.*;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.dto.emotion.MemberEmotionSummaryRequestDTO;
@@ -166,12 +167,13 @@ public class MemberController {
     // 프로필 이미지 변경
     @Operation(summary = "프로필 이미지 변경 API", description = "프로필 이미지를 변경합니다.")
     @PatchMapping("/emotion")
-    public ResponseEntity<ApiResponse<Void>> updateProfileEmotion(
+    public ResponseEntity<ApiResponse<Map<String, String>>> updateProfileEmotion(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody ProfileEmotionUpdateRequestDto requestDto) {
 
-        memberService.updateProfileEmotion(userDetails.getUsername(), requestDto.getProfileEmotion());
-        return ApiResponse.success_only(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS);
+        EmotionType updated = memberService.updateProfileEmotion(userDetails.getUsername(), requestDto.getProfileEmotion());
+        Map<String, String> data = Map.of("profileEmotion", updated.name());
+        return ApiResponse.success(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS, data);
     }
 
 

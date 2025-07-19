@@ -12,6 +12,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Table(name = "member")
@@ -47,6 +48,7 @@ public class Member extends BaseTimeEntity {
     @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private MemberEmotionSummary emotionSummary;
 
+    @Column(name="refresh_token")
     private String refreshToken;  // 리프레시 토큰
 
     // jwt
@@ -99,6 +101,4 @@ public class Member extends BaseTimeEntity {
     public void incrementReportCount() {
         this.reportCount++;
     }
-
-
 }

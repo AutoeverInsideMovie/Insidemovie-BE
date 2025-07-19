@@ -329,6 +329,16 @@ public class MovieService {
 
     // 대표 감정 계산 메서드
     private EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
+
+        // 모든 값이 0인 경우 NEUTRAL 고정
+        if (dto.getJoy() == 0.0 &&
+                dto.getSadness() == 0.0 &&
+                dto.getAnger() == 0.0 &&
+                dto.getFear() == 0.0 &&
+                dto.getNeutral() == 0.0) {
+            return EmotionType.NEUTRAL;
+        }
+
         Map<EmotionType, Double> scores = Map.of(
                 EmotionType.JOY, dto.getJoy(),
                 EmotionType.SADNESS, dto.getSadness(),

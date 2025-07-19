@@ -73,7 +73,7 @@ public class ReviewService {
                 .build();
         Review savedReview = reviewRepository.save(review);
 
-        /*try {
+        try {
             // FastAPI overall_avg 엔드포인트 호출
             PredictRequestDTO request = new PredictRequestDTO(savedReview.getContent());
             PredictResponseDTO response = fastApiRestTemplate.postForObject(
@@ -100,7 +100,7 @@ public class ReviewService {
 
         } catch (RestClientException e) {
             throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
-        }*/
+        }
         return savedReview.getId();
     }
 

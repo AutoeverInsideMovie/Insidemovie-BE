@@ -28,29 +28,10 @@ public class MemberEmotionSummary {
     private Float sadness;
     private Float fear;
     private Float anger;
-    private Float neutral;
+    private Float disgust;
 
     @Enumerated(EnumType.STRING)
     private EmotionType repEmotionType; // 대표 감정
-
-//    @Column(nullable = false)
-//    private Float joy = 0.0f;
-//
-//    @Column(nullable = false)
-//    private Float sadness = 0.0f;
-//
-//    @Column(nullable = false)
-//    private Float anger = 0.0f;
-//
-//    @Column(nullable = false)
-//    private Float fear = 0.0f;
-//
-//    @Column(nullable = false)
-//    private Float neutral = 0.0f;
-//
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private EmotionType repEmotionType = EmotionType.NEUTRAL;
 
     // 평균 감정 정보를 DTO로부터 갱신
     public void updateFromDTO(EmotionAvgDTO dto) {
@@ -58,7 +39,7 @@ public class MemberEmotionSummary {
         this.sadness        = dto.getSadness().floatValue();
         this.anger          = dto.getAnger().floatValue();
         this.fear           = dto.getFear().floatValue();
-        this.neutral        = dto.getNeutral().floatValue();
+        this.disgust        = dto.getDisgust().floatValue();
         this.repEmotionType = dto.getRepEmotionType();
     }
 }

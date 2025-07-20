@@ -89,7 +89,7 @@ public class ReviewService {
                     .anger(probabilities.get("anger"))
                     .fear(probabilities.get("fear"))
                     .joy(probabilities.get("joy"))
-                    .neutral(probabilities.get("neutral"))
+                    .disgust(probabilities.get("disgust"))
                     .sadness(probabilities.get("sadness"))
                     .review(savedReview)
                     .build();
@@ -252,18 +252,18 @@ public class ReviewService {
                             "anger", e.getAnger(),
                             "fear", e.getFear(),
                             "joy", e.getJoy(),
-                            "neutral", e.getNeutral(),
+                            "disgust", e.getDisgust(),
                             "sadness", e.getSadness()
                     );
                     String rep = probs.entrySet().stream()
                             .max(Map.Entry.comparingByValue())
                             .map(Map.Entry::getKey)
-                            .orElse("neutral");
+                            .orElse("disgust");
                     return EmotionDTO.builder()
                             .anger(probs.get("anger"))
                             .fear(probs.get("fear"))
                             .joy(probs.get("joy"))
-                            .neutral(probs.get("neutral"))
+                            .disgust(probs.get("disgust"))
                             .sadness(probs.get("sadness"))
                             .repEmotion(rep)
                             .build();

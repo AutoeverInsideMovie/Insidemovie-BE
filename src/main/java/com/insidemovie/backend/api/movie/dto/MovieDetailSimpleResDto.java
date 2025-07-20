@@ -1,6 +1,6 @@
 package com.insidemovie.backend.api.movie.dto;
 
-import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
+import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 import lombok.*;
 
 @Builder
@@ -12,5 +12,5 @@ public class MovieDetailSimpleResDto {
     private String title;
     private String posterPath;
     private Double voteAverage;
-    private MovieEmotionResDTO emotion;
+    private MovieEmotionSummary emotion;
 }

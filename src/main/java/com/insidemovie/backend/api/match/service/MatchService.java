@@ -10,9 +10,7 @@ import com.insidemovie.backend.api.match.repository.VoteRepository;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.movie.dto.MovieDetailSimpleResDto;
-import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.entity.Movie;
-import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.common.exception.InternalServerException;
 import com.insidemovie.backend.common.exception.NotFoundException;
@@ -155,22 +153,13 @@ public class MatchService {
 
         for (MovieMatch mm : movieMatch) {
             Movie movie = mm.getMovie();
-            MovieEmotionSummary movieEmotion = movie.getEmotions();
-
-            MovieEmotionResDTO emotionDto = MovieEmotionResDTO.builder()
-                    .joy(movieEmotion.getJoy())
-                    .anger(movieEmotion.getAnger())
-                    .sadness(movieEmotion.getSadness())
-                    .fear(movieEmotion.getFear())
-                    .neutral(movieEmotion.getNeutral())
-                    .dominantEmotion(movieEmotion.getDominantEmotion())
-                    .build();
 
             MovieDetailSimpleResDto dto = MovieDetailSimpleResDto.builder()
+                    .id(movie.getId())
                     .title(movie.getTitle())
                     .posterPath(movie.getPosterPath())
                     .voteAverage(movie.getVoteAverage())
-                    .emotion(emotionDto)
+                    .emotion(movie.getEmotions())
                     .build();
             response.add(dto);
         }

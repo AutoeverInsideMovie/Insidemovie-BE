@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.member.service;
 
+
 import com.insidemovie.backend.api.constant.Authority;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.jwt.JwtProvider;
@@ -261,8 +262,8 @@ public class MemberService {
         EmotionAvgDTO avg = emotionRepository
                 .findAverageEmotionsByMemberId(memberId)
                 .orElseGet(() -> EmotionAvgDTO.builder()
-                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).neutral(0.0)
-                        .repEmotionType(EmotionType.NEUTRAL)
+                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
+                        .repEmotionType(EmotionType.DISGUST)
                         .build()
                 );
 
@@ -285,14 +286,16 @@ public class MemberService {
         Map<EmotionType, Double> scores = Map.of(
                 EmotionType.JOY, dto.getJoy(),
                 EmotionType.SADNESS, dto.getSadness(),
-                EmotionType.ANGER, dto.getAnger(),
-                EmotionType.FEAR, dto.getFear(),
-                EmotionType.NEUTRAL, dto.getNeutral()
+                EmotionType.ANGER,   dto.getAnger(),
+                EmotionType.FEAR,    dto.getFear(),
+                EmotionType.DISGUST, dto.getDisgust()
         );
+
+        // 최댓값 감정 리턴
         return scores.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(EmotionType.NEUTRAL);
+                .orElse(EmotionType.DISGUST);
     }
 
     @Transactional
@@ -305,37 +308,40 @@ public class MemberService {
         }
 
         EmotionType rep = findMaxEmotion(
-                dto.getJoy(), dto.getSadness(), dto.getFear(),
-                dto.getAnger(), dto.getNeutral()
-        );
+            dto.getJoy(), dto.getSadness(), dto.getFear(),
+            dto.getAnger(), dto.getDisgust()
+            );
 
+        // 엔티티 생성 및 저장
         MemberEmotionSummary summary = MemberEmotionSummary.builder()
-                .member(member)
-                .joy(dto.getJoy())
-                .sadness(dto.getSadness())
-                .fear(dto.getFear())
-                .anger(dto.getAnger())
-                .neutral(dto.getNeutral())
-                .repEmotionType(rep)
-                .build();
+            .member(member)
+            .joy(dto.getJoy())
+            .sadness(dto.getSadness())
+            .fear(dto.getFear())
+            .anger(dto.getAnger())
+            .disgust(dto.getDisgust())
+            .repEmotionType(rep)
+            .build();
 
         MemberEmotionSummary saved = memberEmotionSummaryRepository.save(summary);
         return MemberEmotionSummaryResponseDTO.fromEntity(saved);
     }
 
-    public static EmotionType findMaxEmotion(Float joy, Float sadness, Float fear,
-                                             Float anger, Float neutral) {
-        return Map.<EmotionType, Float>of(
-                EmotionType.JOY, joy,
-                EmotionType.SADNESS, sadness,
-                EmotionType.FEAR, fear,
-                EmotionType.ANGER, anger,
-                EmotionType.NEUTRAL, neutral
-        ).entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .orElseThrow()
-                .getKey();
-    }
+    public static EmotionType findMaxEmotion(
+                Float joy, Float sadness, Float fear,
+                Float anger, Float disgust
+        ) {
+            return Map.<EmotionType, Float>of(
+                EmotionType.JOY,    joy,
+                EmotionType.SADNESS,sadness,
+                EmotionType.FEAR,   fear,
+                EmotionType.ANGER,  anger,
+                EmotionType.DISGUST,disgust
+            ).entrySet().stream()
+             .max(Map.Entry.comparingByValue())
+             .orElseThrow()  // 혹은 기본값 설정
+             .getKey();
+        }
 
     @Transactional
     public MemberEmotionSummaryResponseDTO updateEmotionSummary(MemberEmotionSummaryRequestDTO dto) {
@@ -345,35 +351,41 @@ public class MemberService {
 
         double avgJoy = avg(summary.getJoy(), dto.getJoy());
         double avgSadness = avg(summary.getSadness(), dto.getSadness());
-        double avgAnger = avg(summary.getAnger(), dto.getAnger());
-        double avgFear = avg(summary.getFear(), dto.getFear());
-        double avgNeutral = avg(summary.getNeutral(), dto.getNeutral());
+        double avgAnger   = avg(summary.getAnger(),   dto.getAnger());
+        double avgFear    = avg(summary.getFear(),    dto.getFear());
+        double avgDisgust = avg(summary.getDisgust(), dto.getDisgust());
 
         EmotionType repType = Stream.of(
-                        new AbstractMap.SimpleEntry<>(EmotionType.JOY, avgJoy),
-                        new AbstractMap.SimpleEntry<>(EmotionType.SADNESS, avgSadness),
-                        new AbstractMap.SimpleEntry<>(EmotionType.ANGER, avgAnger),
-                        new AbstractMap.SimpleEntry<>(EmotionType.FEAR, avgFear),
-                        new AbstractMap.SimpleEntry<>(EmotionType.NEUTRAL, avgNeutral)
-                )
-                .max(Comparator.comparingDouble(Map.Entry::getValue))
-                .map(Map.Entry::getKey)
-                .orElse(EmotionType.NEUTRAL);
+                new AbstractMap.SimpleEntry<>(EmotionType.JOY,     avgJoy),
+                new AbstractMap.SimpleEntry<>(EmotionType.SADNESS, avgSadness),
+                new AbstractMap.SimpleEntry<>(EmotionType.ANGER,   avgAnger),
+                new AbstractMap.SimpleEntry<>(EmotionType.FEAR,    avgFear),
+                new AbstractMap.SimpleEntry<>(EmotionType.DISGUST, avgDisgust)
+            )
+            .max(Comparator.comparingDouble(Map.Entry::getValue))
+            .map(Map.Entry::getKey)
+            .orElse(EmotionType.DISGUST);
 
         EmotionAvgDTO avgDto = EmotionAvgDTO.builder()
-                .joy(avgJoy)
-                .sadness(avgSadness)
-                .anger(avgAnger)
-                .fear(avgFear)
-                .neutral(avgNeutral)
-                .repEmotionType(repType)
-                .build();
+            .joy(avgJoy)
+            .sadness(avgSadness)
+            .anger(avgAnger)
+            .fear(avgFear)
+            .disgust(avgDisgust)
+            .repEmotionType(repType)
+            .build();
 
+        // 엔티티에 한 번에 반영
         summary.updateFromDTO(avgDto);
+
+        // 저장
         MemberEmotionSummary updated = memberEmotionSummaryRepository.save(summary);
+
+        // DTO 변환 후 반환
         return MemberEmotionSummaryResponseDTO.fromEntity(updated);
     }
 
+    // 두 값의 평균 (소수점 유지)
     private double avg(double a, double b) {
         return (a + b) / 2.0;
     }

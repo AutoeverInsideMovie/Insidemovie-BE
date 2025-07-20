@@ -13,7 +13,7 @@ public class MemberEmotionSummaryResponseDTO {
     private Double sadness;
     private Double anger;
     private Double fear;
-    private Double neutral;
+    private Double disgust;
     private EmotionType repEmotion;
 
     /**
@@ -26,7 +26,7 @@ public class MemberEmotionSummaryResponseDTO {
             .sadness(e.getSadness().doubleValue())
             .anger(e.getAnger().doubleValue())
             .fear(e.getFear().doubleValue())
-            .neutral(e.getNeutral().doubleValue())
+            .disgust(e.getDisgust().doubleValue())
             .repEmotion(e.getRepEmotionType())
             .build();
     }

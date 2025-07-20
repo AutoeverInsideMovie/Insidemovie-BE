@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,24 +44,20 @@ public class ReviewService {
     private final RestTemplate fastApiRestTemplate;
     private final EmotionRepository emotionRepository;
 
-    // 리뷰 작성 메서드
+    // 리뷰 작성
     @Transactional
     public Long createReview(Long movieId, ReviewCreateDTO reviewCreateDTO, String memberEmail) {
 
-        // 사용자 조회
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
-        // 영화 조회
         Movie movie = movieRepository.findById(movieId)
-            .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
-        // 기존에 작성한 리뷰가 있다면 예외 처리 (중복 방지)
         if (reviewRepository.findByMemberAndMovie(member, movie).isPresent()) {
             throw new BadRequestException(ErrorStatus.DUPLICATE_REVIEW_EXCEPTION.getMessage());
         }
 
-        // 리뷰 저장
         Review review = Review.builder()
                 .content(reviewCreateDTO.getContent())
                 .rating(reviewCreateDTO.getRating())
@@ -73,10 +68,10 @@ public class ReviewService {
                 .member(member)
                 .movie(movie)
                 .build();
+
         Review savedReview = reviewRepository.save(review);
 
         try {
-            // FastAPI overall_avg 엔드포인트 호출
             PredictRequestDTO request = new PredictRequestDTO(savedReview.getContent());
             PredictResponseDTO response = fastApiRestTemplate.postForObject(
                     "/predict/overall_avg",
@@ -85,11 +80,10 @@ public class ReviewService {
             );
 
             if (response == null || response.getProbabilities() == null) {
-            throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
+                throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
             }
 
             Map<String, Double> probabilities = response.getProbabilities();
-            System.out.println("========================================" + response.getProbabilities());
             Emotion emotion = Emotion.builder()
                     .anger(probabilities.get("anger"))
                     .fear(probabilities.get("fear"))
@@ -106,7 +100,7 @@ public class ReviewService {
         return savedReview.getId();
     }
 
-    // 리뷰 목록 조회 메서드
+    // 영화별 리뷰 목록 조회
     @Transactional
     public PageResDto<ReviewResponseDTO> getReviewsByMovie(
             Long movieId,
@@ -114,35 +108,32 @@ public class ReviewService {
             String memberEmail
     ) {
         Pageable pageable = PageRequest.of(page, pageSize);
-        // 영화 조회
+
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
-        Long currentUserId = null;  // 로그인 사용자 ID
-        Long myReviewId = null;     // 내 리뷰가 있을 경우 그 리뷰 PK
-        log.info("로그인 사용자 ID:  "+currentUserId+"내 리뷰가 있을 경우 그 리뷰 PK:  "+myReviewId);
+        Long currentUserId = null;
+        Long myReviewId = null;
 
-        // 2) 로그인 사용자라면 Member 조회 + 내 리뷰 ID 찾기
         if (memberEmail != null && !memberEmail.isBlank()) {
             Member member = memberRepository.findByEmail(memberEmail.trim())
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
             currentUserId = member.getId();
 
-            // 존재하면 ID, 없으면 null
             myReviewId = reviewRepository.findByMemberAndMovie(member, movie)
                     .map(Review::getId)
                     .orElse(null);
         }
 
-        // 내 리뷰 ID 가 있으면 제외하여 조회
-        Page<Review> page = (myReviewId != null)
+        log.info("로그인 사용자 ID: {}, 내 리뷰 ID: {}", currentUserId, myReviewId);
+
+        Page<Review> reviewPage = (myReviewId != null)
                 ? reviewRepository.findByMovieAndIdNotAndIsConcealedFalse(movie, myReviewId, pageable)
                 : reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 
         final Long uid = currentUserId;
-        log.info("로그인 사용자 ID:  "+uid);
-
         Page<ReviewResponseDTO> dtoPage = reviewPage.map(r -> toResponseDTO(r, uid));
+
         return new PageResDto<>(dtoPage);
     }
 
@@ -164,24 +155,20 @@ public class ReviewService {
         return toResponseDTO(review, member.getId());
     }
 
-    // 리뷰 수정 메서드
+    // 리뷰 수정
     @Transactional
     public void modifyReview(Long reviewId, ReviewUpdateDTO reviewUpdateDTO, String memberEmail) {
 
-        // 사용자 조회
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
-        // 리뷰 존재 여부 확인
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
 
-        // 작성자 본인인지 확인
         if (!review.getMember().getId().equals(member.getId())) {
             throw new UnAuthorizedException(ErrorStatus.USER_UNAUTHORIZED.getMessage());
         }
 
-        // 리뷰 수정
         review.modify(
                 reviewUpdateDTO.getContent(),
                 reviewUpdateDTO.getRating(),
@@ -190,69 +177,58 @@ public class ReviewService {
         );
     }
 
-    // 리뷰 삭제 메서드
+    // 리뷰 삭제
     @Transactional
     public void deleteReview(Long reviewId, String memberEmail) {
 
-        // 사용자 조회
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
-        // 리뷰 존재 여부 확인
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
 
-        // 작성자 본인인지 확인
         if (!review.getMember().getId().equals(member.getId())) {
             throw new UnAuthorizedException(ErrorStatus.USER_UNAUTHORIZED.getMessage());
         }
 
-        // 좋아요 삭제
         reviewLikeRepository.deleteByReviewId(reviewId);
-
-        // 리뷰 삭제
         reviewRepository.delete(review);
     }
 
-    // 좋아요 토글 메서드
+    // 좋아요 토글
     @Transactional
     public void toggleReviewLike(Long reviewId, String memberEmail) {
-        // 사용자 조회
+
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
-        // 리뷰 조회
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW_EXCEPTION.getMessage()));
 
-        // 좋아요 여부 확인
-        Optional<ReviewLike> optionalLike = reviewLikeRepository.findByReview_IdAndMember_Id(reviewId, member.getId());
+        Optional<ReviewLike> optionalLike =
+                reviewLikeRepository.findByReview_IdAndMember_Id(reviewId, member.getId());
 
         if (optionalLike.isPresent()) {
-            // 이미 좋아요 눌렀다면 취소
             reviewLikeRepository.delete(optionalLike.get());
             reviewRepository.decrementLikeCount(reviewId);
         } else {
-            // 좋아요가 없다면 등록
             ReviewLike newLike = ReviewLike.builder()
                     .review(review)
                     .member(member)
                     .build();
-
             reviewLikeRepository.save(newLike);
             reviewRepository.incrementLikeCount(reviewId);
         }
     }
 
-    // 내가 작성한 리뷰 목록 조회 메서드
+    // 내가 작성한 리뷰 목록
     @Transactional
-    public PageResDto<ReviewResponseDTO> getMyReviews(String memberEmail,  Integer page, Integer pageSize) {
+    public PageResDto<ReviewResponseDTO> getMyReviews(String memberEmail, Integer page, Integer pageSize) {
         Pageable pageable = PageRequest.of(page, pageSize);
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         Page<Review> myReviews = reviewRepository.findByMember(member, pageable);
-        // currentUserId = 본인의 ID
         Long currentUserId = member.getId();
         Page<ReviewResponseDTO> dto = myReviews.map(review -> toResponseDTO(review, currentUserId));
 
@@ -260,14 +236,14 @@ public class ReviewService {
     }
 
     private ReviewResponseDTO toResponseDTO(Review review, Long currentUserId) {
-        boolean myReview = (currentUserId != null && review.getMember().getId().equals(currentUserId));
-        boolean myLike = (currentUserId != null &&
-                reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), currentUserId));
-        ReportStatus reportStatus =
-                review.getReports().stream()
-                        .map(Report::getStatus)
-                        .findFirst()
-                        .orElse(null);
+        boolean myReview = currentUserId != null && review.getMember().getId().equals(currentUserId);
+        boolean myLike = currentUserId != null &&
+                reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), currentUserId);
+
+        ReportStatus reportStatus = review.getReports().stream()
+                .map(com.insidemovie.backend.api.report.entity.Report::getStatus)
+                .findFirst()
+                .orElse(null);
 
         EmotionDTO emotionDTO = emotionRepository.findByReviewId(review.getId())
                 .map(e -> {
@@ -312,5 +288,4 @@ public class ReviewService {
                 .reportStatus(reportStatus)
                 .build();
     }
-
 }

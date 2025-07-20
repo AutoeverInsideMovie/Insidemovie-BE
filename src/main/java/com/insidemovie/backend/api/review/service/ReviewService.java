@@ -300,6 +300,8 @@ public class ReviewService {
                 .modify(review.isModify())
                 .myLike(myLike)
                 .emotion(emotionDTO)
+                .isReported(review.isReported())
+                .isConcealed(review.isConcealed())
                 .build();
     }
 

@@ -18,14 +18,16 @@ import com.insidemovie.backend.common.exception.InternalServerException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -111,7 +113,7 @@ public class MatchService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MATCH.getMessage()));
 
         // 투표 여부 확인
-        Boolean isVoted = voteRepository.existsByMatchIdAndUserId(lastMatch.getId(), member.getId());
+        Boolean isVoted = voteRepository.existsByMatchIdAndMemberId(lastMatch.getId(), member.getId());
         if (isVoted) {
             throw new IllegalStateException(ErrorStatus.DUPLICATE_VOTE_EXCEPTION.getMessage());
         }

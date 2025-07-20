@@ -9,7 +9,7 @@ import java.util.List;
 
 @Entity
 @Getter @Setter
-@Table(name = "match")
+@Table(name = "`match`")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -28,6 +28,7 @@ public class Match {
     @Column(name = "winner_id")
     private Long winnerId;
 
+    @Builder.Default
     @OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MovieMatch> movieMatch = new ArrayList<>();
 }

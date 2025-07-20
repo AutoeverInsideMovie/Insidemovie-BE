@@ -8,7 +8,7 @@ import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 
 import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
-import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
+import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieGenre;
@@ -347,27 +347,27 @@ public class MovieService {
      * 영화에 저장된 5가지 감정 상태를 조회해 DTO로 반환
      */
     @Transactional
-    public MovieEmotionSummaryResponseDTO getMovieEmotions(Long movieId) {
+    public MovieEmotionResDTO getMovieEmotions(Long movieId) {
         return movieEmotionSummaryRepository.findByMovieId(movieId)
             .map(summary -> {
-                MovieEmotionSummaryResponseDTO dto = new MovieEmotionSummaryResponseDTO();
+                MovieEmotionResDTO dto = new MovieEmotionResDTO();
                 dto.setJoy(summary.getJoy());
                 dto.setSadness(summary.getSadness());
                 dto.setFear(summary.getFear());
                 dto.setAnger(summary.getAnger());
                 dto.setNeutral(summary.getNeutral());
-                dto.setDominantEmotion(summary.getDominantEmotion().name());
+                dto.setDominantEmotion(EmotionType.valueOf(summary.getDominantEmotion().name()));
                 return dto;
             })
             .orElseGet(() -> {
                 // 데이터가 없을 때 빈 DTO 반환
-                MovieEmotionSummaryResponseDTO dto = new MovieEmotionSummaryResponseDTO();
+                MovieEmotionResDTO dto = new MovieEmotionResDTO();
                 dto.setJoy(0f);
                 dto.setSadness(0f);
                 dto.setFear(0f);
                 dto.setAnger(0f);
                 dto.setNeutral(0f);
-                dto.setDominantEmotion("NONE");
+                dto.setDominantEmotion(EmotionType.valueOf("JOY"));
                 return dto;
             });
     }

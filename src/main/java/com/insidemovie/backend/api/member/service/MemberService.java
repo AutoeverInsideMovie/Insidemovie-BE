@@ -60,6 +60,20 @@ public class MemberService {
 
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         Member member = requestDto.toEntity(encodedPassword);
+
+        // MemberEmotionSummary 생성 및 연결
+        MemberEmotionSummary summary = MemberEmotionSummary.builder()
+                .joy(0f)
+                .sadness(0f)
+                .fear(0f)
+                .anger(0f)
+                .disgust(0f)
+                .repEmotionType(null)
+                .build();
+
+        summary.setMember(member);
+        member.setEmotionSummary(summary);
+
         memberRepository.save(member);
 
         Map<String, Object> result = new HashMap<>();
@@ -87,6 +101,20 @@ public class MemberService {
                 .socialType("KAKAO")
                 .authority(Authority.ROLE_USER)
                 .build();
+
+        // MemberEmotionSummary 생성 및 연결
+        MemberEmotionSummary summary = MemberEmotionSummary.builder()
+                .member(member)
+                .joy(0f)
+                .sadness(0f)
+                .fear(0f)
+                .anger(0f)
+                .disgust(0f)
+                .repEmotionType(null)
+                .build();
+
+        summary.setMember(member);
+        member.setEmotionSummary(summary);
 
         memberRepository.save(member);
 

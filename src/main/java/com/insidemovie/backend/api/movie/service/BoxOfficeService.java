@@ -1,6 +1,8 @@
 package com.insidemovie.backend.api.movie.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
@@ -19,18 +21,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -43,6 +43,7 @@ public class BoxOfficeService {
     @Value("${kobis.api.key}")
     private String kobisApiKey;
 
+    private final ObjectMapper objectMapper;
     private final MovieService movieService;
     private final DailyBoxOfficeRepository dailyRepo;
     private final WeeklyBoxOfficeRepository weeklyRepo;
@@ -440,20 +441,69 @@ public class BoxOfficeService {
         MovieDetailResDto dto = new MovieDetailResDto();
         dto.setId(movie.getId());
         dto.setTitle(movie.getTitle());
+        dto.setTitleEn(movie.getTitleEn());
         dto.setOverview(movie.getOverview());
         dto.setPosterPath(movie.getPosterPath());
         dto.setBackdropPath(movie.getBackdropPath());
         dto.setVoteAverage(movie.getVoteAverage());
         dto.setOriginalLanguage(movie.getOriginalLanguage());
-        dto.setIsLike(false);  // 좋아요 기능 연동 시 변경
+        dto.setIsLike(false); // TODO: 좋아요 연동
 
-        List<String> genres = movieGenreRepository
-            .findByMovie(movie)
-            .stream()
-            .map(mg -> mg.getGenreType().name())
-            .collect(Collectors.toList());
+        // 장르
+        List<String> genres = movieGenreRepository.findByMovie(movie)
+                .stream()
+                .map(mg -> mg.getGenreType().name())
+                .toList();
         dto.setGenre(genres);
 
+        // 배우 / 감독 / OTT : JSON 배열 파싱
+        dto.setActors(readJsonArray(movie.getActors()));          // ["배우1","배우2",...]
+        dto.setDirector(readJsonArray(movie.getDirectors()));     // ["감독1","감독2"...]
+        dto.setOttProviders(readJsonArray(movie.getOttProviders())); // []
+
+        dto.setRating(movie.getRating());
+
+        // releaseDate (LocalDate → String "yyyy-MM-dd" 혹은 null)
+        if (movie.getReleaseDate() != null) {
+            dto.setReleaseDate(movie.getReleaseDate().toString());  // DTO 타입에 맞게
+        } else {
+            dto.setReleaseDate(null);
+        }
+
+        dto.setRuntime(movie.getRuntime());
+        dto.setStatus(movie.getStatus());
         return dto;
+    }
+
+
+    private List<String> parseList(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        return Arrays.stream(raw.replaceAll("^\\[|]$", "").split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    private String parseSingle(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String cleaned = raw.replaceAll("^\\[|]$", "").trim();
+        return cleaned.isEmpty() ? null : cleaned;
+    }
+
+    private List<String> readJsonArray(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        try {
+            return objectMapper.readValue(raw, new TypeReference<List<String>>() {
+            });
+        } catch (Exception e) {
+            // 과거 toString() 포맷 호환 (fallback)
+            if (raw.startsWith("[") && raw.endsWith("]")) {
+                return Arrays.stream(raw.substring(1, raw.length() - 1).split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+            }
+            return List.of();
+        }
     }
 }

@@ -37,6 +37,14 @@ public class MatchController {
     @GetMapping("/weekly-match")
     public ResponseEntity<ApiResponse<List<MovieDetailSimpleResDto>>> MatchDetail() {
         List<MovieDetailSimpleResDto> response = matchService.getMatchDetail();
-        return ApiResponse.success(SuccessStatus.SEND_MATCH_DETAIL_SUCCESS, response);
+        return ApiResponse.success(SuccessStatus.GET_MATCH_DETAIL_SUCCESS, response);
+    }
+
+    // 역대 우승 영화 조회
+    @Operation(summary = "역대 우승 영화 조회", description = "영화 대결에서 우승한 영화 내역을 조회합니다.")
+    @GetMapping("/winners")
+    public ResponseEntity<ApiResponse<List<MovieDetailSimpleResDto>>> winnerHistory() {
+        List<MovieDetailSimpleResDto> response = matchService.getWinnerHistory();
+        return ApiResponse.success(SuccessStatus.GET_WINNER_SUCCESS, response);
     }
 }

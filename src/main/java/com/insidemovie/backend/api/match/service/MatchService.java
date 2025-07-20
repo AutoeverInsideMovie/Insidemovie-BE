@@ -30,6 +30,7 @@ import java.util.Random;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+// TODO: 지금 emotion table이 없어서 주석처리 해놨음 주석 풀어야됨!!!
 public class MatchService {
     private final MovieMatchRepository movieMatchRepository;
     private final MatchRepository matchRepository;
@@ -101,7 +102,7 @@ public class MatchService {
                 .findFirst()
                 .orElseThrow(() -> new InternalServerException(ErrorStatus.NOT_FOUND_WINNER.getMessage()));
 
-        lastMatch.setWinnerId(winner.getId());
+        lastMatch.setWinnerId(winner.getMovie().getId());
         matchRepository.save(lastMatch);
     }
 
@@ -159,7 +160,29 @@ public class MatchService {
                     .title(movie.getTitle())
                     .posterPath(movie.getPosterPath())
                     .voteAverage(movie.getVoteAverage())
-                    .emotion(movie.getEmotions())
+//                    .emotion(movie.getEmotions())
+                    .build();
+            response.add(dto);
+        }
+        return response;
+    }
+
+    // 역대 우승 영화 조회
+    public List<MovieDetailSimpleResDto> getWinnerHistory() {
+        List<Match> matches = matchRepository.findAll();
+        List<MovieDetailSimpleResDto> response = new ArrayList<>();
+
+        for (Match match : matches) {
+            if (match.getWinnerId() == null) continue;
+            Movie movie = movieRepository.findById(match.getWinnerId())
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+
+            MovieDetailSimpleResDto dto = MovieDetailSimpleResDto.builder()
+                    .id(movie.getId())
+                    .title(movie.getTitle())
+                    .posterPath(movie.getPosterPath())
+                    .voteAverage(movie.getVoteAverage())
+//                    .emotion(movie.getEmotions())
                     .build();
             response.add(dto);
         }

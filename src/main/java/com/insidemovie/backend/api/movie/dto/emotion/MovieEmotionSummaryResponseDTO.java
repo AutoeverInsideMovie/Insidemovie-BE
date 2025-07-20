@@ -8,6 +8,6 @@ public class MovieEmotionSummaryResponseDTO {
     private Float anger;
     private Float sadness;
     private Float fear;
-    private Float disgust;
+    private Float neutral;
     private String dominantEmotion;
 }

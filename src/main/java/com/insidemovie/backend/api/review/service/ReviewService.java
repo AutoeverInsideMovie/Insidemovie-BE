@@ -5,6 +5,8 @@ import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.api.report.entity.Report;
+import com.insidemovie.backend.api.report.entity.ReportStatus;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.entity.Emotion;
 import com.insidemovie.backend.api.review.entity.Review;
@@ -258,6 +260,11 @@ public class ReviewService {
         boolean myReview = (currentUserId != null && review.getMember().getId().equals(currentUserId));
         boolean myLike = (currentUserId != null &&
                 reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), currentUserId));
+        ReportStatus reportStatus =
+                review.getReports().stream()
+                        .map(Report::getStatus)
+                        .findFirst()
+                        .orElse(null);
 
         EmotionDTO emotionDTO = emotionRepository.findByReviewId(review.getId())
                 .map(e -> {
@@ -299,6 +306,7 @@ public class ReviewService {
                 .emotion(emotionDTO)
                 .isReported(review.isReported())
                 .isConcealed(review.isConcealed())
+                .reportStatus(reportStatus)
                 .build();
     }
 

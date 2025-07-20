@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.review.dto;
 
+import com.insidemovie.backend.api.report.entity.ReportStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -30,4 +31,5 @@ public class ReviewResponseDTO {
 
     private boolean isReported;
     private boolean isConcealed;
+    private ReportStatus reportStatus;
 }

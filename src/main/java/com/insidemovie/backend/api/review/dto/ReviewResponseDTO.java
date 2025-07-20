@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.review.dto;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.ReportStatus;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class ReviewResponseDTO {
     private boolean myLike;  // 내가 좋아요 누른 리뷰
 
     private String nickname;
+    private EmotionType profileEmotion;
 
     private Long memberId;  // 작성자 ID
     private Long movieId;

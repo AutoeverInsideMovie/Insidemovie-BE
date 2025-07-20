@@ -280,6 +280,7 @@ public class ReviewService {
                 .createdAt(review.getCreatedAt())
                 .likeCount(review.getLikeCount())
                 .nickname(review.getMember().getNickname())
+                .profileEmotion(review.getMember().getProfileEmotion())
                 .memberId(review.getMember().getId())
                 .movieId(review.getMovie().getId())
                 .myReview(myReview)

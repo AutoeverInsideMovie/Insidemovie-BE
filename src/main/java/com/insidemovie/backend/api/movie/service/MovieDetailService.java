@@ -31,10 +31,6 @@ public class MovieDetailService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         List<MovieGenre> genres = movieGenreRepository.findByMovieId(movie.getId());
-        if(genres.isEmpty()){
-            log.error("Movie상세보기 장르 오류");
-            throw new NotFoundException(ErrorStatus.NOT_FOUND_GENRE_EXCEPTION.getMessage());
-        }
 
         List<String> genreNames= genres.stream()
                 .map(mg -> mg.getGenreType().name())
@@ -61,10 +57,6 @@ public class MovieDetailService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         List<MovieGenre> genres = movieGenreRepository.findByMovieId(movie.getId());
-        if (genres.isEmpty()) {
-            log.error("Movie상세보기 장르 오류");
-            throw new NotFoundException(ErrorStatus.NOT_FOUND_GENRE_EXCEPTION.getMessage());
-        }
 
         List<String> genreNames = genres.stream()
                 .map(mg ->mg.getGenreType().name())

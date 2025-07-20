@@ -1,9 +1,14 @@
 package com.insidemovie.backend.api.report.controller;
 
+import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.report.dto.ReportRequestDTO;
 import com.insidemovie.backend.api.report.dto.ReportResponseDTO;
 import com.insidemovie.backend.api.report.service.ReportService;
+import com.insidemovie.backend.common.exception.ForbiddenException;
+import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ApiResponse;
+import com.insidemovie.backend.common.response.ErrorStatus;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReportController {
 
     private final ReportService reportService;
+    private final MemberRepository memberRepository;
 
     @Operation(
             summary = "리뷰 신고 API", description = "리뷰를 신고합니다.")
@@ -30,6 +36,14 @@ public class ReportController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody @Valid ReportRequestDTO reportRequestDTO
             ) {
+
+        Member member = memberRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        // 정지된 사용자 차단
+        if (member.isBanned()) {
+            throw new ForbiddenException(ErrorStatus.USER_BANNED_EXCEPTION.getMessage());
+        }
 
         ReportResponseDTO dto = reportService.reportReview(userDetails.getUsername(), reviewId, reportRequestDTO.getReason());
 

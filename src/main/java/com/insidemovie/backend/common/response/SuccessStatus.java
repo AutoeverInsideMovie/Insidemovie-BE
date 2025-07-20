@@ -53,7 +53,6 @@ public enum SuccessStatus {
     SEND_RECOMMEND_MOVIES_SUCCESS(HttpStatus.OK, "추천 영화 조회 성공"),
 
     /** 201 CREATED */
-    CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),
     CREATE_REVIEW_SUCCESS(HttpStatus.CREATED, "리뷰 등록 성공"),
     ;
 

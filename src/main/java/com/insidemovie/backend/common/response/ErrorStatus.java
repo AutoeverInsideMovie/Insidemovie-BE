@@ -25,7 +25,10 @@ public enum ErrorStatus {
 
     /** 401 UNAUTHORIZED */
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
+    USER_ALREADY_LOGGED_OUT(HttpStatus.UNAUTHORIZED, "이미 로그아웃된 사용자입니다."),
 
+    /** 403 FORBIDDEN */
+    USER_BANNED_EXCEPTION(HttpStatus.FORBIDDEN, "정지된 사용자는 이 기능을 이용할 수 없습니다."),
 
     /** 404 NOT_FOUND */
     NOT_FOUND_MEMBERID_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 사용자 입니다."),

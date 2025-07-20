@@ -1,6 +1,7 @@
 package com.insidemovie.backend.api.match.controller;
 
 import com.insidemovie.backend.api.match.service.MatchService;
+import com.insidemovie.backend.api.movie.dto.MovieDetailSimpleResDto;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,10 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/match")
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MatchController {
     private final MatchService matchService;
 
+    // 영화 대결 투표
     @Operation(summary = "영화 대결 투표", description = "더 좋아하는 영화에 투표합니다.")
     @PostMapping("/vote/{movieId}")
     public ResponseEntity<ApiResponse<Void>> voteMatch(
@@ -29,5 +30,13 @@ public class MatchController {
             ) {
         matchService.voteMatch(movieId, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.SEND_VOTE_SUCCESS);
+    }
+
+    // 영화 대결 조회
+    @Operation(summary = "대결 영화 조회", description = "대결중인 영화 내역을 조회합니다.")
+    @GetMapping("/weekly-match")
+    public ResponseEntity<ApiResponse<List<MovieDetailSimpleResDto>>> MatchDetail() {
+        List<MovieDetailSimpleResDto> response = matchService.getMatchDetail();
+        return ApiResponse.success(SuccessStatus.SEND_MATCH_DETAIL_SUCCESS, response);
     }
 }

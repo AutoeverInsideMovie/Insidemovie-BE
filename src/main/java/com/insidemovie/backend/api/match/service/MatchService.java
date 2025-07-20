@@ -9,24 +9,23 @@ import com.insidemovie.backend.api.match.repository.MovieMatchRepository;
 import com.insidemovie.backend.api.match.repository.VoteRepository;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.movie.dto.MovieDetailSimpleResDto;
+import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.common.exception.InternalServerException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -125,5 +124,40 @@ public class MatchService {
                 .movie(movie)
                 .build();
         voteRepository.save(vote);
+    }
+
+    // 영화 대결 조회
+    public List<MovieDetailSimpleResDto> getMatchDetail(){
+        List<MovieDetailSimpleResDto> response = new ArrayList<>();
+
+        // 최근 매치
+        Match lastMatch = matchRepository.findTopByOrderByMatchNumberDesc()
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MATCH.getMessage()));
+
+        // 매치 내역 조회
+        List<MovieMatch> movieMatch = movieMatchRepository.findByMatchId(lastMatch.getId());
+
+        for (MovieMatch mm : movieMatch) {
+            Movie movie = mm.getMovie();
+            MovieEmotionSummary movieEmotion = movie.getEmotions();
+
+            MovieEmotionResDTO emotionDto = MovieEmotionResDTO.builder()
+                    .joy(movieEmotion.getJoy())
+                    .anger(movieEmotion.getAnger())
+                    .sadness(movieEmotion.getSadness())
+                    .fear(movieEmotion.getFear())
+                    .neutral(movieEmotion.getNeutral())
+                    .dominantEmotion(movieEmotion.getDominantEmotion())
+                    .build();
+
+            MovieDetailSimpleResDto dto = MovieDetailSimpleResDto.builder()
+                    .title(movie.getTitle())
+                    .posterPath(movie.getPosterPath())
+                    .voteAverage(movie.getVoteAverage())
+                    .emotion(emotionDto)
+                    .build();
+            response.add(dto);
+        }
+        return response;
     }
 }

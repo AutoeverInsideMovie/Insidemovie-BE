@@ -265,6 +265,7 @@ public class ReviewService {
                 .content(review.getContent())
                 .rating(review.getRating())
                 .spoiler(review.isSpoiler())
+                .watchedAt(review.getWatchedAt())
                 .createdAt(review.getCreatedAt())
                 .likeCount(review.getLikeCount())
                 .nickname(review.getMember().getNickname())

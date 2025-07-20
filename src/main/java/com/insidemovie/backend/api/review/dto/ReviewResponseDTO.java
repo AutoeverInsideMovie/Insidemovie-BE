@@ -14,6 +14,7 @@ public class ReviewResponseDTO {
     private String content;
     private double rating;
     private boolean spoiler;
+    private LocalDateTime watchedAt; // 영화 관람일
     private LocalDateTime createdAt; // 리뷰 작성일
 
     private long likeCount;

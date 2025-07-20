@@ -28,7 +28,7 @@ public class MemberEmotionSummary {
     private Float sadness;
     private Float fear;
     private Float anger;
-    private Float neutral;
+    private Float disgust;
 
     @Enumerated(EnumType.STRING)
     private EmotionType repEmotionType; // 대표 감정
@@ -39,7 +39,7 @@ public class MemberEmotionSummary {
         this.sadness        = dto.getSadness().floatValue();
         this.anger          = dto.getAnger().floatValue();
         this.fear           = dto.getFear().floatValue();
-        this.neutral        = dto.getNeutral().floatValue();
+        this.disgust        = dto.getDisgust().floatValue();
         this.repEmotionType = dto.getRepEmotionType();
     }
 }

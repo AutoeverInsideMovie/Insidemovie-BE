@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -88,7 +89,7 @@ public class ReviewService {
                     .anger(probabilities.get("anger"))
                     .fear(probabilities.get("fear"))
                     .joy(probabilities.get("joy"))
-                    .neutral(probabilities.get("neutral"))
+                    .disgust(probabilities.get("disgust"))
                     .sadness(probabilities.get("sadness"))
                     .review(savedReview)
                     .build();
@@ -104,10 +105,9 @@ public class ReviewService {
     @Transactional
     public PageResDto<ReviewResponseDTO> getReviewsByMovie(
             Long movieId,
-            Integer page, Integer pageSize,
+            Pageable pageable,
             String memberEmail
     ) {
-        Pageable pageable = PageRequest.of(page, pageSize);
 
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
@@ -224,7 +224,8 @@ public class ReviewService {
     // 내가 작성한 리뷰 목록
     @Transactional
     public PageResDto<ReviewResponseDTO> getMyReviews(String memberEmail, Integer page, Integer pageSize) {
-        Pageable pageable = PageRequest.of(page, pageSize);
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("createdAt").descending());
+
         Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
@@ -251,18 +252,18 @@ public class ReviewService {
                             "anger", e.getAnger(),
                             "fear", e.getFear(),
                             "joy", e.getJoy(),
-                            "neutral", e.getNeutral(),
+                            "disgust", e.getDisgust(),
                             "sadness", e.getSadness()
                     );
                     String rep = probs.entrySet().stream()
                             .max(Map.Entry.comparingByValue())
                             .map(Map.Entry::getKey)
-                            .orElse("neutral");
+                            .orElse("disgust");
                     return EmotionDTO.builder()
                             .anger(probs.get("anger"))
                             .fear(probs.get("fear"))
                             .joy(probs.get("joy"))
-                            .neutral(probs.get("neutral"))
+                            .disgust(probs.get("disgust"))
                             .sadness(probs.get("sadness"))
                             .repEmotion(rep)
                             .build();

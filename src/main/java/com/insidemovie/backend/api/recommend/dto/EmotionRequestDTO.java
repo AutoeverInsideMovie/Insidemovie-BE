@@ -8,6 +8,6 @@ public class EmotionRequestDTO {
     private double joy;
     private double anger;
     private double fear;
-    private double neutral;
+    private double disgust;
     private double sadness;
 }

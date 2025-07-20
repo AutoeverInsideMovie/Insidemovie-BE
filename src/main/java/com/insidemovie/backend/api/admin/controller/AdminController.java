@@ -78,6 +78,13 @@ public class AdminController {
         return ApiResponse.success_only(SuccessStatus.REPORT_REJECTED);
     }
 
+    @Operation(summary = "신고 보류", description = "신고를 보류합니다.")
+    @PatchMapping("/reports/{reportId}/unprocessed")
+    public ResponseEntity<ApiResponse<Void>> unprocessedReport(@PathVariable Long reportId) {
+        reportService.unprocessedReport(reportId);
+        return ApiResponse.success_only(SuccessStatus.REPORT_UNPROCESSED);
+    }
+
     @Operation(summary = "관리자 대시보드 요약 정보", description = "회원 수, 리뷰 수 등 요약 정보를 반환합니다.")
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<AdminDashboardDTO>> getDashboard() {

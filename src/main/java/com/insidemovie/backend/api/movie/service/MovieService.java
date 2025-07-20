@@ -1,4 +1,5 @@
 package com.insidemovie.backend.api.movie.service;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insidemovie.backend.api.constant.GenreType;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MovieService {
 
+    private final ObjectMapper objectMapper;
     private final MovieRepository movieRepository;
     private final RestTemplate restTemplate;
     private final MovieGenreRepository movieGenreRepository;
@@ -156,15 +158,13 @@ public class MovieService {
      * MovieDetailDTO의 모든 필드를 Movie 엔티티에 매핑하는 공통 헬퍼 메서드
      */
     private void applyDetailToMovie(Movie movie, MovieDetailDTO detail) {
-        // 포스터/배경 전체 URL
         String fullPoster   = imageBaseUrl + posterSize + detail.getPosterPath();
         String fullBackdrop = imageBaseUrl + posterSize + detail.getBackdropPath();
 
-        // 평점 반올림
         double avg = detail.getVoteAverage() == null ? 0 : detail.getVoteAverage();
         double rounded = BigDecimal.valueOf(avg)
-            .setScale(2, RoundingMode.HALF_UP)
-            .doubleValue();
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
 
         movie.updateTitle(detail.getTitle());
         movie.updateOverview(detail.getOverview());
@@ -175,51 +175,54 @@ public class MovieService {
         movie.updateOriginalLanguage(detail.getOriginalLanguage());
         movie.updateReleaseDate(detail.getReleaseDate());
         movie.updatePopularity(detail.getPopularity());
-
-
-        // 장르 ID 리스트
-//        List<Long> genreIds = detail.getGenres().stream()
-//            .map(GenreDto::getId)
-//            .collect(Collectors.toList());
-//        movie.updateGenreIds(genreIds);
-
         movie.setTitleEn(detail.getOriginalTitle());
 
-        // 배우
+        // 배우 리스트
         List<String> actors = detail.getCredits().getCast().stream()
-            .map(CastDTO::getName)
-            .collect(Collectors.toList());
-        movie.setActors(actors.toString());
+                .map(CastDTO::getName)
+                .toList();
+        movie.setActors(writeJsonArray(actors));   // ["A","B","C"]
 
-        // 감독
+        // 감독 리스트
         List<String> directors = detail.getCredits().getCrew().stream()
-            .filter(c -> "Director".equals(c.getJob()))
-            .map(CrewDTO::getName)
-            .collect(Collectors.toList());
-        movie.setDirectors(directors.toString());
+                .filter(c -> "Director".equals(c.getJob()))
+                .map(CrewDTO::getName)
+                .distinct()
+                .toList();
+        movie.setDirectors(writeJsonArray(directors));
 
         movie.setRuntime(detail.getRuntime());
         movie.setStatus(detail.getStatus());
 
-        // KR 등급
+        // 한국 등급
         String rating = detail.getReleaseDates().getResults().stream()
-            .filter(r -> "KR".equals(r.getIso3166_1()))
-            .flatMap(r -> r.getReleaseDates().stream())
-            .map(ReleaseDateDTO::getCertification)
-            .filter(cert -> cert != null && !cert.isEmpty())
-            .findFirst().orElse(null);
+                .filter(r -> "KR".equals(r.getIso3166_1()))
+                .flatMap(r -> r.getReleaseDates().stream())
+                .map(ReleaseDateDTO::getCertification)
+                .filter(cert -> cert != null && !cert.isEmpty())
+                .findFirst()
+                .orElse(null);
         movie.setRating(rating);
 
-        // KR OTT 제공처
-        List<String> ottProviders = Optional.ofNullable(detail.getWatchProviders()
-                .getResults().get("KR"))
-            .map(cp -> Optional.ofNullable(cp.getFlatrate()).orElse(Collections.emptyList())
-                .stream()
-                .map(ProviderDTO::getProviderName)
-                .collect(Collectors.toList()))
-            .orElse(Collections.emptyList());
-        movie.setOttProviders(ottProviders.toString());
+        // 한국 OTT 제공
+        List<String> ottProviders = Optional.ofNullable(detail.getWatchProviders().getResults().get("KR"))
+                .map(cp -> Optional.ofNullable(cp.getFlatrate()).orElse(Collections.emptyList())
+                        .stream()
+                        .map(ProviderDTO::getProviderName)
+                        .toList())
+                .orElse(Collections.emptyList());
+        movie.setOttProviders(writeJsonArray(ottProviders));
     }
+
+    private String writeJsonArray(List<String> list) {
+        try {
+            return objectMapper.writeValueAsString(list); // 예: ["배우1","배우2"]
+        } catch (Exception e) {
+            log.warn("JSON 직렬화 실패. list={}", list, e);
+            return "[]";
+        }
+    }
+
 
     /**
      * 제목 + 개봉연도로 TMDB에서 영화 검색 후 첫 번째 결과 반환
@@ -312,8 +315,8 @@ public class MovieService {
         // 감정 평균 조회
         EmotionAvgDTO avg = emotionRepository.findAverageEmotionsByMovieId(movieId)
                 .orElseGet(() -> EmotionAvgDTO.builder()
-                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).neutral(0.0)
-                        .repEmotionType(EmotionType.NEUTRAL)
+                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
+                        .repEmotionType(EmotionType.DISGUST)
                         .build());
 
         // 대표 감정 계산
@@ -339,13 +342,13 @@ public class MovieService {
     // 대표 감정 계산 메서드
     private EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
 
-        // 모든 값이 0인 경우 NEUTRAL 고정
+        // 모든 값이 0인 경우 DISGUST 고정
         if (dto.getJoy() == 0.0 &&
                 dto.getSadness() == 0.0 &&
                 dto.getAnger() == 0.0 &&
                 dto.getFear() == 0.0 &&
-                dto.getNeutral() == 0.0) {
-            return EmotionType.NEUTRAL;
+                dto.getDisgust() == 0.0) {
+            return EmotionType.DISGUST;
         }
 
         Map<EmotionType, Double> scores = Map.of(
@@ -353,13 +356,13 @@ public class MovieService {
                 EmotionType.SADNESS, dto.getSadness(),
                 EmotionType.ANGER, dto.getAnger(),
                 EmotionType.FEAR, dto.getFear(),
-                EmotionType.NEUTRAL, dto.getNeutral()
+                EmotionType.DISGUST, dto.getDisgust()
         );
 
         return scores.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(EmotionType.NEUTRAL);
+                .orElse(EmotionType.DISGUST);
     }
 
     /**
@@ -374,7 +377,7 @@ public class MovieService {
                 dto.setSadness(summary.getSadness());
                 dto.setFear(summary.getFear());
                 dto.setAnger(summary.getAnger());
-                dto.setNeutral(summary.getNeutral());
+                dto.setDisgust(summary.getDisgust());
                 dto.setDominantEmotion(summary.getDominantEmotion().name());
                 return dto;
             })
@@ -385,7 +388,7 @@ public class MovieService {
                 dto.setSadness(0f);
                 dto.setFear(0f);
                 dto.setAnger(0f);
-                dto.setNeutral(0f);
+                dto.setDisgust(0f);
                 dto.setDominantEmotion("NONE");
                 return dto;
             });
@@ -506,5 +509,4 @@ public class MovieService {
         return new PageResDto<>(dto);
 
     }
-
 }

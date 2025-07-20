@@ -6,7 +6,6 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Getter @Setter
@@ -56,11 +55,14 @@ public class Movie {
     private String rating;               // 영화 등급
     private LocalDate releaseDate;       // 개봉일
 
+    @Column(name = "is_matched")
+    private Boolean isMatched;
+
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MovieLike> movieLikes = new ArrayList<>();
 
-    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private MovieEmotionSummary emotions;
 
     // 제목 수정

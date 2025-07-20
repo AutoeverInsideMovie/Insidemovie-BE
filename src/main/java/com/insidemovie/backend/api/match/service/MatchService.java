@@ -47,9 +47,19 @@ public class MatchService {
 
         // 랜덤 감정 값에 따른 영화 리스트
         int idx = random.nextInt(emotions.length);
-        String emotion = String.valueOf(emotions[idx]);
+        EmotionType emotion = emotions[idx];
         List<Movie> movieList = movieRepository.findTop3ByEmotion(emotion);
 
+        if (movieList.size() < 3) {
+            log.warn("감정 [{}]에 해당하는 영화가 3개 미만입니다. 랜덤 영화로 대체합니다.", emotion);
+            movieList = movieRepository.find3Movie(emotion);
+            String titles = movieList.stream()
+                    .map(Movie::getTitle)
+                    .toList()
+                    .toString();
+
+            log.info("대체된 랜덤 영화 리스트: {}", titles);
+        }
         // 몇 번째 match인지 계산
         Integer matchNumber = (int) matchRepository.count() + 1;
 
@@ -59,6 +69,10 @@ public class MatchService {
                 .matchNumber(matchNumber)
                 .build();
         matchRepository.save(match);
+
+        // 매치 생성 시 isMatched를 true로 업데이트
+        movieList.forEach(movie -> movie.setIsMatched(true));
+        movieRepository.saveAll(movieList);
 
         // 대결 정보 저장
         List<MovieMatch> movieMatchList = movieList.stream()

@@ -14,8 +14,12 @@ public class MatchScheduler {
 
     @Scheduled(cron = "${match.cron.weekly}", zone = "Asia/Seoul")
     public void generateMovieMatch() {
-        log.info("지난 주 영화 대결 종료");
-        matchService.closeMatch();
+        try {
+            log.info("지난 주 영화 대결 종료");
+            matchService.closeMatch();
+        } catch (Exception e) {
+            log.info("오류가 발생하여, 대결 종료를 실행하지 않습니다.");
+        }
         log.info("영화 대결 생성");
         matchService.createMatch();
     }

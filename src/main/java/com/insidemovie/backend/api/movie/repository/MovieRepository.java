@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.repository;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.GenreType;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -45,16 +46,20 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     Page<Movie> findMoviesByGenreTypeOrderByVoteAverageDesc(@Param("genreType") GenreType genreType, Pageable pageable);
 
     // 대결할 영화 - 댓글 30개 이상, 이전에 대결을 진행하지 않은 영화를 별점 순으로 3개
+    // TODO: 30개 제한은 데이터 이슈로 뺐음
+    // AND m.vote_count >= 30
     @Query(value = """
-            SELECT * FROM movie m
-            JOIN movie_emotion_summary me ON m.movie_id = me.movie_id
-            WHERE me.dominant_emotion = :emotion
-                AND m.vote_count >= 30
-                AND m.movie_id NOT IN (
-                    SELECT mf.movie_id FROM movie_fight mf
-                )
-            ORDER BY m.vote_average DESC
-            LIMIT 3
-            """, nativeQuery = true)
-    List<Movie> findTop3ByEmotion(String emotion);
+        SELECT m.* 
+        FROM movie m
+        JOIN movie_emotion_summary me ON m.movie_id = me.movie_id
+        WHERE me.dominant_emotion = :emotion
+          AND (m.is_matched IS NULL OR m.is_matched = false)
+        ORDER BY m.vote_average DESC
+        LIMIT 3
+        """, nativeQuery = true)
+    List<Movie> findTop3ByEmotion(@Param("emotion") EmotionType emotion);
+
+    // 데이터가 없으면 랜덤한 영화 3개
+    @Query(value = "SELECT * FROM movie ORDER BY RAND() LIMIT 3", nativeQuery = true)
+    List<Movie> find3Movie(@Param("emotion") EmotionType emotion);
 }

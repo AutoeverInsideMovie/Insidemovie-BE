@@ -5,6 +5,8 @@ import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.api.report.entity.Report;
+import com.insidemovie.backend.api.report.entity.ReportStatus;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.entity.Emotion;
 import com.insidemovie.backend.api.review.entity.Review;
@@ -133,9 +135,9 @@ public class ReviewService {
         }
 
         // 내 리뷰 ID 가 있으면 제외하여 조회
-        Page<Review> reviewPage = (myReviewId != null)
-                ? reviewRepository.findByMovieAndIdNot(movie, myReviewId, pageable)
-                : reviewRepository.findByMovie(movie, pageable);
+        Page<Review> page = (myReviewId != null)
+                ? reviewRepository.findByMovieAndIdNotAndIsConcealedFalse(movie, myReviewId, pageable)
+                : reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 
         final Long uid = currentUserId;
         log.info("로그인 사용자 ID:  "+uid);
@@ -261,6 +263,11 @@ public class ReviewService {
         boolean myReview = (currentUserId != null && review.getMember().getId().equals(currentUserId));
         boolean myLike = (currentUserId != null &&
                 reviewLikeRepository.existsByReview_IdAndMember_Id(review.getId(), currentUserId));
+        ReportStatus reportStatus =
+                review.getReports().stream()
+                        .map(Report::getStatus)
+                        .findFirst()
+                        .orElse(null);
 
         EmotionDTO emotionDTO = emotionRepository.findByReviewId(review.getId())
                 .map(e -> {
@@ -302,6 +309,7 @@ public class ReviewService {
                 .emotion(emotionDTO)
                 .isReported(review.isReported())
                 .isConcealed(review.isConcealed())
+                .reportStatus(reportStatus)
                 .build();
     }
 

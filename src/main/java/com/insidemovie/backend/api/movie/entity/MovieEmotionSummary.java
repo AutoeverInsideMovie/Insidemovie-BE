@@ -25,7 +25,7 @@ public class MovieEmotionSummary {
     private Float sadness;
     private Float fear;
     private Float anger;
-    private Float disgust;
+    private Float neutral;
 
     @Enumerated(EnumType.STRING)
     private EmotionType dominantEmotion; // 대표 감정
@@ -35,7 +35,7 @@ public class MovieEmotionSummary {
         this.sadness = dto.getSadness().floatValue();
         this.anger = dto.getAnger().floatValue();
         this.fear = dto.getFear().floatValue();
-        this.disgust = dto.getDisgust().floatValue();
+        this.neutral = dto.getNeutral().floatValue();
         this.dominantEmotion = dto.getRepEmotionType();
     }
 }

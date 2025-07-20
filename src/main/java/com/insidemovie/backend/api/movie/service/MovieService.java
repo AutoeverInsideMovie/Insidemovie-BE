@@ -312,8 +312,8 @@ public class MovieService {
         // 감정 평균 조회
         EmotionAvgDTO avg = emotionRepository.findAverageEmotionsByMovieId(movieId)
                 .orElseGet(() -> EmotionAvgDTO.builder()
-                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
-                        .repEmotionType(EmotionType.DISGUST)
+                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).neutral(0.0)
+                        .repEmotionType(EmotionType.NEUTRAL)
                         .build());
 
         // 대표 감정 계산
@@ -344,8 +344,8 @@ public class MovieService {
                 dto.getSadness() == 0.0 &&
                 dto.getAnger() == 0.0 &&
                 dto.getFear() == 0.0 &&
-                dto.getDisgust() == 0.0) {
-            return EmotionType.DISGUST;
+                dto.getNeutral() == 0.0) {
+            return EmotionType.NEUTRAL;
         }
 
         Map<EmotionType, Double> scores = Map.of(
@@ -353,13 +353,13 @@ public class MovieService {
                 EmotionType.SADNESS, dto.getSadness(),
                 EmotionType.ANGER, dto.getAnger(),
                 EmotionType.FEAR, dto.getFear(),
-                EmotionType.DISGUST, dto.getDisgust()
+                EmotionType.NEUTRAL, dto.getNeutral()
         );
 
         return scores.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(EmotionType.DISGUST);
+                .orElse(EmotionType.NEUTRAL);
     }
 
     /**
@@ -374,7 +374,7 @@ public class MovieService {
                 dto.setSadness(summary.getSadness());
                 dto.setFear(summary.getFear());
                 dto.setAnger(summary.getAnger());
-                dto.setDisgust(summary.getDisgust());
+                dto.setNeutral(summary.getNeutral());
                 dto.setDominantEmotion(summary.getDominantEmotion().name());
                 return dto;
             })
@@ -385,7 +385,7 @@ public class MovieService {
                 dto.setSadness(0f);
                 dto.setFear(0f);
                 dto.setAnger(0f);
-                dto.setDisgust(0f);
+                dto.setNeutral(0f);
                 dto.setDominantEmotion("NONE");
                 return dto;
             });

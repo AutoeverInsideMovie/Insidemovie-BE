@@ -71,7 +71,7 @@ public class ReviewController {
         }
 
         ReviewResponseDTO dto = reviewService.getMyReview(movieId, userDetails.getUsername());
-        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, dto);
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, dto);
     }
 
 

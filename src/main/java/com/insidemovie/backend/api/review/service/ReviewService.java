@@ -133,8 +133,8 @@ public class ReviewService {
 
         // 내 리뷰 ID 가 있으면 제외하여 조회
         Page<Review> page = (myReviewId != null)
-                ? reviewRepository.findByMovieAndIdNot(movie, myReviewId, pageable)
-                : reviewRepository.findByMovie(movie, pageable);
+                ? reviewRepository.findByMovieAndIdNotAndIsConcealedFalse(movie, myReviewId, pageable)
+                : reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 
         final Long uid = currentUserId;
 

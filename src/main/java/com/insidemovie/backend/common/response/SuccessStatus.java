@@ -50,6 +50,7 @@ public enum SuccessStatus {
     SEND_BOXOFFICE_MOVIE_DETAIL_SUCCESS(HttpStatus.OK, "박스오피스의 상세정보 조회 성공"),
     SEND_GENRE_MOVIES_SUCCESS(HttpStatus.OK, "장르별 영화 조회 성공"),
     SEND_WATCHED_MOVIES_SUCCESS(HttpStatus.OK, "내가 관람한 영화 조회 성공"),
+    SEND_RECOMMEND_MOVIES_SUCCESS(HttpStatus.OK, "추천 영화 조회 성공"),
 
 
 

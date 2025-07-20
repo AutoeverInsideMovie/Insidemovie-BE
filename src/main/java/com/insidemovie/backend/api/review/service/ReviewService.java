@@ -123,23 +123,14 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Long currentUserId = null;
-        Long myReviewId = null;
 
         if (memberEmail != null && !memberEmail.isBlank()) {
             Member member = memberRepository.findByEmail(memberEmail.trim())
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
             currentUserId = member.getId();
-
-            myReviewId = reviewRepository.findByMemberAndMovie(member, movie)
-                    .map(Review::getId)
-                    .orElse(null);
         }
 
-        log.info("로그인 사용자 ID: {}, 내 리뷰 ID: {}", currentUserId, myReviewId);
-
-        Page<Review> reviewPage = (myReviewId != null)
-                ? reviewRepository.findByMovieAndIdNotAndIsConcealedFalse(movie, myReviewId, pageable)
-                : reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
+        Page<Review> reviewPage = reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 
         final Long uid = currentUserId;
         Page<ReviewResponseDTO> dtoPage = reviewPage.map(r -> toResponseDTO(r, uid));
@@ -285,6 +276,7 @@ public class ReviewService {
                 .content(review.getContent())
                 .rating(review.getRating())
                 .spoiler(review.isSpoiler())
+                .watchedAt(review.getWatchedAt())
                 .createdAt(review.getCreatedAt())
                 .likeCount(review.getLikeCount())
                 .nickname(review.getMember().getNickname())

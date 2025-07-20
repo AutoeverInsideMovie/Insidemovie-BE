@@ -2,7 +2,6 @@ package com.insidemovie.backend.common.config.security;
 
 import com.insidemovie.backend.api.jwt.JwtFilter;
 import com.insidemovie.backend.api.jwt.JwtProvider;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,7 +74,9 @@ public class SecurityConfig {
                     "/api/v1/member/kakao-login",
                     "/api/v1/member/kakao-signup",
                     "/api/v1/member/token-reissue",
-                    "/api/v1/member/check-nickname"
+                    "/api/v1/member/check-nickname",
+                    "/api/v1/match/weekly-match",
+                    "/api/v1/match/winners"
                 ).permitAll()
 
                 // Role-based

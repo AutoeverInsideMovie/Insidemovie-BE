@@ -12,6 +12,7 @@ public class MemberInfoDto {
     private String email;
     private String nickname;
     private Integer reportCount;
+    private Integer watchMovieCount; // = Review Count
     private Integer likeCount;
     private EmotionType repEmotionType;
     private Authority authority;

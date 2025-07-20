@@ -112,7 +112,7 @@ public class MemberController {
     // 사용자 정보 조회
     @Operation(summary = "사용자 정보 조회 API", description = "사용자 정보를 조회합니다.")
     @GetMapping("/profile")
-    public ResponseEntity<?> getMemberInfo(@AuthenticationPrincipal User principal) {
+    public ResponseEntity<ApiResponse<MemberInfoDto>> getMemberInfo(@AuthenticationPrincipal User principal) {
         MemberInfoDto memberInfoDto = memberService.getMemberInfo(principal.getUsername());
         return ApiResponse.success(SuccessStatus.SEND_MEMBER_SUCCESS, memberInfoDto);
     }

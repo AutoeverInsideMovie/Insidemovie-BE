@@ -1,100 +1,78 @@
 package com.insidemovie.backend.api.movie.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.insidemovie.backend.api.constant.EmotionType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Getter @Setter
 @Builder
-@Getter
 @Table(name = "movie")
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"movieLikes", "emotions"})
 public class Movie {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "movie_id")
     private Long id;
 
     @Column(name = "kofic_id", unique = true)
-    private String koficId;  // kofic 영화 코드
+    private String koficId;             // kofic 영화 코드
 
     @Column(name = "tmdb_id", unique = true)
-    private Long tmdbMovieId;  // tmdb 영화 코드
-
-    private String title; //영화제목
-    private String titleEn;
-
-    private Integer runtime; //러닝타임
-    //private String releaseDate; //개봉일
-    private Long audienceAcc;  // 누적 관객수
-
-    private String nation;      // 제작 국가
-    private String status;      // 제작 상태 (개봉, 기타 등)
-    private String directors;  //감독
-
-
+    private Long tmdbMovieId;            // tmdb 영화 코드
 
     @Column(columnDefinition = "TEXT")
-    private String overview;
+    private String overview;            // 영화 개요
 
-    //private String rating;  // 관람 등급 (ALL, 12, 15, 18)
-
-    private Boolean isOttAvailable;
-    private String ottProviders;
-
-    private String posterPath; // 포스터 이미지 경로
-    private String backdropPath; // 배경 이미지 경로
-
-    private Double voteAverage; // 평균 평점
-    private Integer voteCount; // 평점 투표 수
+    @Column(name = "popularity")
+    private Double popularity;          // tmdb 자체 인기도
 
     @Column(name = "original_language")
-    private String originalLanguage; //국가
+    private String originalLanguage;     // 국가
 
-    private String actors; //출연진
+    @Column(length = 10000)
+    private String actors;              // 출연진
 
-    private Double rating;
-    private LocalDate releaseDate;
+//    @Column(name = "genre_ids")
+//    private Set<Integer> genreIds;     // 장르
 
-    private LocalDateTime cachedAt;     // 언제 가져왔는지
+    private String title;                // 영화 제목
+    private String titleEn;              // 영문 영화 제목
+    private Integer runtime;             // 러닝 타임
+    private String nation;               // 제작 국가
+    private String status;               // 제작 상태 (개봉, 기타 등)
+    private String directors;            // 감독
+    private String ottProviders;         // OTT 제공
+    private String posterPath;           // 포스터 이미지 경로
+    private String backdropPath;         // 배경 이미지 경로
+    private Double voteAverage;          // 평균 평점
+    private Integer voteCount;           // 평점 투표 수
+    private String rating;               // 영화 등급
+    private LocalDate releaseDate;       // 개봉일
 
-//    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @Builder.Default
-//    private List<Genre> genres = new ArrayList<>();
-
-    @Column(name = "genre_ids")
-    private List<Integer> genreIds; //장르
+    @Column(name = "is_matched")
+    private Boolean isMatched;
 
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MovieLike> movieLikes = new ArrayList<>();
 
-    @Column(name = "dominant_emotion")
-    @Enumerated(EnumType.STRING)
-    private EmotionType dominantEmotion;  // 영화 대표 감정
-
+    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private MovieEmotionSummary emotions;
 
     // 제목 수정
     public void updateTitle(String title) {
         this.title = title;
     }
-
     // 개요 수정
     public void updateOverview(String overview) {
         this.overview = overview;
     }
-
     // 포스터 수정
     public void updatePosterPath(String posterPath) {
         this.posterPath = posterPath;
@@ -108,17 +86,17 @@ public class Movie {
         this.voteAverage = voteAverage;
     }
     // 장르 수정
-    public void updateGenreIds(List<Integer> genreIds) {
-        this.genreIds = genreIds;
-    }
+    //public void updateGenreIds(List<Long> genreIds) {this.genreIds = genreIds;}
     // 국가 수정
     public void updateOriginalLanguage(String originalLanguage) {
         this.originalLanguage = originalLanguage;
     }
-
     // 개봉일 수정
     public void updateReleaseDate(LocalDate date) {
         this.releaseDate = date;
     }
-
+    // 인기 수정
+    public void updatePopularity(Double popularity) {
+        this.popularity = popularity;
+    }
 }

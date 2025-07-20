@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     // 특정 회원이 작성한 리뷰 목록을 페이징하여 조회
     Page<Review> findByMember(Member member, Pageable pageable);
+
+    // 내 리뷰 제외
+    Page<Review> findByMovieAndIdNot(Movie movie, Long id, Pageable pageable);
+
+    // 리뷰 목록에서 숨김 리뷰 제외하고 조회
+    Page<Review> findByMovieAndIsConcealedFalse(Movie movie, Pageable pageable);
+    Page<Review> findByMovieAndIdNotAndIsConcealedFalse(Movie movie, Long id, Pageable pageable);
+
 
     // 특정 회원이 작성한 리뷰 개수를 반환
     long countByMember(Member member);
@@ -43,4 +52,28 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 숨김 처리된 리뷰 수
     long countByIsConcealedTrue();
 
+    // 누적 리뷰 수 (특정 시점까지)
+    long countByCreatedAtLessThan(LocalDateTime dateTime);
+
+    // 일별 작성 리뷰 수
+    @Query("""
+        SELECT DATE(r.createdAt), COUNT(r)
+        FROM Review r
+        WHERE r.createdAt >= :start AND r.createdAt < :end
+        GROUP BY DATE(r.createdAt)
+        ORDER BY DATE(r.createdAt)
+    """)
+    List<Object[]> countReviewsDaily(@Param("start") LocalDateTime start,
+                                     @Param("end") LocalDateTime end);
+
+    // 월별 작성 수
+    @Query("""
+        SELECT FUNCTION('DATE_FORMAT', r.createdAt, '%Y-%m'), COUNT(r)
+        FROM Review r
+        WHERE r.createdAt >= :start AND r.createdAt < :end
+        GROUP BY FUNCTION('DATE_FORMAT', r.createdAt, '%Y-%m')
+        ORDER BY FUNCTION('DATE_FORMAT', r.createdAt, '%Y-%m')
+    """)
+    List<Object[]> countReviewsMonthly(@Param("start") LocalDateTime start,
+                                       @Param("end") LocalDateTime end);
 }

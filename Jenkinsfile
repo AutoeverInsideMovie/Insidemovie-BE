@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    options {
-        skipDefaultCheckout(true)
-    }
-
     environment {
         IMAGE_NAME = 'ssafysong/inside-movie'
         TAG = 'be'
@@ -68,6 +64,15 @@ pipeline {
                     "
                     """
                 }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                sh '''
+                docker container prune -f
+                docker image prune -f
+                '''
             }
         }
     }

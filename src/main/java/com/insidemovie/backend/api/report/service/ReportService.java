@@ -2,11 +2,10 @@ package com.insidemovie.backend.api.report.service;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
-import com.insidemovie.backend.api.report.dto.ReportRequestDTO;
 import com.insidemovie.backend.api.report.dto.ReportResponseDTO;
 import com.insidemovie.backend.api.report.entity.Report;
-import com.insidemovie.backend.api.report.entity.ReportReason;
-import com.insidemovie.backend.api.report.entity.ReportStatus;
+import com.insidemovie.backend.api.constant.ReportReason;
+import com.insidemovie.backend.api.constant.ReportStatus;
 import com.insidemovie.backend.api.report.repository.ReportRepository;
 import com.insidemovie.backend.api.review.entity.Review;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
@@ -48,7 +47,7 @@ public class ReportService {
         }
 
         // 리뷰, 회원 상태 업데이트
-        review.markReported();                   // 리뷰 isReported = true
+//        review.markReported();                   // 리뷰 isReported = true
         reportedMember.incrementReportCount();   // 피신고자 reportCount++
 
         return ReportResponseDTO.fromEntity(
@@ -73,6 +72,7 @@ public class ReportService {
         report.updateStatus(ReportStatus.ACCEPTED);
 
         Review review = report.getReview();
+        review.markReported();
         review.conceal();
     }
 
@@ -83,6 +83,14 @@ public class ReportService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REPORT_EXCEPTION.getMessage()));
 
         report.updateStatus(ReportStatus.REJECTED);
+    }
+    // 신고 미처리화
+    @Transactional
+    public void unprocessedReport(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REPORT_EXCEPTION.getMessage()));
+
+        report.updateStatus(ReportStatus.UNPROCESSED);
     }
 
 }

@@ -2,13 +2,16 @@ package com.insidemovie.backend.api.report.repository;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.report.entity.Report;
-import com.insidemovie.backend.api.report.entity.ReportStatus;
+import com.insidemovie.backend.api.constant.ReportStatus;
 import com.insidemovie.backend.api.review.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ReportRepository extends JpaRepository<Report, Long> {
 
@@ -20,4 +23,28 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     // 미처리 신고 수
     long countByStatus(ReportStatus status);
+
+    // 누적 신고 수 (특정 시점까지)
+    long countByCreatedAtLessThan(LocalDateTime dateTime);
+
+    // 일별 신고 수
+    @Query("""
+        SELECT DATE(r.createdAt), COUNT(r)
+        FROM Report r
+        WHERE r.createdAt >= :start AND r.createdAt < :end
+        GROUP BY DATE(r.createdAt)
+        ORDER BY DATE(r.createdAt)
+    """)
+    List<Object[]> countReportsDaily(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // 월별 신고 수
+    @Query("""
+        SELECT FUNCTION('DATE_FORMAT', r.createdAt, '%Y-%m'), COUNT(r)
+        FROM Report r
+        WHERE r.createdAt >= :start AND r.createdAt < :end
+        GROUP BY FUNCTION('DATE_FORMAT', r.createdAt, '%Y-%m')
+        ORDER BY FUNCTION('DATE_FORMAT', r.createdAt, '%Y-%m')
+    """)
+    List<Object[]> countReportsMonthly(@Param("start") LocalDateTime start,
+                                       @Param("end") LocalDateTime end);
 }

@@ -21,28 +21,16 @@ public class JwtFilter extends OncePerRequestFilter {
 
     // 매 요청마다 실행
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException, java.io.IOException {
 
-        // 헤더에서 JWT 추출
-        String jwt = resolveToken(request); // 헤더에서 JWT 추출
-        System.out.println("JWT: " + jwt);
-
-        // 로그인, 회원가입 요청은 JWT 검사 안 함
-        String requestURI = request.getRequestURI();
-        if (requestURI.equals("/api/v1/member/login") || requestURI.equals("/api/v1/member/signup") ||
-                requestURI.equals("/api/v1/member/kakao-accesstoken") ||   // 추가
-                requestURI.equals("/api/v1/member/kakao-login")) {
-            filterChain.doFilter(request, response);
-            return;
+        String token = resolveToken(request);
+        if (token != null && jwtProvider.validateToken(token)) {
+            Authentication authentication = jwtProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-        if (StringUtils.hasText(jwt) && jwtProvider.validateToken(jwt)) {
-            Authentication authentication = jwtProvider.getAuthentication(jwt);
-            SecurityContextHolder.getContext().setAuthentication(authentication); // 인증 객체 설정
-
-        }
-
-        // 다음 필터로 요청 전달
         filterChain.doFilter(request, response);
     }
 
@@ -53,5 +41,18 @@ public class JwtFilter extends OncePerRequestFilter {
             return bearerToken.substring(7); // "Bearer " 부분 제거
         }
         return null;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+        if ("OPTIONS".equalsIgnoreCase(method)) return true;
+        return uri.startsWith("/api/v1/boxoffice")
+            || uri.startsWith("/api/v1/member/login")
+            || uri.startsWith("/api/v1/member/signup")
+            || uri.startsWith("/api/v1/member/kakao-accesstoken")
+            || uri.startsWith("/api/v1/member/kakao-login")
+            || uri.startsWith("/api/v1/member/reissue");
     }
 }

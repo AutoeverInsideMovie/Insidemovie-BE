@@ -1,11 +1,14 @@
 package com.insidemovie.backend.api.movie.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
+import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieResponseDTO;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
@@ -19,18 +22,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -43,6 +42,7 @@ public class BoxOfficeService {
     @Value("${kobis.api.key}")
     private String kobisApiKey;
 
+    private final ObjectMapper objectMapper;
     private final MovieService movieService;
     private final DailyBoxOfficeRepository dailyRepo;
     private final WeeklyBoxOfficeRepository weeklyRepo;
@@ -345,35 +345,89 @@ public class BoxOfficeService {
      * 저장된 일간 박스오피스 영화의 MovieDetailResDto 리스트 반환
      */
     @Transactional
-    public MovieDetailResDto getDailyMovieDetailByMovieId(Long movieId, String targetDt) {
-        // 1) movieId → Movie 엔티티 조회
-        Movie movie = movieRepo.findById(movieId)
-            .orElseThrow(() -> new BaseException(
-                ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
-                String.format("영화를 찾을 수 없습니다. movieId=%d", movieId)
-            ));
+    public MovieDetailResDto getDailyMovieDetailByMovieId(Long movieId) {
 
-        // 2) Movie 에서 tmdbId 확보
+        // 1) Movie 1차 조회 (있으면 바로 사용)
+        Movie movie = movieRepo.findById(movieId).orElse(null);
+
+        if (movie == null) {
+            // 로컬 Movie 없음 → 어떤 영화인지 알아내야 함.
+            // Daily 박스오피스 테이블에서 movieId 와 연결된 row 가 있을 수도, 없을 수도 있음.
+            List<DailyBoxOfficeEntity> latestDaily = dailyRepo.findLatestSorted();
+
+            // movieId 로 직접 DailyBoxOfficeEntity 의 Movie FK 매칭 (존재할 때)
+            DailyBoxOfficeEntity matchedByMovieEntity = latestDaily.stream()
+                    .filter(d -> d.getMovie() != null && d.getMovie().getId().equals(movieId))
+                    .findFirst()
+                    .orElse(null);
+
+            String titleForSearch;
+            Integer yearForSearch;
+
+            if (matchedByMovieEntity != null) {
+                titleForSearch = matchedByMovieEntity.getMovieName();
+                yearForSearch = extractYearSafe(matchedByMovieEntity.getOpenDate()); // "yyyy-MM-dd" or "yyyyMMdd"
+            } else {
+                throw new BaseException(
+                        ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                        "영화가 로컬에 없고 박스오피스에서도 역추적할 수 없습니다. movieId=" + movieId
+                );
+            }
+
+            log.info("[DailyDetail][AutoFetch] local Movie 없음. 제목='{}', year={}", titleForSearch, yearForSearch);
+
+            // TMDB 검색
+            movieService.searchMovieByTitleAndYear(titleForSearch, yearForSearch)
+                    .ifPresentOrElse(found -> {
+                                // 상세 저장 (actors/감독 등 포함)
+                                movieService.fetchAndSaveMovieById(found.getId());
+                            },
+                            () -> {
+                                throw new BaseException(
+                                        ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                                        "TMDB 검색 실패: title=" + titleForSearch + ", year=" + yearForSearch
+                                );
+                            });
+
+            // 다시 로컬에서 재조회 (방금 TMDB 저장)
+            movie = movieRepo.findByTmdbMovieId(
+                            movieService.searchMovieByTitleAndYear(titleForSearch, yearForSearch)
+                                    .map(SearchMovieResponseDTO::getId)
+                                    .orElse(null)
+                    ).orElseThrow(() -> new BaseException(
+                            ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                            "TMDB 저장 후 Movie 재조회 실패"
+                    ));
+        }
+
+        // TMDB ID 확인 (신규 저장이라면 반드시 존재)
         Long tmdbId = movie.getTmdbMovieId();
         if (tmdbId == null) {
             throw new BaseException(
-                ErrorStatus.NOT_FOUND_DAILY_MOIVE.getHttpStatus(),
-                "해당 영화에 연동된 TMDB ID가 없습니다."
+                    ErrorStatus.NOT_FOUND_DAILY_MOIVE.getHttpStatus(),
+                    "해당 영화에 TMDB ID가 없습니다. movieId=" + movieId
             );
         }
 
-        // 3) targetDt → LocalDate 변환
-        LocalDate date = LocalDate.parse(targetDt, FMT);
+        // 기준 날짜 = 어제
+        LocalDate baseDate = LocalDate.now().minusDays(1);
 
-        // 4) 일간 박스오피스 레코드 조회
-        DailyBoxOfficeEntity box = dailyRepo
-            .findByMovie_TmdbMovieIdAndTargetDate(tmdbId, date)
-            .orElseThrow(() -> new BaseException(
-                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
-                String.format("해당 날짜(%s)의 일간 박스오피스 정보를 찾을 수 없습니다.", targetDt)
-            ));
+        // 어제 날짜의 박스오피스 레코드 조회
+        Optional<DailyBoxOfficeEntity> yesterdayOpt =
+                dailyRepo.findByMovie_TmdbMovieIdAndTargetDate(tmdbId, baseDate);
 
-        // 5) MovieDetailResDto 변환
+        // 없으면 최신 fallback 에서 동일 영화
+        DailyBoxOfficeEntity daily = yesterdayOpt.orElseGet(() -> {
+            List<DailyBoxOfficeEntity> latestRows = dailyRepo.findLatestSorted();
+            return latestRows.stream()
+                    .filter(e -> e.getMovie() != null &&
+                            tmdbId.equals(e.getMovie().getTmdbMovieId()))
+                    .findFirst()
+                    .orElseThrow(() -> new BaseException(
+                            ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
+                            "해당 영화의 일간 박스오피스 데이터가 없습니다."
+                    ));
+        });
         return toMovieDetailResDto(movie);
     }
 
@@ -381,57 +435,86 @@ public class BoxOfficeService {
      * 저장된 주간 박스오피스 영화의 MovieDetailResDto 리스트 반환
      */
     @Transactional
-    public MovieDetailResDto getWeeklyMovieDetailByMovieId(
-            Long movieId, String targetDt, String weekGb
-    ) {
-        // movieId → Movie 엔티티 조회
-        Movie movie = movieRepo.findById(movieId)
-            .orElseThrow(() -> new BaseException(
-                ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
-                String.format("영화를 찾을 수 없습니다. movieId=%d", movieId)
-            ));
+    public MovieDetailResDto getWeeklyMovieDetailByMovieId(Long movieId, String weekGb) {
 
-        // Movie 에서 tmdbId 확보
+        // Movie 1차 조회 (없으면 나중에 박스오피스 기반 TMDB 검색 시도)
+        Movie movie = movieRepo.findById(movieId).orElse(null);
+
+        // 최신 yearWeek 결정 (weeklyRepo.findLatestSorted() 가 최신순 정렬이라고 가정)
+        List<WeeklyBoxOfficeEntity> latestList = weeklyRepo.findLatestSorted();
+        if (latestList.isEmpty()) {
+            throw new BaseException(
+                    ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                    "저장된 주간 박스오피스 데이터가 없습니다."
+            );
+        }
+        String latestYearWeek = latestList.get(0).getYearWeekTime();
+
+        // 최신 week의 동일 영화 레코드를 확보 (Movie 없을 때 제목/연도용)
+        WeeklyBoxOfficeEntity matchedWeekly = latestList.stream()
+                .filter(w -> w.getMovie() != null && w.getMovie().getId().equals(movieId))
+                .findFirst()
+                .orElse(null);
+
+        // 로컬 Movie 없으면 → weekly 데이터로 제목/개봉연 찾아 TMDB 검색 & 저장
+        if (movie == null) {
+            if (matchedWeekly == null) {
+                // Movie 자체가 없고, latest weekly 데이터에서도 연결 불가 → 더 이상 단서 없음
+                throw new BaseException(
+                        ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                        "Movie가 로컬에 없고 주간 박스오피스에서도 역추적 불가. movieId=" + movieId
+                );
+            }
+
+            String titleForSearch = matchedWeekly.getMovieNm();
+            int yearForSearch = extractYearSafe(matchedWeekly.getOpenDt()); // "yyyy-MM-dd" or "yyyyMMdd"
+            log.info("[WeeklyDetail][AutoFetch] local Movie 없음. title='{}', year={}", titleForSearch, yearForSearch);
+
+            // TMDB 검색
+            Long fetchedTmdbId = movieService.searchMovieByTitleAndYear(titleForSearch, yearForSearch)
+                    .map(SearchMovieResponseDTO::getId)
+                    .orElseThrow(() -> new BaseException(
+                            ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                            "TMDB 검색 실패: title=" + titleForSearch + ", year=" + yearForSearch
+                    ));
+
+            // 상세 저장
+            movieService.fetchAndSaveMovieById(fetchedTmdbId);
+
+            // 재조회 (tmdbMovieId 로)
+            movie = movieRepo.findByTmdbMovieId(fetchedTmdbId)
+                    .orElseThrow(() -> new BaseException(
+                            ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getHttpStatus(),
+                            "TMDB 저장 후 Movie 재조회 실패 tmdbId=" + fetchedTmdbId
+                    ));
+        }
+
+        // TMDB ID 필수 검증
         Long tmdbId = movie.getTmdbMovieId();
         if (tmdbId == null) {
             throw new BaseException(
-                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
-                "해당 영화에 연동된 TMDB ID가 없습니다."
+                    ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                    "해당 영화에 TMDB ID가 없습니다. movieId=" + movieId
             );
         }
 
-        // targetDt → yearWeek 계산 (없으면 최신)
-        String yearWeek = Optional.ofNullable(targetDt)
-            .filter(dt -> !dt.isBlank())
-            .map(dt -> {
-                LocalDate d = LocalDate.parse(dt, FMT);
-                WeekFields wf = WeekFields.ISO;
-                int w = d.get(wf.weekOfWeekBasedYear());
-                int y = d.get(wf.weekBasedYear());
-                return String.format("%04dIW%02d", y, w);
-            })
-            .orElseGet(() -> {
-                List<WeeklyBoxOfficeEntity> latest = weeklyRepo.findLatestSorted();
-                if (latest.isEmpty()) {
-                    throw new BaseException(
-                            ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
-                            "저장된 주간 박스오피스 데이터가 없습니다."
-                    );
-                }
-                return latest.get(0).getYearWeekTime();
-            });
-
-        // 주간 박스오피스 레코드 조회
-        WeeklyBoxOfficeEntity box = weeklyRepo
-            .findByMovie_TmdbMovieIdAndYearWeekTime(tmdbId, yearWeek)
-            .orElseThrow(() -> new BaseException(
-                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
-                String.format("연주차(%s)의 주간 박스오피스 정보를 찾을 수 없습니다.", yearWeek)
-            ));
-
-        // 5) MovieDetailResDto 변환
+        // 최신 yearWeek 에서 주간 박스오피스 레코드 조회 (없으면 fallback: 이미 latestList 에 같은 week 다 있음)
+        WeeklyBoxOfficeEntity weeklyRecord = weeklyRepo
+                .findByMovie_TmdbMovieIdAndYearWeekTime(tmdbId, latestYearWeek)
+                .orElseGet(() ->
+                        // 혹시 findBy... 가 null 이면 latestList 에서 직접 검색
+                        latestList.stream()
+                                .filter(w -> w.getMovie() != null &&
+                                        tmdbId.equals(w.getMovie().getTmdbMovieId()))
+                                .findFirst()
+                                .orElseThrow(() -> new BaseException(
+                                        ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                                        "최신 주간 데이터에서 해당 영화 레코드를 찾을 수 없습니다."
+                                ))
+                );
         return toMovieDetailResDto(movie);
     }
+
 
     /**
      * Movie 엔티티 → MovieDetailResDto 매핑 헬퍼
@@ -440,20 +523,86 @@ public class BoxOfficeService {
         MovieDetailResDto dto = new MovieDetailResDto();
         dto.setId(movie.getId());
         dto.setTitle(movie.getTitle());
+        dto.setTitleEn(movie.getTitleEn());
         dto.setOverview(movie.getOverview());
         dto.setPosterPath(movie.getPosterPath());
         dto.setBackdropPath(movie.getBackdropPath());
         dto.setVoteAverage(movie.getVoteAverage());
         dto.setOriginalLanguage(movie.getOriginalLanguage());
-        dto.setIsLike(false);  // 좋아요 기능 연동 시 변경
+        dto.setIsLike(false); // TODO: 좋아요 연동
 
-        List<String> genres = movieGenreRepository
-            .findByMovie(movie)
-            .stream()
-            .map(mg -> mg.getGenreType().name())
-            .collect(Collectors.toList());
+        // 장르
+        List<String> genres = movieGenreRepository.findByMovie(movie)
+                .stream()
+                .map(mg -> mg.getGenreType().name())
+                .toList();
         dto.setGenre(genres);
 
+        // 배우 / 감독 / OTT : JSON 배열 파싱
+        dto.setActors(readJsonArray(movie.getActors()));          // ["배우1","배우2",...]
+        dto.setDirector(readJsonArray(movie.getDirectors()));     // ["감독1","감독2"...]
+        dto.setOttProviders(readJsonArray(movie.getOttProviders())); // []
+
+        dto.setRating(movie.getRating());
+
+        // releaseDate (LocalDate → String "yyyy-MM-dd" 혹은 null)
+        if (movie.getReleaseDate() != null) {
+            dto.setReleaseDate(movie.getReleaseDate().toString());  // DTO 타입에 맞게
+        } else {
+            dto.setReleaseDate(null);
+        }
+
+        dto.setRuntime(movie.getRuntime());
+        dto.setStatus(movie.getStatus());
         return dto;
     }
+
+
+    private List<String> parseList(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        return Arrays.stream(raw.replaceAll("^\\[|]$", "").split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    private String parseSingle(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String cleaned = raw.replaceAll("^\\[|]$", "").trim();
+        return cleaned.isEmpty() ? null : cleaned;
+    }
+
+    private List<String> readJsonArray(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        try {
+            return objectMapper.readValue(raw, new TypeReference<List<String>>() {
+            });
+        } catch (Exception e) {
+            // 과거 toString() 포맷 호환 (fallback)
+            if (raw.startsWith("[") && raw.endsWith("]")) {
+                return Arrays.stream(raw.substring(1, raw.length() - 1).split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+            }
+            return List.of();
+        }
+    }
+
+    private int extractYearSafe(String openDate) {
+        if (openDate == null || openDate.isBlank()) {
+            return LocalDate.now().getYear();
+        }
+        // 가능한 포맷 2가지 시도
+        String trimmed = openDate.trim();
+        try {
+            if (trimmed.length() == 10) { // yyyy-MM-dd
+                return LocalDate.parse(trimmed, DateTimeFormatter.ISO_DATE).getYear();
+            } else if (trimmed.length() == 8) { // yyyyMMdd
+                return LocalDate.parse(trimmed, DateTimeFormatter.ofPattern("yyyyMMdd")).getYear();
+            }
+        } catch (Exception ignored) { }
+        return LocalDate.now().getYear();
+    }
+
 }

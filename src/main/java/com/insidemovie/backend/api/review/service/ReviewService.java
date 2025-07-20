@@ -104,10 +104,9 @@ public class ReviewService {
     @Transactional
     public PageResDto<ReviewResponseDTO> getReviewsByMovie(
             Long movieId,
-            Integer page, Integer pageSize,
+            Pageable pageable,
             String memberEmail
     ) {
-        Pageable pageable = PageRequest.of(page, pageSize);
 
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));

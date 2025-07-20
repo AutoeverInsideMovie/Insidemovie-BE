@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.review.controller;
 
+import com.insidemovie.backend.api.constant.ReviewSort;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
@@ -54,12 +55,13 @@ public class ReviewController {
     @GetMapping("/movies/{movieId}/reviews")
     public ResponseEntity<ApiResponse<PageResDto<ReviewResponseDTO>>> getReviewsByMovie(
             @PathVariable Long movieId,
+            @RequestParam(defaultValue = "LATEST") ReviewSort sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-
-        PageResDto<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, page, size, userDetails.getUsername());
+        Pageable pageable = PageRequest.of(page, size, sort.toSort());
+        PageResDto<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageable, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, reviewPage);
     }
 

@@ -87,11 +87,11 @@ public class ReviewService {
 
             Map<String, Double> probabilities = response.getProbabilities();
             Emotion emotion = Emotion.builder()
-                    .anger(probabilities.get("anger"))
-                    .fear(probabilities.get("fear"))
-                    .joy(probabilities.get("joy"))
-                    .disgust(probabilities.get("disgust"))
-                    .sadness(probabilities.get("sadness"))
+                    .anger(probabilities.getOrDefault("anger", 0.0))
+                    .fear(probabilities.getOrDefault("fear", 0.0))
+                    .joy(probabilities.getOrDefault("joy", 0.0))
+                    .disgust(probabilities.getOrDefault("disgust", 0.0))
+                    .sadness(probabilities.getOrDefault("sadness", 0.0))
                     .review(savedReview)
                     .build();
             emotionRepository.save(emotion);

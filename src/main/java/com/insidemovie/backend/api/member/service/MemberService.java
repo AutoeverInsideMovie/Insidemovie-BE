@@ -68,7 +68,7 @@ public class MemberService {
                 .fear(0f)
                 .anger(0f)
                 .disgust(0f)
-                .repEmotionType(null)
+                .repEmotionType(EmotionType.NONE)
                 .build();
 
         summary.setMember(member);
@@ -110,7 +110,7 @@ public class MemberService {
                 .fear(0f)
                 .anger(0f)
                 .disgust(0f)
-                .repEmotionType(null)
+                .repEmotionType(EmotionType.NONE)
                 .build();
 
         summary.setMember(member);
@@ -292,7 +292,7 @@ public class MemberService {
                 .findAverageEmotionsByMemberId(memberId)
                 .orElseGet(() -> EmotionAvgDTO.builder()
                         .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
-                        .repEmotionType(EmotionType.DISGUST)
+                        .repEmotionType(EmotionType.NONE)
                         .build()
                 );
 
@@ -320,11 +320,15 @@ public class MemberService {
                 EmotionType.DISGUST, dto.getDisgust()
         );
 
+        // 모든 값이 0.0이면 NONE
+        boolean allZero = scores.values().stream().allMatch(v -> v == 0.0);
+        if (allZero) return EmotionType.NONE;
+
         // 최댓값 감정 리턴
         return scores.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(EmotionType.DISGUST);
+                .orElse(EmotionType.NONE);
     }
 
     @Transactional

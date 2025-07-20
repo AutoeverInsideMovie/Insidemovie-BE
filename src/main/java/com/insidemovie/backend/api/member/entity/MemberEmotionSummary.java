@@ -31,7 +31,7 @@ public class MemberEmotionSummary {
     private Float disgust;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true)
+    @Column(name = "rep_emotion_type")
     private EmotionType repEmotionType; // 대표 감정
 
     public void setMember(Member member) {

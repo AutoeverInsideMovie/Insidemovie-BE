@@ -71,4 +71,9 @@ movie:
   seed-enabled: false # 시딩 끝나면 false
   update-enabled: true #시딩 끝나면 true
 
+match:
+  cron:
+    weekly: "0 0 8 * * MON"
+
+
 

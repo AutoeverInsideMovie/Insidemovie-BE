@@ -1,9 +1,6 @@
 package com.insidemovie.backend.api.review.controller;
 
-import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
-import com.insidemovie.backend.api.review.dto.ReviewCreateDTO;
-import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
-import com.insidemovie.backend.api.review.dto.ReviewUpdateDTO;
+import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ApiResponse;
@@ -33,13 +30,18 @@ public class ReviewController {
     @Operation(
             summary = "리뷰 등록 API", description = "새로운 리뷰를 등록합니다.")
     @PostMapping("/movies/{movieId}/reviews")
-    public ResponseEntity<ApiResponse<Long>> createReview(
+    public ResponseEntity<ApiResponse<ReviewCreatedResponseDTO>> createReview(
             @PathVariable Long movieId,
             @RequestBody ReviewCreateDTO reviewCreateDTO,
             @AuthenticationPrincipal UserDetails userDetails){
 
         Long id = reviewService.createReview(movieId, reviewCreateDTO, userDetails.getUsername());
-        return ApiResponse.success(SuccessStatus.CREATE_REVIEW_SUCCESS, id);
+
+        ReviewCreatedResponseDTO body = ReviewCreatedResponseDTO.builder()
+                .reviewId(id)
+                .build();
+
+        return ApiResponse.success(SuccessStatus.CREATE_REVIEW_SUCCESS, body);
     }
 
     @Operation(

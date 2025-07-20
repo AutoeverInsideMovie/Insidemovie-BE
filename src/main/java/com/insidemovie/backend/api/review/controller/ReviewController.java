@@ -1,6 +1,11 @@
 package com.insidemovie.backend.api.review.controller;
 
 import com.insidemovie.backend.api.review.dto.*;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
+import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
+import com.insidemovie.backend.api.review.dto.ReviewCreateDTO;
+import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
+import com.insidemovie.backend.api.review.dto.ReviewUpdateDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ApiResponse;
@@ -47,17 +52,15 @@ public class ReviewController {
     @Operation(
             summary = "리뷰 목록 조회 API", description = "특정 영화에 대한 리뷰 목록을 조회합니다.")
     @GetMapping("/movies/{movieId}/reviews")
-    public ResponseEntity<ApiResponse<PageResult<ReviewResponseDTO>>> getReviewsByMovie(
+    public ResponseEntity<ApiResponse<PageResDto<ReviewResponseDTO>>> getReviewsByMovie(
             @PathVariable Long movieId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
-        PageRequest pageRequest = PageRequest.of(page, size);
 
-        Page<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageRequest, userEmail);
-        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, PageResult.of(reviewPage));
+        PageResDto<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, page, size, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, reviewPage);
     }
 
     @Operation(summary = "내 리뷰 단건 조회", description = "영화에 대해 내가 작성한 리뷰(있으면)를 반환")

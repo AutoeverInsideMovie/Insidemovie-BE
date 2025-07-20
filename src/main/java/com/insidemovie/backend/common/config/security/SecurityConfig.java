@@ -98,7 +98,8 @@ public class SecurityConfig {
                 // Public POST
                 .requestMatchers(
                         HttpMethod.POST,
-                        "/api/v1/member/signup/emotion"
+                        "/api/v1/member/signup/emotion",
+                        "/api/v1/recommend/emotion"
                 ).permitAll()
 
                 // Public PATCH

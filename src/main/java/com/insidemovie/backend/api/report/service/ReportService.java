@@ -2,11 +2,10 @@ package com.insidemovie.backend.api.report.service;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
-import com.insidemovie.backend.api.report.dto.ReportRequestDTO;
 import com.insidemovie.backend.api.report.dto.ReportResponseDTO;
 import com.insidemovie.backend.api.report.entity.Report;
-import com.insidemovie.backend.api.report.entity.ReportReason;
-import com.insidemovie.backend.api.report.entity.ReportStatus;
+import com.insidemovie.backend.api.constant.ReportReason;
+import com.insidemovie.backend.api.constant.ReportStatus;
 import com.insidemovie.backend.api.report.repository.ReportRepository;
 import com.insidemovie.backend.api.review.entity.Review;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;

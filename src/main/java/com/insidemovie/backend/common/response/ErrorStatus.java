@@ -41,6 +41,7 @@ public enum ErrorStatus {
 
     /** 500 SERVER_ERROR */
     FAIL_UPLOAD_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR,"파일 업로드 실패하였습니다."),
+    FAIL_FIND_WINNER(HttpStatus.INTERNAL_SERVER_ERROR, "우승 영화 검색에 실패하였습니다."),
 
     /** 503 ERROR */
     EXTERNAL_SERVICE_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "외부 감정 분석 서비스 호출에 실패하였습니다.")

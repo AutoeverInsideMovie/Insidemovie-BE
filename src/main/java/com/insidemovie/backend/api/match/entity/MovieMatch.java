@@ -2,15 +2,14 @@ package com.insidemovie.backend.api.match.entity;
 
 import com.insidemovie.backend.api.movie.entity.Movie;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name="movie_match")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter @Setter
 public class MovieMatch {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,9 +18,6 @@ public class MovieMatch {
 
     @Column(name = "vote_count")
     private Long voteCount;
-
-    @Column(name = "movie_rank")
-    private Integer movieRank;
 
     @ManyToOne
     @JoinColumn(name = "movie_id")

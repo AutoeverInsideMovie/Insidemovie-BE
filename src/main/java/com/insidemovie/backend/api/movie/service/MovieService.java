@@ -1,4 +1,5 @@
 package com.insidemovie.backend.api.movie.service;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.insidemovie.backend.api.constant.GenreType;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MovieService {
 
+    private final ObjectMapper objectMapper;
     private final MovieRepository movieRepository;
     private final RestTemplate restTemplate;
     private final MovieGenreRepository movieGenreRepository;
@@ -156,15 +158,13 @@ public class MovieService {
      * MovieDetailDTO의 모든 필드를 Movie 엔티티에 매핑하는 공통 헬퍼 메서드
      */
     private void applyDetailToMovie(Movie movie, MovieDetailDTO detail) {
-        // 포스터/배경 전체 URL
         String fullPoster   = imageBaseUrl + posterSize + detail.getPosterPath();
         String fullBackdrop = imageBaseUrl + posterSize + detail.getBackdropPath();
 
-        // 평점 반올림
         double avg = detail.getVoteAverage() == null ? 0 : detail.getVoteAverage();
         double rounded = BigDecimal.valueOf(avg)
-            .setScale(2, RoundingMode.HALF_UP)
-            .doubleValue();
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
 
         movie.updateTitle(detail.getTitle());
         movie.updateOverview(detail.getOverview());
@@ -175,51 +175,54 @@ public class MovieService {
         movie.updateOriginalLanguage(detail.getOriginalLanguage());
         movie.updateReleaseDate(detail.getReleaseDate());
         movie.updatePopularity(detail.getPopularity());
-
-
-        // 장르 ID 리스트
-//        List<Long> genreIds = detail.getGenres().stream()
-//            .map(GenreDto::getId)
-//            .collect(Collectors.toList());
-//        movie.updateGenreIds(genreIds);
-
         movie.setTitleEn(detail.getOriginalTitle());
 
-        // 배우
+        // 배우 리스트
         List<String> actors = detail.getCredits().getCast().stream()
-            .map(CastDTO::getName)
-            .collect(Collectors.toList());
-        movie.setActors(actors.toString());
+                .map(CastDTO::getName)
+                .toList();
+        movie.setActors(writeJsonArray(actors));   // ["A","B","C"]
 
-        // 감독
+        // 감독 리스트
         List<String> directors = detail.getCredits().getCrew().stream()
-            .filter(c -> "Director".equals(c.getJob()))
-            .map(CrewDTO::getName)
-            .collect(Collectors.toList());
-        movie.setDirectors(directors.toString());
+                .filter(c -> "Director".equals(c.getJob()))
+                .map(CrewDTO::getName)
+                .distinct()
+                .toList();
+        movie.setDirectors(writeJsonArray(directors));
 
         movie.setRuntime(detail.getRuntime());
         movie.setStatus(detail.getStatus());
 
-        // KR 등급
+        // 한국 등급
         String rating = detail.getReleaseDates().getResults().stream()
-            .filter(r -> "KR".equals(r.getIso3166_1()))
-            .flatMap(r -> r.getReleaseDates().stream())
-            .map(ReleaseDateDTO::getCertification)
-            .filter(cert -> cert != null && !cert.isEmpty())
-            .findFirst().orElse(null);
+                .filter(r -> "KR".equals(r.getIso3166_1()))
+                .flatMap(r -> r.getReleaseDates().stream())
+                .map(ReleaseDateDTO::getCertification)
+                .filter(cert -> cert != null && !cert.isEmpty())
+                .findFirst()
+                .orElse(null);
         movie.setRating(rating);
 
-        // KR OTT 제공처
-        List<String> ottProviders = Optional.ofNullable(detail.getWatchProviders()
-                .getResults().get("KR"))
-            .map(cp -> Optional.ofNullable(cp.getFlatrate()).orElse(Collections.emptyList())
-                .stream()
-                .map(ProviderDTO::getProviderName)
-                .collect(Collectors.toList()))
-            .orElse(Collections.emptyList());
-        movie.setOttProviders(ottProviders.toString());
+        // 한국 OTT 제공
+        List<String> ottProviders = Optional.ofNullable(detail.getWatchProviders().getResults().get("KR"))
+                .map(cp -> Optional.ofNullable(cp.getFlatrate()).orElse(Collections.emptyList())
+                        .stream()
+                        .map(ProviderDTO::getProviderName)
+                        .toList())
+                .orElse(Collections.emptyList());
+        movie.setOttProviders(writeJsonArray(ottProviders));
     }
+
+    private String writeJsonArray(List<String> list) {
+        try {
+            return objectMapper.writeValueAsString(list); // 예: ["배우1","배우2"]
+        } catch (Exception e) {
+            log.warn("JSON 직렬화 실패. list={}", list, e);
+            return "[]";
+        }
+    }
+
 
     /**
      * 제목 + 개봉연도로 TMDB에서 영화 검색 후 첫 번째 결과 반환
@@ -506,5 +509,4 @@ public class MovieService {
         return new PageResDto<>(dto);
 
     }
-
 }

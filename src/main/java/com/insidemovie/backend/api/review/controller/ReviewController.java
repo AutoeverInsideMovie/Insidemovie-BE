@@ -1,5 +1,8 @@
 package com.insidemovie.backend.api.review.controller;
 
+import com.insidemovie.backend.api.constant.ReviewSort;
+import com.insidemovie.backend.api.review.dto.*;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
 import com.insidemovie.backend.api.review.dto.ReviewCreateDTO;
 import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
@@ -33,29 +36,33 @@ public class ReviewController {
     @Operation(
             summary = "리뷰 등록 API", description = "새로운 리뷰를 등록합니다.")
     @PostMapping("/movies/{movieId}/reviews")
-    public ResponseEntity<ApiResponse<Long>> createReview(
+    public ResponseEntity<ApiResponse<ReviewCreatedResponseDTO>> createReview(
             @PathVariable Long movieId,
             @RequestBody ReviewCreateDTO reviewCreateDTO,
             @AuthenticationPrincipal UserDetails userDetails){
 
         Long id = reviewService.createReview(movieId, reviewCreateDTO, userDetails.getUsername());
-        return ApiResponse.success(SuccessStatus.CREATE_REVIEW_SUCCESS, id);
+
+        ReviewCreatedResponseDTO body = ReviewCreatedResponseDTO.builder()
+                .reviewId(id)
+                .build();
+
+        return ApiResponse.success(SuccessStatus.CREATE_REVIEW_SUCCESS, body);
     }
 
     @Operation(
             summary = "리뷰 목록 조회 API", description = "특정 영화에 대한 리뷰 목록을 조회합니다.")
     @GetMapping("/movies/{movieId}/reviews")
-    public ResponseEntity<ApiResponse<PageResult<ReviewResponseDTO>>> getReviewsByMovie(
+    public ResponseEntity<ApiResponse<PageResDto<ReviewResponseDTO>>> getReviewsByMovie(
             @PathVariable Long movieId,
+            @RequestParam(defaultValue = "LATEST") ReviewSort sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
-        PageRequest pageRequest = PageRequest.of(page, size);
-
-        Page<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageRequest, userEmail);
-        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, PageResult.of(reviewPage));
+        Pageable pageable = PageRequest.of(page, size, sort.toSort());
+        PageResDto<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageable, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, reviewPage);
     }
 
     @Operation(summary = "내 리뷰 단건 조회", description = "영화에 대해 내가 작성한 리뷰(있으면)를 반환")
@@ -69,7 +76,7 @@ public class ReviewController {
         }
 
         ReviewResponseDTO dto = reviewService.getMyReview(movieId, userDetails.getUsername());
-        return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, dto);
+        return ApiResponse.success(SuccessStatus.SEND_MY_REVIEW_SUCCESS, dto);
     }
 
 

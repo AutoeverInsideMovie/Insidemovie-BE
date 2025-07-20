@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.review.dto;
 
+import com.insidemovie.backend.api.report.entity.ReportStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -28,6 +29,7 @@ public class ReviewResponseDTO {
 
     private EmotionDTO emotion; // 감정 상태 DTO
 
-    private Boolean isReported;
-    private Boolean isConcealed;
+    private boolean isReported;
+    private boolean isConcealed;
+    private ReportStatus reportStatus;
 }

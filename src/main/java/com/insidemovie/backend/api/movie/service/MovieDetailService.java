@@ -31,10 +31,6 @@ public class MovieDetailService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         List<MovieGenre> genres = movieGenreRepository.findByMovieId(movie.getId());
-        if(genres.isEmpty()){
-            log.error("Movie상세보기 장르 오류");
-            throw new NotFoundException(ErrorStatus.NOT_FOUND_GENRE_EXCEPTION.getMessage());
-        }
 
         List<String> genreNames= genres.stream()
                 .map(mg -> mg.getGenreType().name())
@@ -49,6 +45,13 @@ public class MovieDetailService {
         resDto.setVoteAverage(movie.getVoteAverage());
         resDto.setOriginalLanguage(movie.getOriginalLanguage());
         resDto.setGenre(genreNames);
+        resDto.setActors(movie.getActors());
+        resDto.setDirector(movie.getDirectors());
+        resDto.setOttProviders(movie.getOttProviders());
+        resDto.setRating(movie.getRating());
+        resDto.setRuntime(movie.getRuntime());
+        resDto.setStatus(movie.getStatus());
+        resDto.setTitleEn(movie.getTitleEn());
         return resDto;
     }
 
@@ -61,10 +64,6 @@ public class MovieDetailService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         List<MovieGenre> genres = movieGenreRepository.findByMovieId(movie.getId());
-        if (genres.isEmpty()) {
-            log.error("Movie상세보기 장르 오류");
-            throw new NotFoundException(ErrorStatus.NOT_FOUND_GENRE_EXCEPTION.getMessage());
-        }
 
         List<String> genreNames = genres.stream()
                 .map(mg ->mg.getGenreType().name())
@@ -80,6 +79,13 @@ public class MovieDetailService {
         resDto.setOriginalLanguage(movie.getOriginalLanguage());
         resDto.setIsLike(movieLikeRepository.existsByMovie_IdAndMember_Id(movie.getId(), member.getId()));
         resDto.setGenre(genreNames);
+        resDto.setActors(movie.getActors());
+        resDto.setDirector(movie.getDirectors());
+        resDto.setOttProviders(movie.getOttProviders());
+        resDto.setRating(movie.getRating());
+        resDto.setRuntime(movie.getRuntime());
+        resDto.setStatus(movie.getStatus());
+        resDto.setTitleEn(movie.getTitleEn());
         return resDto;
     }
 }

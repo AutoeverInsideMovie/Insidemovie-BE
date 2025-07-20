@@ -86,11 +86,11 @@ public class ReviewService {
 
             Map<String, Double> probabilities = response.getProbabilities();
             Emotion emotion = Emotion.builder()
-                    .anger(probabilities.get("anger"))
-                    .fear(probabilities.get("fear"))
-                    .joy(probabilities.get("joy"))
-                    .disgust(probabilities.get("disgust"))
-                    .sadness(probabilities.get("sadness"))
+                    .anger(Optional.ofNullable(probabilities.get("anger")).orElse(0.0))
+                    .fear(Optional.ofNullable(probabilities.get("fear")).orElse(0.0))
+                    .joy(Optional.ofNullable(probabilities.get("joy")).orElse(0.0))
+                    .disgust(Optional.ofNullable(probabilities.get("disgust")).orElse(0.0))
+                    .sadness(Optional.ofNullable(probabilities.get("sadness")).orElse(0.0))
                     .review(savedReview)
                     .build();
             emotionRepository.save(emotion);
@@ -113,23 +113,14 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Long currentUserId = null;
-        Long myReviewId = null;
 
         if (memberEmail != null && !memberEmail.isBlank()) {
             Member member = memberRepository.findByEmail(memberEmail.trim())
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
             currentUserId = member.getId();
-
-            myReviewId = reviewRepository.findByMemberAndMovie(member, movie)
-                    .map(Review::getId)
-                    .orElse(null);
         }
 
-        log.info("로그인 사용자 ID: {}, 내 리뷰 ID: {}", currentUserId, myReviewId);
-
-        Page<Review> reviewPage = (myReviewId != null)
-                ? reviewRepository.findByMovieAndIdNotAndIsConcealedFalse(movie, myReviewId, pageable)
-                : reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
+        Page<Review> reviewPage = reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 
         final Long uid = currentUserId;
         Page<ReviewResponseDTO> dtoPage = reviewPage.map(r -> toResponseDTO(r, uid));

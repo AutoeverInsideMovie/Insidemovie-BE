@@ -64,7 +64,7 @@ scheduler:
   cron:
     daily: "0 15 7 * * *"
     weekly: "0 35 07 * * MON"
-    request_movie: "0 45 14 * * *"
+    request_movie: "0 32 00 * * *"
   zone: "Asia/Seoul"
 
 movie:

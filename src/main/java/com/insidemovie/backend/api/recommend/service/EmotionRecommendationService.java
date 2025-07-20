@@ -57,6 +57,7 @@ public class EmotionRecommendationService {
                         case ANGER -> movie.getAnger().doubleValue();
                         case FEAR -> movie.getFear().doubleValue();
                         case DISGUST -> movie.getDisgust().doubleValue();
+                        case NONE -> 0.0;
                     };
 
                     return new MovieRecommendationDTO(

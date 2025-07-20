@@ -28,6 +28,7 @@ public class MovieEmotionSummary {
     private Float disgust;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "dominant_emotion", length = 20)
     private EmotionType dominantEmotion; // 대표 감정
 
     public void updateFromDTO(EmotionAvgDTO dto) {

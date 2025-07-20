@@ -60,92 +60,50 @@ public class BoxOfficeService {
     // 일간 박스오피스 조회 및 저장
     @Transactional
     public void fetchAndStoreDailyBoxOffice(BoxOfficeRequestDTO req) {
-        // 어제 날짜 계산
         LocalDate date = LocalDate.now().minusDays(1);
-        log.info("[Service] DailyBoxOffice for yesterday {} (targetDt={})", date, date.format(FMT));
+        log.info("[Service] WILL UPSERT daily date = {}", date);
+        int limit = req.getItemPerPage();
 
-        // 최신(어제) 데이터 API 호출
-        List<DailyBoxOfficeEntity> fetched = fetchDailyFromApi(date, req.getItemPerPage());
+        log.info("[Daily] Fetch & Upsert for date={} (limit={})", date, limit);
 
-        // 업서트 루프
-        for (DailyBoxOfficeEntity e : fetched) {
-            // targetDate + movieCd 로 기존 데이터 조회
-            Optional<DailyBoxOfficeEntity> opt = dailyRepo
-                .findByTargetDateAndMovieCd(date, e.getMovieCd());
+        List<DailyBoxOfficeEntity> fetched = fetchDailyFromApi(date, limit);
 
-            DailyBoxOfficeEntity toSave;
-            if (opt.isPresent()) {
-                toSave = opt.get();
-                toSave.updateFrom(e);
-            } else {
-                toSave = e;
+        for (DailyBoxOfficeEntity incoming : fetched) {
+            // (movieCd, targetDate) 로 기존 검색
+            DailyBoxOfficeEntity entity = dailyRepo
+                    .findByTargetDateAndMovieCd(date, incoming.getMovieCd())
+                    .map(existing -> { existing.updateFrom(incoming); return existing; })
+                    .orElse(incoming); // 새 엔티티
+
+            // TMDB 연동 (없을 때만 저장)
+            movieService.searchMovieByTitleAndYear(
+                    entity.getMovieName(),
+                    parseYearSafe(entity.getOpenDate())
+            ).ifPresent(dto -> {
+                // Movie 없으면 저장
+                movieRepo.findByTmdbMovieId(dto.getId())
+                        .or(() -> {
+                            movieService.fetchAndSaveMovieById(dto.getId());
+                            return movieRepo.findByTmdbMovieId(dto.getId());
+                        })
+                        .ifPresent(entity::setMovie);
+            });
+
+            dailyRepo.save(entity);
+        }
+
+        log.info("[Daily] Upsert completed (count={}) for {}", fetched.size(), date);
+    }
+
+    private int parseYearSafe(String openDate) {
+        try {
+            if (openDate == null || openDate.isBlank()) {
+                return LocalDate.now().getYear();
             }
-
-            // TMDB 연동: 영화 제목+개봉연도로 TMDB ID 조회/저장
-            movieService.searchMovieByTitleAndYear(
-                toSave.getMovieName(),
-                LocalDate.parse(toSave.getOpenDate(), ISO_FMT).getYear()
-                )
-                .ifPresent(dto -> {
-                    Optional<Movie> existingMovie = movieRepo.findByTmdbMovieId(dto.getId());
-                    if (existingMovie.isEmpty()) {
-                        // DB에 없을 때만 TMDB API 호출 + 저장
-                        movieService.fetchAndSaveMovieById(dto.getId());
-                    }
-                    log.info("[연동완료] {} ({}) → TMDB ID={}",
-                        toSave.getMovieName(), toSave.getMovieCd(), dto.getId());
-                });
-
-            // 저장
-            dailyRepo.save(toSave);
+            return LocalDate.parse(openDate, ISO_FMT).getYear();
+        } catch (Exception e) {
+            return LocalDate.now().getYear();
         }
-
-        // 기존 데이터 삭제
-        dailyRepo.deleteByTargetDate(date);
-
-        // 변경된 호출
-        List<DailyBoxOfficeEntity> entities = fetchDailyFromApi(date, req.getItemPerPage());
-
-        // 저장·DTO 변환·예외 처리
-        dailyRepo.saveAll(entities);
-
-        entities.forEach(e -> {
-            movieService.searchMovieByTitleAndYear(
-                    e.getMovieName(),
-                    LocalDate.parse(e.getOpenDate(), ISO_FMT).getYear()
-                )
-                .ifPresent(dto -> {
-                    // TMDB 상세정보 먼저 저장
-                    movieService.fetchAndSaveMovieById(dto.getId());
-
-                    // 저장된 Movie 엔티티 조회
-                    Movie movie = movieRepo.findByTmdbMovieId(dto.getId())
-                        .orElseThrow(() -> new IllegalStateException(
-                            "Movie not found for TMDB ID=" + dto.getId()));
-
-                    // DailyBoxOfficeEntity 와 연관 설정
-                    e.setMovie(movie);
-
-                    log.info("[연동완료] {} ({}) → TMDB ID={}",
-                        e.getMovieName(), e.getMovieCd(), dto.getId());
-                });
-        });
-
-        List<DailyBoxOfficeResponseDTO> items = entities.stream()
-            .map(DailyBoxOfficeResponseDTO::fromEntity)
-            .collect(Collectors.toList());
-
-        if (items.isEmpty()) {
-            throw new BaseException(
-                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
-                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
-            );
-        }
-
-        BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
-                .boxofficeType("일별")
-                .items(items)
-                .build();
     }
 
     // 외부 API 호출하여 일간 엔티티 목록 생성
@@ -294,26 +252,47 @@ public class BoxOfficeService {
      */
     @Transactional
     public BoxOfficeListDTO<DailyBoxOfficeResponseDTO> getSavedDailyBoxOffice(String targetDt, int itemPerPage) {
-        LocalDate date = LocalDate.parse(targetDt, FMT);
-        Pageable pageable = PageRequest.of(0, itemPerPage, Sort.by("movieRank"));
-        Page<DailyBoxOfficeEntity> page = dailyRepo.findByTargetDate(date, pageable);
 
-        List<DailyBoxOfficeResponseDTO> items = page.stream()
-            .map(DailyBoxOfficeResponseDTO::fromEntity)
-            .collect(Collectors.toList());
+        LocalDate requestDate = (targetDt == null || targetDt.isBlank())
+                ? LocalDate.now().minusDays(1)
+                : LocalDate.parse(targetDt, FMT);
 
-        if (items.isEmpty()) {
+        String resolvedTargetDt = requestDate.format(FMT);
+
+        // 1) 요청 날짜로 시도
+        List<DailyBoxOfficeEntity> rows = dailyRepo.findAllSortedByTargetDate(requestDate);
+
+        // 2) fallback: 없으면 최신
+        if (rows.isEmpty()) {
+            List<DailyBoxOfficeEntity> latestRows = dailyRepo.findLatestSorted();
+            if (!latestRows.isEmpty()) {
+                LocalDate latestDate = latestRows.get(0).getTargetDate();
+                if (!latestDate.equals(requestDate)) {
+                    log.warn("[Daily][Fallback] 요청일 {} 데이터 없음 → 최신 {} 로 대체",
+                            requestDate, latestDate);
+                    rows = latestRows;
+                    resolvedTargetDt = latestDate.format(FMT);
+                }
+            }
+        }
+
+        if (rows.isEmpty()) {
             throw new BaseException(
-                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
-                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
+                    ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
+                    ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
             );
         }
 
+        List<DailyBoxOfficeResponseDTO> items = rows.stream()
+                .limit(itemPerPage)
+                .map(DailyBoxOfficeResponseDTO::fromEntity)
+                .toList();
+
         return BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
-            .boxofficeType("일별")
-            .targetDt(targetDt)
-            .items(items)
-            .build();
+                .boxofficeType("일별")
+                .targetDt(resolvedTargetDt)
+                .items(items)
+                .build();
     }
 
     /**
@@ -321,49 +300,46 @@ public class BoxOfficeService {
      */
     @Transactional
     public BoxOfficeListDTO<WeeklyBoxOfficeResponseDTO> getSavedWeeklyBoxOffice(
-            String targetDt, String weekGb, int itemPerPage
-    ) {
-        // 파라미터가 없으면 가장 최근 저장된 yearWeekTime 조회
+            String targetDt, String weekGb, int itemPerPage) {
+
         String yearWeek = Optional.ofNullable(targetDt)
-            .filter(dt -> !dt.isBlank())
-            .map(dt -> {
-                LocalDate date = LocalDate.parse(dt, FMT);
-                WeekFields wf = WeekFields.ISO;
-                int week = date.get(wf.weekOfWeekBasedYear());
-                int year = date.get(wf.weekBasedYear());
-                return String.format("%04dIW%02d", year, week);
-            })
-            .orElseGet(() ->
-                weeklyRepo.findFirstByOrderByYearWeekTimeDesc()
-                          .map(WeeklyBoxOfficeEntity::getYearWeekTime)
-                          .orElseThrow(() ->
-                              new BaseException(
-                                  ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
-                                  "저장된 박스오피스 데이터가 없습니다."
-                              ))
-            );
+                .filter(s -> !s.isBlank())
+                .map(dt -> {
+                    LocalDate d = LocalDate.parse(dt, FMT);
+                    WeekFields wf = WeekFields.ISO;
+                    int w = d.get(wf.weekOfWeekBasedYear());
+                    int y = d.get(wf.weekBasedYear());
+                    return String.format("%04dIW%02d", y, w);
+                })
+                .orElse(null);
 
-        // 페이징 조회
-        Pageable pageReq = PageRequest.of(0, itemPerPage, Sort.by("movieRank"));
-        Page<WeeklyBoxOfficeEntity> page = weeklyRepo.findByYearWeekTime(yearWeek, pageReq);
+        List<WeeklyBoxOfficeEntity> rows =
+                (yearWeek != null) ? weeklyRepo.findAllSortedByYearWeek(yearWeek) : List.of();
 
-        List<WeeklyBoxOfficeResponseDTO> items = page.stream()
-            .map(WeeklyBoxOfficeResponseDTO::fromEntity)
-            .collect(Collectors.toList());
-
-        if (items.isEmpty()) {
-            throw new BaseException(
-                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
-                ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getMessage()
-            );
+        if (rows.isEmpty()) {
+            rows = weeklyRepo.findLatestSorted();
+            if (rows.isEmpty()) {
+                throw new BaseException(
+                        ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                        ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getMessage()
+                );
+            }
+            yearWeek = rows.get(0).getYearWeekTime();
+            log.warn("[Weekly][Fallback] 요청된 targetDt 데이터 없음 → 최신 yearWeek={} 사용", yearWeek);
         }
 
+        List<WeeklyBoxOfficeResponseDTO> items = rows.stream()
+                .limit(itemPerPage)
+                .map(WeeklyBoxOfficeResponseDTO::fromEntity)
+                .toList();
+
         return BoxOfficeListDTO.<WeeklyBoxOfficeResponseDTO>builder()
-            .boxofficeType("주간")
-            .targetDt(yearWeek)
-            .items(items)
-            .build();
+                .boxofficeType("주간")
+                .targetDt(yearWeek)
+                .items(items)
+                .build();
     }
+
 
      /**
      * 저장된 일간 박스오피스 영화의 MovieDetailResDto 리스트 반환
@@ -434,14 +410,16 @@ public class BoxOfficeService {
                 int y = d.get(wf.weekBasedYear());
                 return String.format("%04dIW%02d", y, w);
             })
-            .orElseGet(() ->
-                weeklyRepo.findFirstByOrderByYearWeekTimeDesc()
-                          .map(WeeklyBoxOfficeEntity::getYearWeekTime)
-                          .orElseThrow(() -> new BaseException(
-                              ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
-                              "저장된 주간 박스오피스 데이터가 없습니다."
-                          ))
-            );
+            .orElseGet(() -> {
+                List<WeeklyBoxOfficeEntity> latest = weeklyRepo.findLatestSorted();
+                if (latest.isEmpty()) {
+                    throw new BaseException(
+                            ErrorStatus.NOT_FOUND_WEEKLY_BOXOFFICE.getHttpStatus(),
+                            "저장된 주간 박스오피스 데이터가 없습니다."
+                    );
+                }
+                return latest.get(0).getYearWeekTime();
+            });
 
         // 주간 박스오피스 레코드 조회
         WeeklyBoxOfficeEntity box = weeklyRepo

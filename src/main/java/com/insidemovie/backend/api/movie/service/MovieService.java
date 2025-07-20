@@ -152,6 +152,20 @@ public class MovieService {
                     movieGenreRepository.save(mg);
                 });
 
+        movieEmotionSummaryRepository.findByMovieId(movie.getId())
+                .orElseGet(()->{
+                    EmotionAvgDTO initialEmotion = EmotionAvgDTO.builder()
+                            .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
+                            .repEmotionType(EmotionType.NONE)
+                            .build();
+                    MovieEmotionSummary newSummary = MovieEmotionSummary.builder()
+                            .movie(movie)
+                            .build();
+                    newSummary.updateFromDTO(initialEmotion);
+                    return movieEmotionSummaryRepository.save(newSummary);
+
+                });
+
         log.info("[TMDB 연동] 저장 완료: TMDB ID={}", tmdbId);
     }
 

@@ -9,5 +9,5 @@ public enum EmotionType {
     ANGER,
     FEAR,
     DISGUST,
-    NONE
+    NONE,
 }

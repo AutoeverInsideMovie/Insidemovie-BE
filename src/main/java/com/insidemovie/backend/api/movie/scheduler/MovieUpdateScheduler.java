@@ -21,7 +21,7 @@ public class MovieUpdateScheduler {
         List<String> types = List.of("popular", "now_playing");
 
         for (String type : types) {
-            for (int page = 40; page <= 250; page++) {
+            for (int page = 1; page <= 250; page++) {
                 log.info("영화 타입 '{}' 페이지 {} 처리 시작", type, page);
                 movieService.fetchAndSaveMoviesByPage(type, page, false);
                 try {

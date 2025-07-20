@@ -2,6 +2,7 @@ package com.insidemovie.backend.api.review.service;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
@@ -43,6 +44,7 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final RestTemplate fastApiRestTemplate;
     private final EmotionRepository emotionRepository;
+    private final MemberService memberService;
 
     // 리뷰 작성
     @Transactional
@@ -93,6 +95,9 @@ public class ReviewService {
                     .review(savedReview)
                     .build();
             emotionRepository.save(emotion);
+
+            // 리뷰 등록 후 사용자 감정 요약 업데이트
+            memberService.getMyEmotionSummary(memberEmail);
 
         } catch (RestClientException e) {
             throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());

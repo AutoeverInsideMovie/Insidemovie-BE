@@ -84,5 +84,13 @@ public class ReportService {
 
         report.updateStatus(ReportStatus.REJECTED);
     }
+    // 신고 미처리화
+    @Transactional
+    public void unprocessedReport(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REPORT_EXCEPTION.getMessage()));
+
+        report.updateStatus(ReportStatus.UNPROCESSED);
+    }
 
 }

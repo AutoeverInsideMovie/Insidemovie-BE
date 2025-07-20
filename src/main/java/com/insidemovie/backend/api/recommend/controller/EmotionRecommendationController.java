@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/recommend")
+@RequestMapping("/api/v1/recommend")
 @Tag(name = "Recommend", description = "추천 영화 관련 API")
 @RequiredArgsConstructor
 public class EmotionRecommendationController {

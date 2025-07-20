@@ -7,7 +7,7 @@ import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
-import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
+import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieWrapperDTO;
 import com.insidemovie.backend.api.movie.service.MovieDetailService;
 import com.insidemovie.backend.api.movie.service.MovieLikeService;
@@ -54,10 +54,10 @@ public class MovieController {
             description = "영화에 저장된 5가지 감정 상태 값을 조회합니다."
     )
     @GetMapping("/emotions/{movieId}")
-    public ResponseEntity<ApiResponse<MovieEmotionSummaryResponseDTO>> getMovieEmotions(
+    public ResponseEntity<ApiResponse<MovieEmotionResDTO>> getMovieEmotions(
             @PathVariable Long movieId
     ) {
-        MovieEmotionSummaryResponseDTO dto = movieService.getMovieEmotions(movieId);
+        MovieEmotionResDTO dto = movieService.getMovieEmotions(movieId);
         return ApiResponse.success(SuccessStatus.SEND_MOVIE_EMOTION_SUCCESS, dto);
     }
 

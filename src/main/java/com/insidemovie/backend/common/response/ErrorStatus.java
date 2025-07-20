@@ -22,6 +22,7 @@ public enum ErrorStatus {
     DUPLICATE_REVIEW_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 해당 영화에 작성한 리뷰가 존재합니다."),
     DUPLICATE_REPORT_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 신고한 리뷰입니다."),
     BAD_REQUEST_ALREADY_LOGOUT(HttpStatus.BAD_REQUEST, "이미 로그아웃 된 사용자입니다."),
+    DUPLICATE_VOTE_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 투표한 사용자입니다."),
 
     /** 401 UNAUTHORIZED */
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
@@ -42,6 +43,8 @@ public enum ErrorStatus {
     NOT_FOUND_DAILY_MOIVE(HttpStatus.NOT_FOUND, "일간 박스오피스 영화의 상세 정보를 찾을 수 없습니다."),
     NOT_FOUND_WEEKLY_MOIVE(HttpStatus.NOT_FOUND, "주간 박스오피스 영화의 상세 정보를 찾을 수 없습니다."),
     NOT_FOUND_MOVIE_EMOTION(HttpStatus.NOT_FOUND, "영화의 감정 정보가 없습니다."),
+    NOT_FOUND_MATCH(HttpStatus.NOT_FOUND, "최근 매치를 찾을 수 없습니다."),
+    NOT_FOUND_WINNER(HttpStatus.NOT_FOUND, "우승 영화 검색에 실패하였습니다."),
 
     /** 500 SERVER_ERROR */
     FAIL_UPLOAD_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR,"파일 업로드 실패하였습니다."),

@@ -51,8 +51,13 @@ public enum SuccessStatus {
     SEND_GENRE_MOVIES_SUCCESS(HttpStatus.OK, "장르별 영화 조회 성공"),
     SEND_WATCHED_MOVIES_SUCCESS(HttpStatus.OK, "내가 관람한 영화 조회 성공"),
     SEND_RECOMMEND_MOVIES_SUCCESS(HttpStatus.OK, "추천 영화 조회 성공"),
+    SEND_VOTE_SUCCESS(HttpStatus.OK, "영화 투표 성공"),
+    GET_MATCH_DETAIL_SUCCESS(HttpStatus.OK, "대결 영화 조회 성공"),
+    GET_WINNER_SUCCESS(HttpStatus.OK, "우승 내역 조회 성공"),
+
 
     /** 201 CREATED */
+    CREATE_SAMPLE_SUCCESS(HttpStatus.CREATED, "샘플 등록 성공"),
     CREATE_REVIEW_SUCCESS(HttpStatus.CREATED, "리뷰 등록 성공"),
     ;
 

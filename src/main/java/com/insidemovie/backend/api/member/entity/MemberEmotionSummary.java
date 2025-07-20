@@ -31,7 +31,12 @@ public class MemberEmotionSummary {
     private Float disgust;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
     private EmotionType repEmotionType; // 대표 감정
+
+    public void setMember(Member member) {
+        this.member = member;
+    }
 
     // 평균 감정 정보를 DTO로부터 갱신
     public void updateFromDTO(EmotionAvgDTO dto) {

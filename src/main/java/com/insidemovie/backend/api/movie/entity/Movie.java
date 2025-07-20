@@ -1,21 +1,19 @@
 package com.insidemovie.backend.api.movie.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @Entity
+@Getter @Setter
 @Builder
-@Data
 @Table(name = "movie")
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"movieLikes", "emotions"})
 public class Movie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,9 +55,15 @@ public class Movie {
     private String rating;               // 영화 등급
     private LocalDate releaseDate;       // 개봉일
 
+    @Column(name = "is_matched")
+    private Boolean isMatched;
+
     @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MovieLike> movieLikes = new ArrayList<>();
+
+    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private MovieEmotionSummary emotions;
 
     // 제목 수정
     public void updateTitle(String title) {

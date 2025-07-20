@@ -70,7 +70,8 @@ public class JwtProvider {
         Claims claims = parseClaims(token);
 
         // 권한 정보 추출
-        List<String> roles = claims.get(AUTHORITIES_KEY, List.class);
+        List<String> roles = Optional.ofNullable(claims.get(AUTHORITIES_KEY, List.class))
+                                   .orElseGet(Collections::emptyList);
 
         Collection<GrantedAuthority> authorities = roles.stream()
             .map(SimpleGrantedAuthority::new)
@@ -81,16 +82,29 @@ public class JwtProvider {
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }
 
-    // 토큰 유효성 검증
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            log.info("JWT 검증 실패: {}", e.getMessage());
-        }
-        return false;
-    }
+    /**
+    * Access / Refresh 공통 유효성 검증.
+    * null/blank 는 단순 false (로그 X) 로 처리해 불필요한 노이즈 제거.
+    */
+   public boolean validateToken(String token) {
+       if (token == null || token.isBlank()) {
+           return false;
+       }
+       try {
+           Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+           return true;
+       } catch (ExpiredJwtException e) {
+           log.debug("JWT expired: {}", e.getMessage());
+       } catch (Exception e) {
+           log.debug("JWT invalid: {}", e.getMessage());
+       }
+       return false;
+   }
+
+   /** Refresh 토큰 특정 검증 로직이 필요하면 추후 분리 (예: prefix, 별도 저장소 확인) */
+   public boolean validateRefreshToken(String token) {
+       return validateToken(token);
+   }
 
     // 토큰의 Claims(내용) 추출
     public Claims parseClaims(String token) {

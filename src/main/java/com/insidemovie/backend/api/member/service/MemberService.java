@@ -17,6 +17,7 @@ import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.BadRequestException;
 import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.exception.NotFoundException;
+import com.insidemovie.backend.common.exception.UnAuthorizedException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -243,9 +244,9 @@ public class MemberService {
                 ));
 
         if (member.getRefreshToken() == null) {
-            throw new BaseException(
-                    ErrorStatus.BAD_REQUEST_ALREADY_LOGOUT.getHttpStatus(),
-                    ErrorStatus.BAD_REQUEST_ALREADY_LOGOUT.getMessage()
+            throw new UnAuthorizedException(
+                    ErrorStatus.USER_ALREADY_LOGGED_OUT.getHttpStatus(),
+                    ErrorStatus.USER_ALREADY_LOGGED_OUT.getMessage()
             );
         }
         member.updateRefreshtoken(null);

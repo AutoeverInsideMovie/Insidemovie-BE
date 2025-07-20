@@ -1,4 +1,4 @@
-package com.insidemovie.backend.api.report.entity;
+package com.insidemovie.backend.api.constant;
 
 public enum ReportReason {
     INAPPROPRIATE_LANGUAGE, // 부적절한 언어 사용 (욕설 / 비방)

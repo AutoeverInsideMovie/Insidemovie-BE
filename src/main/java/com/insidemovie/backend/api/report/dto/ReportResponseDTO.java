@@ -1,8 +1,8 @@
 package com.insidemovie.backend.api.report.dto;
 
 import com.insidemovie.backend.api.report.entity.Report;
-import com.insidemovie.backend.api.report.entity.ReportReason;
-import com.insidemovie.backend.api.report.entity.ReportStatus;
+import com.insidemovie.backend.api.constant.ReportReason;
+import com.insidemovie.backend.api.constant.ReportStatus;
 import lombok.Builder;
 import lombok.Getter;
 

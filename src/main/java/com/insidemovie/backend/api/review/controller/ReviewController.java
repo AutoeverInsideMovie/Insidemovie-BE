@@ -1,5 +1,7 @@
 package com.insidemovie.backend.api.review.controller;
 
+import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.review.dto.MyReviewResponseDTO;
@@ -7,6 +9,7 @@ import com.insidemovie.backend.api.review.dto.ReviewCreateDTO;
 import com.insidemovie.backend.api.review.dto.ReviewResponseDTO;
 import com.insidemovie.backend.api.review.dto.ReviewUpdateDTO;
 import com.insidemovie.backend.api.review.service.ReviewService;
+import com.insidemovie.backend.common.exception.ForbiddenException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ApiResponse;
 import com.insidemovie.backend.common.response.ErrorStatus;
@@ -19,10 +22,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @Tag(name="Review", description = "Review 관련 API 입니다.")
@@ -31,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final MemberRepository memberRepository;
 
     @Operation(
             summary = "리뷰 등록 API", description = "새로운 리뷰를 등록합니다.")
@@ -39,6 +45,14 @@ public class ReviewController {
             @PathVariable Long movieId,
             @RequestBody ReviewCreateDTO reviewCreateDTO,
             @AuthenticationPrincipal UserDetails userDetails){
+
+        Member member = memberRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        // 정지된 사용자 차단
+        if (member.isBanned()) {
+            throw new ForbiddenException(ErrorStatus.USER_BANNED_EXCEPTION.getMessage());
+        }
 
         Long id = reviewService.createReview(movieId, reviewCreateDTO, userDetails.getUsername());
 

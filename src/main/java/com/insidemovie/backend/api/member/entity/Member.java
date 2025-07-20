@@ -97,6 +97,10 @@ public class Member extends BaseTimeEntity {
         this.isBanned = banned;
     }
 
+    public boolean isBanned() {
+        return this.isBanned;
+    }
+
     // 신고 횟수 증가
     public void incrementReportCount() {
         this.reportCount++;

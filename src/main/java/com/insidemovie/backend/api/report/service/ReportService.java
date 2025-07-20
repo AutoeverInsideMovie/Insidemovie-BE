@@ -48,7 +48,7 @@ public class ReportService {
         }
 
         // 리뷰, 회원 상태 업데이트
-        review.markReported();                   // 리뷰 isReported = true
+//        review.markReported();                   // 리뷰 isReported = true
         reportedMember.incrementReportCount();   // 피신고자 reportCount++
 
         return ReportResponseDTO.fromEntity(
@@ -73,6 +73,7 @@ public class ReportService {
         report.updateStatus(ReportStatus.ACCEPTED);
 
         Review review = report.getReview();
+        review.markReported();
         review.conceal();
     }
 

@@ -1,4 +1,4 @@
-package com.insidemovie.backend.api.report.entity;
+package com.insidemovie.backend.api.constant;
 
 public enum ReportStatus {
     UNPROCESSED,  // 미처리

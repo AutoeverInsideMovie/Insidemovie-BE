@@ -375,7 +375,7 @@ public class MovieService {
                 dto.getAnger() == 0.0 &&
                 dto.getFear() == 0.0 &&
                 dto.getDisgust() == 0.0) {
-            return EmotionType.DISGUST;
+            return EmotionType.NONE;
         }
 
         Map<EmotionType, Double> scores = Map.of(
@@ -389,7 +389,7 @@ public class MovieService {
         return scores.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
-                .orElse(EmotionType.DISGUST);
+                .orElse(EmotionType.NONE);
     }
 
     /**

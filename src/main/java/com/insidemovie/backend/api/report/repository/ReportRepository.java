@@ -2,7 +2,7 @@ package com.insidemovie.backend.api.report.repository;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.report.entity.Report;
-import com.insidemovie.backend.api.report.entity.ReportStatus;
+import com.insidemovie.backend.api.constant.ReportStatus;
 import com.insidemovie.backend.api.review.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

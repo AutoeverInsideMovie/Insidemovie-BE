@@ -3,9 +3,9 @@ spring:
     active: local
   config:
     import:
-      - classpath:application-key.yml
-      - optional:file:/home/ubuntu/application-key.yml
       - optional:file:./application-key.yml
+#      - classpath:application-key.yml
+      - optional:./application-key.yml
 
   security:
     oauth2:

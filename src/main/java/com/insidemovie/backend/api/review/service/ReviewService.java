@@ -2,11 +2,12 @@ package com.insidemovie.backend.api.review.service;
 
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
-import com.insidemovie.backend.api.report.entity.Report;
-import com.insidemovie.backend.api.report.entity.ReportStatus;
+import com.insidemovie.backend.api.constant.ReportStatus;
+import com.insidemovie.backend.api.movie.service.MovieService;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.entity.Emotion;
 import com.insidemovie.backend.api.review.entity.Review;
@@ -44,6 +45,8 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final RestTemplate fastApiRestTemplate;
     private final EmotionRepository emotionRepository;
+    private final MemberService memberService;
+    private final MovieService movieService;
 
     // 리뷰 작성
     @Transactional
@@ -86,14 +89,21 @@ public class ReviewService {
 
             Map<String, Double> probabilities = response.getProbabilities();
             Emotion emotion = Emotion.builder()
-                    .anger(probabilities.get("anger"))
-                    .fear(probabilities.get("fear"))
-                    .joy(probabilities.get("joy"))
-                    .disgust(probabilities.get("disgust"))
-                    .sadness(probabilities.get("sadness"))
+                    .anger(probabilities.getOrDefault("anger", 0.0))
+                    .fear(probabilities.getOrDefault("fear", 0.0))
+                    .joy(probabilities.getOrDefault("joy", 0.0))
+                    .disgust(probabilities.getOrDefault("disgust", 0.0))
+                    .sadness(probabilities.getOrDefault("sadness", 0.0))
                     .review(savedReview)
                     .build();
             emotionRepository.save(emotion);
+
+            // 리뷰 등록 후 사용자 감정 요약 업데이트
+            memberService.getMyEmotionSummary(memberEmail);
+
+            // 리뷰 등록 후 영화 감정 요약 업데이트
+            movieService.getMovieEmotionSummary(movieId);
+
 
         } catch (RestClientException e) {
             throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
@@ -113,23 +123,14 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Long currentUserId = null;
-        Long myReviewId = null;
 
         if (memberEmail != null && !memberEmail.isBlank()) {
             Member member = memberRepository.findByEmail(memberEmail.trim())
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
             currentUserId = member.getId();
-
-            myReviewId = reviewRepository.findByMemberAndMovie(member, movie)
-                    .map(Review::getId)
-                    .orElse(null);
         }
 
-        log.info("로그인 사용자 ID: {}, 내 리뷰 ID: {}", currentUserId, myReviewId);
-
-        Page<Review> reviewPage = (myReviewId != null)
-                ? reviewRepository.findByMovieAndIdNotAndIsConcealedFalse(movie, myReviewId, pageable)
-                : reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
+        Page<Review> reviewPage = reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 
         final Long uid = currentUserId;
         Page<ReviewResponseDTO> dtoPage = reviewPage.map(r -> toResponseDTO(r, uid));
@@ -275,6 +276,7 @@ public class ReviewService {
                 .content(review.getContent())
                 .rating(review.getRating())
                 .spoiler(review.isSpoiler())
+                .watchedAt(review.getWatchedAt())
                 .createdAt(review.getCreatedAt())
                 .likeCount(review.getLikeCount())
                 .nickname(review.getMember().getNickname())

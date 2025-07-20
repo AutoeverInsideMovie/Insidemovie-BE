@@ -3,18 +3,26 @@ package com.insidemovie.backend.api.match.service;
 import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.match.entity.Match;
 import com.insidemovie.backend.api.match.entity.MovieMatch;
+import com.insidemovie.backend.api.match.entity.Vote;
 import com.insidemovie.backend.api.match.repository.MatchRepository;
 import com.insidemovie.backend.api.match.repository.MovieMatchRepository;
+import com.insidemovie.backend.api.match.repository.VoteRepository;
+import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.common.exception.InternalServerException;
+import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +35,8 @@ public class MatchService {
     private final MovieMatchRepository movieMatchRepository;
     private final MatchRepository matchRepository;
     private final MovieRepository movieRepository;
+    private final VoteRepository voteRepository;
+    private final MemberRepository memberRepository;
     private final Random random = new Random();
 
     // 대결 생성
@@ -64,13 +74,8 @@ public class MatchService {
     @Transactional
     public void closeMatch() {
         // 마지막 매치 조회
-        Optional<Match> match = matchRepository.findTopByOrderByMatchNumberDesc();
-        // 매치가 없는 경우 진행X
-        if (match.isEmpty()) {
-            return;
-        }
-
-        Match lastMatch = match.get();
+        Match lastMatch = matchRepository.findTopByOrderByMatchNumberDesc()
+                .orElseThrow(() -> new NotFoundException((ErrorStatus.NOT_FOUND_MATCH.getMessage())));
 
         // 마지막 매치의 영화 조회
         List<MovieMatch> movieMatches = movieMatchRepository.findByMatchId(lastMatch.getId());
@@ -81,13 +86,44 @@ public class MatchService {
                         .comparing(MovieMatch::getVoteCount, Comparator.reverseOrder())
                         .thenComparing(m -> m.getMovie().getRating(), Comparator.reverseOrder()))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new InternalServerException(ErrorStatus.NOT_FOUND_WINNER.getMessage()));
 
-        if (winner != null) {
-            lastMatch.setWinnerId(winner.getId());
-            matchRepository.save(lastMatch);
-        } else {
-            throw new InternalServerException(ErrorStatus.FAIL_FIND_WINNER.getMessage());
+        lastMatch.setWinnerId(winner.getId());
+        matchRepository.save(lastMatch);
+    }
+
+    // 대결 투표
+    @Transactional
+    public void voteMatch(Long movieId, String memberEmail) {
+        // 사용자 조회
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        // 영화 조회
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+
+        // 최근 매치
+        Match lastMatch = matchRepository.findTopByOrderByMatchNumberDesc()
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MATCH.getMessage()));
+
+        // 매치 정보
+        MovieMatch movieMatch = movieMatchRepository.findByMatchIdAndMovieId(lastMatch.getId(), movieId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MATCH.getMessage()));
+
+        // 투표 여부 확인
+        Boolean isVoted = voteRepository.existsByMatchIdAndUserId(lastMatch.getId(), member.getId());
+        if (isVoted) {
+            throw new IllegalStateException(ErrorStatus.DUPLICATE_VOTE_EXCEPTION.getMessage());
         }
+
+        movieMatch.setVoteCount(movieMatch.getVoteCount() + 1);
+        Vote vote = Vote.builder()
+                .votedAt(LocalDateTime.now())
+                .member(member)
+                .match(lastMatch)
+                .movie(movie)
+                .build();
+        voteRepository.save(vote);
     }
 }

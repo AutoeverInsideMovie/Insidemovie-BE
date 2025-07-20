@@ -48,8 +48,7 @@ public enum SuccessStatus {
     SEND_POPULAR_MOVIES_SUCCESS(HttpStatus.OK, "인기 영화 조회 성공"),
     SEND_BOXOFFICE_MOVIE_DETAIL_SUCCESS(HttpStatus.OK, "박스오피스의 상세정보 조회 성공"),
     SEND_GENRE_MOVIES_SUCCESS(HttpStatus.OK, "장르별 영화 조회 성공"),
-
-
+    SEND_VOTE_SUCCESS(HttpStatus.OK, "영화 투표 성공"),
 
 
     /** 201 CREATED */

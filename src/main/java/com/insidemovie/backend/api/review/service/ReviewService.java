@@ -106,18 +106,19 @@ public class ReviewService {
 
     // 리뷰 목록 조회 메서드
     @Transactional
-    public Page<ReviewResponseDTO> getReviewsByMovie(
+    public PageResDto<ReviewResponseDTO> getReviewsByMovie(
             Long movieId,
-            Pageable pageable,
+            Integer page, Integer pageSize,
             String memberEmail
     ) {
-
+        Pageable pageable = PageRequest.of(page, pageSize);
         // 영화 조회
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Long currentUserId = null;  // 로그인 사용자 ID
         Long myReviewId = null;     // 내 리뷰가 있을 경우 그 리뷰 PK
+        log.info("로그인 사용자 ID:  "+currentUserId+"내 리뷰가 있을 경우 그 리뷰 PK:  "+myReviewId);
 
         // 2) 로그인 사용자라면 Member 조회 + 내 리뷰 ID 찾기
         if (memberEmail != null && !memberEmail.isBlank()) {
@@ -132,13 +133,15 @@ public class ReviewService {
         }
 
         // 내 리뷰 ID 가 있으면 제외하여 조회
-        Page<Review> page = (myReviewId != null)
+        Page<Review> reviewPage = (myReviewId != null)
                 ? reviewRepository.findByMovieAndIdNot(movie, myReviewId, pageable)
                 : reviewRepository.findByMovie(movie, pageable);
 
         final Long uid = currentUserId;
+        log.info("로그인 사용자 ID:  "+uid);
 
-        return page.map(r -> toResponseDTO(r, uid));
+        Page<ReviewResponseDTO> dtoPage = reviewPage.map(r -> toResponseDTO(r, uid));
+        return new PageResDto<>(dtoPage);
     }
 
     // 내 리뷰 단건 조회

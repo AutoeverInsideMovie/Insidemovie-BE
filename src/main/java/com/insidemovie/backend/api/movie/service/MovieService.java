@@ -8,8 +8,6 @@ import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 
-import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionSummaryResponseDTO;
-import com.insidemovie.backend.api.movie.dto.RecommendedMovieResDto;
 import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
@@ -389,7 +387,7 @@ public class MovieService {
                 dto.setFear(summary.getFear());
                 dto.setAnger(summary.getAnger());
                 dto.setDisgust(summary.getDisgust());
-                dto.setDominantEmotion(summary.getDominantEmotion().name());
+                dto.setDominantEmotion(EmotionType.valueOf(summary.getDominantEmotion().name()));
                 return dto;
             })
             .orElseGet(() -> {
@@ -400,7 +398,7 @@ public class MovieService {
                 dto.setFear(0f);
                 dto.setAnger(0f);
                 dto.setDisgust(0f);
-                dto.setDominantEmotion("NONE");
+                dto.setDominantEmotion(EmotionType.valueOf("NONE"));
                 return dto;
             });
     }

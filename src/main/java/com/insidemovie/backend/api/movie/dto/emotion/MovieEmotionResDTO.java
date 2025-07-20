@@ -12,6 +12,6 @@ public class MovieEmotionResDTO {
     private Float anger;
     private Float sadness;
     private Float fear;
-    private Float neutral;
+    private Float disgust;
     private EmotionType dominantEmotion;
 }

@@ -13,6 +13,7 @@ public class WeeklyBoxOfficeResponseDTO {
 
     public static WeeklyBoxOfficeResponseDTO fromEntity(WeeklyBoxOfficeEntity e) {
         return WeeklyBoxOfficeResponseDTO.builder()
+            .movieId(e.getMovie() != null ? e.getMovie().getId() : null)
             .base(BaseBoxOfficeItemDTO.builder()
                 .id(e.getId())
                 .rnum(e.getRnum())

@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.member.dto;
 
+import com.insidemovie.backend.api.constant.Authority;
 import lombok.*;
 
 @Getter
@@ -10,4 +11,5 @@ import lombok.*;
 public class MemberLoginResponseDto {
     private String accessToken;
     private String refreshToken;
+    private Authority authority;
 }

@@ -35,5 +35,4 @@ public class EmotionAvgDTO {
         this.disgust = disgust;
         this.repEmotionType = EmotionType.NONE; // 혹은 null
     }
-
 }

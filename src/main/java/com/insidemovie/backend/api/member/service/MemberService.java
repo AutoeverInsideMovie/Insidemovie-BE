@@ -167,7 +167,7 @@ public class MemberService {
         String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
         member.updateRefreshtoken(refreshToken);
 
-        return new MemberLoginResponseDto(accessToken, refreshToken);
+        return new MemberLoginResponseDto(accessToken, refreshToken, member.getAuthority());
     }
 
     // 토큰 재발급

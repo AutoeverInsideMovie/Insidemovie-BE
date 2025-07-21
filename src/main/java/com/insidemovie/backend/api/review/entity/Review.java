@@ -30,7 +30,6 @@ public class Review extends BaseTimeEntity {
     private String content;
 
     private long likeCount;
-    private boolean modify;
 
     private LocalDateTime watchedAt;
     private boolean spoiler;
@@ -67,7 +66,6 @@ public class Review extends BaseTimeEntity {
         this.rating = rating;
         this.spoiler = spoiler;
         this.watchedAt = watchedAt;
-        this.modify = true;  // 수정됨
     }
 
     // 신고가 등록되면 호출

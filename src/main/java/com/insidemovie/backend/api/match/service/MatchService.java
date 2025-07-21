@@ -1,6 +1,7 @@
 package com.insidemovie.backend.api.match.service;
 
 import com.insidemovie.backend.api.constant.EmotionType;
+import com.insidemovie.backend.api.match.dto.WinnerHistoryDto;
 import com.insidemovie.backend.api.match.entity.Match;
 import com.insidemovie.backend.api.match.entity.MovieMatch;
 import com.insidemovie.backend.api.match.entity.Vote;
@@ -180,9 +181,9 @@ public class MatchService {
     }
 
     // 역대 우승 영화 조회
-    public List<MovieDetailSimpleResDto> getWinnerHistory() {
+    public List<WinnerHistoryDto> getWinnerHistory() {
         List<Match> matches = matchRepository.findAll();
-        List<MovieDetailSimpleResDto> response = new ArrayList<>();
+        List<WinnerHistoryDto> response = new ArrayList<>();
 
         for (Match match : matches) {
             if (match.getWinnerId() == null) continue;
@@ -199,14 +200,20 @@ public class MatchService {
                     .dominantEmotion(movieEmotion.getDominantEmotion())
                     .build();
 
-            MovieDetailSimpleResDto dto = MovieDetailSimpleResDto.builder()
+            MovieDetailSimpleResDto movieDto = MovieDetailSimpleResDto.builder()
                     .id(movie.getId())
                     .title(movie.getTitle())
                     .posterPath(movie.getPosterPath())
                     .voteAverage(movie.getVoteAverage())
                 //     .emotion(emotionDto)
                     .build();
-            response.add(dto);
+
+            WinnerHistoryDto winnerHistoryDto = WinnerHistoryDto.builder()
+                    .matchNumber(match.getMatchNumber())
+                    .matchDate(match.getMatchDate())
+                    .movie(movieDto)
+                    .build();
+            response.add(winnerHistoryDto);
         }
         return response;
     }

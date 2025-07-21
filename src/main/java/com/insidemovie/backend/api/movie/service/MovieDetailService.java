@@ -9,11 +9,15 @@ import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieLikeRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,6 +32,7 @@ public class MovieDetailService {
     private final MovieGenreRepository movieGenreRepository;
     private final MovieLikeRepository movieLikeRepository;
     private final MemberRepository memberRepository;
+    private final ReviewRepository reviewRepository;
 
     /**
      * 비로그인 사용자 영화 상세
@@ -62,6 +67,14 @@ public class MovieDetailService {
                 .stream()
                 .map(mg -> mg.getGenreType().name())
                 .toList();
+        Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+        BigDecimal rounded;
+        if(ratingAvg==null || ratingAvg==0.00){
+            rounded=BigDecimal.ZERO.setScale(2);
+        }else{
+            rounded= BigDecimal.valueOf(ratingAvg)
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
 
         MovieDetailResDto dto = new MovieDetailResDto();
         dto.setId(movie.getId());
@@ -74,6 +87,7 @@ public class MovieDetailService {
         dto.setOriginalLanguage(movie.getOriginalLanguage());
         dto.setIsLike(isLike);
         dto.setGenre(genreNames);
+        dto.setRatingAvg(rounded);
 
         // 배우 / 감독 / OTT 파싱
         dto.setActors(readArrayFlexible(movie.getActors()));          // List<String>

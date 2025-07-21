@@ -1,7 +1,9 @@
 package com.insidemovie.backend.api.movie.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,6 +32,5 @@ public class MovieDetailResDto {
     private Integer runtime;    //러닝타임
     private String status;      //제작 및 배급 상태
     private String titleEn;     //영화 영문 이름
-
-
+    private BigDecimal ratingAvg;     //리뷰기반 영화 평점
 }

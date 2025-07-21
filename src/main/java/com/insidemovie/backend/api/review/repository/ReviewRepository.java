@@ -76,4 +76,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     """)
     List<Object[]> countReviewsMonthly(@Param("start") LocalDateTime start,
                                        @Param("end") LocalDateTime end);
+
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.movie.id =:movieId")
+    Double findAverageByMovieId(@Param("movieId") Long movieId);
 }

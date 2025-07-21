@@ -3,6 +3,8 @@ package com.insidemovie.backend.api.movie.dto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,4 +15,5 @@ public class MovieDetailSimpleResDto {
     private String posterPath;
     private Double voteAverage;
     private MovieEmotionResDTO emotion;
+    private BigDecimal ratingAvg;
 }

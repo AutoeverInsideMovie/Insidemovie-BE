@@ -338,6 +338,16 @@ public class MovieService {
             case NONE -> 0.0;
         };
 
+        Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+        BigDecimal rounded;
+        if(ratingAvg==null || ratingAvg==0.00){
+            rounded=BigDecimal.ZERO.setScale(2);
+        }else{
+            rounded= BigDecimal.valueOf(ratingAvg)
+            .setScale(2, RoundingMode.HALF_UP);
+        }
+
+
         MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
         movieSearchResDto.setId(movie.getId());
         movieSearchResDto.setTitle(movie.getTitle());
@@ -345,6 +355,7 @@ public class MovieService {
         movieSearchResDto.setVoteAverage(movie.getVoteAverage());
         movieSearchResDto.setMainEmotion(mainEmotion);
         movieSearchResDto.setMainEmotionValue(mainEmotionValue);
+        movieSearchResDto.setRatingAvg(rounded);
         return movieSearchResDto;
     }
 
@@ -488,6 +499,7 @@ public class MovieService {
             throw new NotFoundException("해당 장르의 영화가 없습니다: " + genreType.name());
         }
 
+
         return new PageResDto<MovieSearchResDto> (moviePage.map(movie -> {
             MovieSearchResDto dto = new MovieSearchResDto();
             EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
@@ -501,6 +513,14 @@ public class MovieService {
                 case DISGUST -> avg.getDisgust();
                 case NONE -> 0.0;
             };
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
 
             dto.setId(movie.getId());
             dto.setTitle(movie.getTitle());
@@ -509,6 +529,7 @@ public class MovieService {
             dto.setReleaseDate(movie.getReleaseDate());
             dto.setMainEmotion(mainEmotion);
             dto.setMainEmotionValue(mainEmotionValue);
+            dto.setRatingAvg(rounded);
             return dto;
         }));
     }
@@ -534,7 +555,14 @@ public class MovieService {
                 case DISGUST -> avg.getDisgust();
                 case NONE -> 0.0;
             };
-
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
             resDto.setId(movie.getId());
             resDto.setTitle(movie.getTitle());
             resDto.setPosterPath(movie.getPosterPath());
@@ -542,6 +570,7 @@ public class MovieService {
             resDto.setReleaseDate(movie.getReleaseDate());
             resDto.setMainEmotion(mainEmotion);
             resDto.setMainEmotionValue(mainEmotionValue);
+            resDto.setRatingAvg(rounded);
             return resDto;
         });
 
@@ -560,6 +589,15 @@ public class MovieService {
             Movie movie = movielike.getMovie();
             EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
 
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+
             EmotionType mainEmotion = avg.getRepEmotionType();
             Double mainEmotionValue = switch (mainEmotion) {
                 case JOY     -> avg.getJoy();
@@ -577,6 +615,7 @@ public class MovieService {
                     .voteAverage(movie.getVoteAverage())
                     .mainEmotion(mainEmotion)
                     .mainEmotionValue(mainEmotionValue)
+                    .ratingAvg(rounded)
                     .build();
         });
         return new PageResDto<>(dto);

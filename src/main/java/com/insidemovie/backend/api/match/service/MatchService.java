@@ -15,6 +15,7 @@ import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.InternalServerException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
@@ -23,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -41,6 +44,7 @@ public class MatchService {
     private final VoteRepository voteRepository;
     private final MemberRepository memberRepository;
     private final Random random = new Random();
+    private final ReviewRepository reviewRepository;
 
     // 대결 생성
     @Transactional
@@ -159,6 +163,15 @@ public class MatchService {
             Movie movie = mm.getMovie();
             MovieEmotionSummary movieEmotion = movie.getEmotions();
 
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+
             MovieEmotionResDTO emotionDto = MovieEmotionResDTO.builder()
                     .joy(movieEmotion.getJoy())
                     .anger(movieEmotion.getAnger())
@@ -174,6 +187,7 @@ public class MatchService {
                     .posterPath(movie.getPosterPath())
                     .voteAverage(movie.getVoteAverage())
                 //     .emotion(emotionDto)
+                    .ratingAvg(rounded)
                     .build();
             response.add(dto);
         }
@@ -190,6 +204,15 @@ public class MatchService {
             Movie movie = movieRepository.findById(match.getWinnerId())
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+
             MovieEmotionSummary movieEmotion = movie.getEmotions();
             MovieEmotionResDTO emotionDto = MovieEmotionResDTO.builder()
                     .joy(movieEmotion.getJoy())
@@ -205,6 +228,7 @@ public class MatchService {
                     .title(movie.getTitle())
                     .posterPath(movie.getPosterPath())
                     .voteAverage(movie.getVoteAverage())
+                    .ratingAvg(rounded)
                 //     .emotion(emotionDto)
                     .build();
 

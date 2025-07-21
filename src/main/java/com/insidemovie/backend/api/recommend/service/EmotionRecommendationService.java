@@ -5,9 +5,13 @@ import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepositor
 import com.insidemovie.backend.api.recommend.dto.EmotionRequestDTO;
 import com.insidemovie.backend.api.recommend.dto.MovieRecommendationDTO;
 
+import com.insidemovie.backend.api.review.entity.Review;
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +22,7 @@ import java.util.stream.Collectors;
 public class EmotionRecommendationService {
 
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
+    private final ReviewRepository reviewRepository;
 
     // 사용자의 감정 벡터를 기반으로 영화 추천 리스트 반환
     public List<MovieRecommendationDTO> recommendByEmotion(EmotionRequestDTO userEmotion) {
@@ -61,6 +66,15 @@ public class EmotionRecommendationService {
                         default -> 0;
                     };
 
+                    Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getMovieId());
+                    BigDecimal rounded;
+                    if(ratingAvg==null || ratingAvg==0.00){
+                        rounded=BigDecimal.ZERO.setScale(2);
+                    }else{
+                        rounded= BigDecimal.valueOf(ratingAvg)
+                                .setScale(2, RoundingMode.HALF_UP);
+                    }
+
                     return new MovieRecommendationDTO(
                             movie.getMovieId(),
                             movie.getMovie().getTitle(),
@@ -68,7 +82,8 @@ public class EmotionRecommendationService {
                             movie.getMovie().getVoteAverage(),
                             movie.getDominantEmotion(),
                             dominantRatio,
-                            similarity
+                            similarity,
+                            rounded
                     );
                 })
 

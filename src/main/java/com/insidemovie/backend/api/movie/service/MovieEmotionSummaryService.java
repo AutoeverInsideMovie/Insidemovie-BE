@@ -20,8 +20,9 @@ public class MovieEmotionSummaryService {
     private final EmotionRepository emotionRepository;
     private final MovieEmotionSummaryRepository summaryRepository;
     private final MovieRepository movieRepository;
-    private final MovieLikeRepository movieLikeRepository;                    // ✔ 변경
-    private final MemberEmotionSummaryService memberEmotionSummaryService;    // ✔ 추가
+    private final MovieLikeRepository movieLikeRepository;
+    private final MemberEmotionSummaryService memberEmotionSummaryService;
+    private final MovieService movieService;
 
     @Transactional
     public void recalcMovieSummary(Long movieId) {
@@ -38,6 +39,9 @@ public class MovieEmotionSummaryService {
                 .disgust(0.0)
                 .repEmotionType(EmotionType.NONE)
                 .build());
+
+        EmotionType rep = movieService.calculateRepEmotion(avgDto);
+        avgDto.setRepEmotionType(rep);
 
         // 3) movie_emotion_summary 조회 또는 신규 생성
         MovieEmotionSummary summary = summaryRepository

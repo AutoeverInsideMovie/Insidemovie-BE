@@ -392,9 +392,9 @@ public class MovieService {
     }
 
     // 대표 감정 계산 메서드
-    private EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
+    EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
 
-        // 모든 값이 0인 경우 DISGUST 고정
+        // 모든 값이 0인 경우 NONE 고정
         if (dto.getJoy() == 0.0 &&
                 dto.getSadness() == 0.0 &&
                 dto.getAnger() == 0.0 &&

@@ -58,11 +58,11 @@ public class Movie {
     @Column(name = "is_matched")
     private Boolean isMatched;
 
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<MovieLike> movieLikes = new ArrayList<>();
 
-    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     private MovieEmotionSummary emotions;
 
     // 제목 수정

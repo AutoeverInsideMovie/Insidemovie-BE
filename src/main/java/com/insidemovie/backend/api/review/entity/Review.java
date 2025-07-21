@@ -55,11 +55,11 @@ public class Review extends BaseTimeEntity {
     private Emotion emotion;
 
     @Builder.Default
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ReviewLike> likes = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Report> reports = new ArrayList<>();
 
     public void modify(String content, double rating, boolean spoiler, LocalDateTime watchedAt) {

@@ -29,6 +29,6 @@ public class Match {
     private Long winnerId;
 
     @Builder.Default
-    @OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MovieMatch> movieMatch = new ArrayList<>();
 }

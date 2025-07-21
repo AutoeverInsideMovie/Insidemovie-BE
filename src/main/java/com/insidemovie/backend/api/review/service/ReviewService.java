@@ -75,7 +75,6 @@ public class ReviewService {
                 .spoiler(reviewCreateDTO.isSpoiler())
                 .watchedAt(reviewCreateDTO.getWatchedAt())
                 .likeCount(0)
-                .modify(false)
                 .member(member)
                 .movie(movie)
                 .build();
@@ -338,7 +337,6 @@ public class ReviewService {
                 .memberEmotion(memberEmotionType.name())
                 .movieId(review.getMovie().getId())
                 .myReview(myReview)
-                .modify(review.isModify())
                 .myLike(myLike)
                 .emotion(emotionDTO)
                 .isReported(review.isReported())

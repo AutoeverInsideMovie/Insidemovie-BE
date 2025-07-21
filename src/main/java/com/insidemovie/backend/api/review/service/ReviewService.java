@@ -1,6 +1,9 @@
 package com.insidemovie.backend.api.review.service;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.entity.MemberEmotionSummary;
+import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryRepository;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
@@ -48,6 +51,7 @@ public class ReviewService {
     private final EmotionRepository emotionRepository;
     private final MemberService memberService;
     private final MovieService movieService;
+    private final MemberEmotionSummaryRepository memberEmotionSummaryRepository;
     private final MovieEmotionSummaryService movieEmotionSummaryService;
 
     // 리뷰 작성
@@ -290,6 +294,7 @@ public class ReviewService {
                 .findFirst()
                 .orElse(null);
 
+        // 리뷰 자체 감정
         EmotionDTO emotionDTO = emotionRepository.findByReviewId(review.getId())
                 .map(e -> {
                     Map<String, Double> probs = Map.of(
@@ -314,6 +319,12 @@ public class ReviewService {
                 })
                 .orElse(null);
 
+        EmotionType memberEmotionType = memberEmotionSummaryRepository
+                .findByMemberId(review.getMember().getId())
+                .map(MemberEmotionSummary::getRepEmotionType)
+                .orElse(EmotionType.NONE);
+
+
         return ReviewResponseDTO.builder()
                 .reviewId(review.getId())
                 .content(review.getContent())
@@ -324,6 +335,7 @@ public class ReviewService {
                 .likeCount(review.getLikeCount())
                 .nickname(review.getMember().getNickname())
                 .memberId(review.getMember().getId())
+                .memberEmotion(memberEmotionType.name())
                 .movieId(review.getMovie().getId())
                 .myReview(myReview)
                 .modify(review.isModify())

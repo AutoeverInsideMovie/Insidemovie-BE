@@ -139,16 +139,16 @@ public class MemberController {
         return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
     }
 
-    @Operation(summary = "프로필 감정(이미지) 변경 API", description = "프로필 이미지를 변경합니다.")
-    @PatchMapping("/emotion")
-    public ResponseEntity<ApiResponse<Map<String, String>>> updateProfileEmotion(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody ProfileEmotionUpdateRequestDto requestDto
-    ) {
-        EmotionType updated = memberService.updateProfileEmotion(userDetails.getUsername(), requestDto.getProfileEmotion());
-        Map<String, String> data = Map.of("profileEmotion", updated.name());
-        return ApiResponse.success(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS, data);
-    }
+//    @Operation(summary = "프로필 감정(이미지) 변경 API", description = "프로필 이미지를 변경합니다.")
+//    @PatchMapping("/emotion")
+//    public ResponseEntity<ApiResponse<Map<String, String>>> updateProfileEmotion(
+//            @AuthenticationPrincipal UserDetails userDetails,
+//            @RequestParam("emotion") EmotionType emotion
+//    ) {
+//        EmotionType updated = memberService.updateProfileEmotion(userDetails.getUsername(), emotion);
+//        Map<String, String> data = Map.of("profileEmotion", updated.name());
+//        return ApiResponse.success(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS, data);
+//    }
 
     @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자의 리뷰 목록을 페이징하여 조회합니다.")
     @GetMapping("/my-review")

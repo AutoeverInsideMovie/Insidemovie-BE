@@ -254,14 +254,14 @@ public class MemberService {
         member.updatePassword(newEncoded);
     }
 
-    // 프로필 감정
-    @Transactional
-    public EmotionType updateProfileEmotion(String email, EmotionType emotionType) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
-        member.updateProfileEmotion(emotionType);
-        return member.getProfileEmotion();
-    }
+//    // 프로필 감정
+//    @Transactional
+//    public EmotionType updateProfileEmotion(String email, EmotionType emotionType) {
+//        Member member = memberRepository.findByEmail(email)
+//                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+//        member.updateProfileEmotion(emotionType);
+//        return member.getProfileEmotion();
+//    }
 
     // 로그아웃
     @Transactional

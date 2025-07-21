@@ -25,7 +25,6 @@ public class ReviewResponseDTO {
     private boolean myLike;  // 내가 좋아요 누른 리뷰
 
     private String nickname;
-    private EmotionType profileEmotion;
 
     private Long memberId;  // 작성자 ID
     private Long movieId;

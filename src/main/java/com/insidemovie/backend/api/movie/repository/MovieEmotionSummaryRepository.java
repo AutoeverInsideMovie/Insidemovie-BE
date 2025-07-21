@@ -9,5 +9,4 @@ import java.util.Optional;
 public interface MovieEmotionSummaryRepository extends JpaRepository<MovieEmotionSummary, Long> {
     Optional<MovieEmotionSummary> findByMovieId(Long movieId);
     Optional<MovieEmotionSummary> findByMovie(Movie movie);
-  
 }

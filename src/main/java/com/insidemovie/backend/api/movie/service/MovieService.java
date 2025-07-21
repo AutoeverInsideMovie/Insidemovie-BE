@@ -361,6 +361,7 @@ public class MovieService {
 
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+
         // 요약 엔티티 조회 or 생성
         MovieEmotionSummary summary = movieEmotionSummaryRepository
                 .findByMovieId(movieId)
@@ -387,18 +388,15 @@ public class MovieService {
             return EmotionType.NONE;
         }
 
-        Map<EmotionType, Double> scores = Map.of(
-                EmotionType.JOY, dto.getJoy(),
-                EmotionType.SADNESS, dto.getSadness(),
-                EmotionType.ANGER, dto.getAnger(),
-                EmotionType.FEAR, dto.getFear(),
-                EmotionType.DISGUST, dto.getDisgust()
-        );
-
-        return scores.entrySet().stream()
+        return Map.<EmotionType, Double>of(
+                        EmotionType.JOY,     dto.getJoy(),
+                        EmotionType.SADNESS, dto.getSadness(),
+                        EmotionType.ANGER,   dto.getAnger(),
+                        EmotionType.FEAR,    dto.getFear(),
+                        EmotionType.DISGUST, dto.getDisgust()
+                ).entrySet().stream()
                 .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse(EmotionType.NONE);
+                .get().getKey();
     }
 
     /**

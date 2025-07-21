@@ -101,7 +101,7 @@ public class ReviewService {
             emotionRepository.save(emotion);
 
             // 리뷰 등록 후 영화 감정 요약 업데이트
-//            movieService.getMovieEmotionSummary(movieId);
+            movieService.getMovieEmotionSummary(movieId);
 
 
         } catch (RestClientException e) {
@@ -207,7 +207,7 @@ public class ReviewService {
             emotionRepository.save(newEmotion);
 
             // 영화 감정 요약 갱신
-//            movieService.getMovieEmotionSummary(review.getMovie().getId());
+            movieService.getMovieEmotionSummary(review.getMovie().getId());
 
         } catch (RestClientException e) {
             throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
@@ -230,6 +230,7 @@ public class ReviewService {
 
         reviewLikeRepository.deleteByReviewId(reviewId);  // 좋아요 삭제
         reviewRepository.delete(review);  // 리뷰 삭제
+        movieService.getMovieEmotionSummary(review.getMovie().getId());
     }
 
     // 좋아요 토글

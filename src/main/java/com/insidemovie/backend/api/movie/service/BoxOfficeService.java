@@ -3,6 +3,8 @@ package com.insidemovie.backend.api.movie.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.insidemovie.backend.api.constant.EmotionType;
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.movie.dto.MovieDetailResDto;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeListDTO;
 import com.insidemovie.backend.api.movie.dto.boxoffice.BoxOfficeRequestDTO;
@@ -10,14 +12,14 @@ import com.insidemovie.backend.api.movie.dto.boxoffice.DailyBoxOfficeResponseDTO
 import com.insidemovie.backend.api.movie.dto.boxoffice.WeeklyBoxOfficeResponseDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.SearchMovieResponseDTO;
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 import com.insidemovie.backend.api.movie.entity.boxoffice.DailyBoxOfficeEntity;
 import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
-import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
-import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
-import com.insidemovie.backend.api.movie.repository.MovieRepository;
-import com.insidemovie.backend.api.movie.repository.WeeklyBoxOfficeRepository;
+import com.insidemovie.backend.api.movie.repository.*;
+import com.insidemovie.backend.api.review.repository.EmotionRepository;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.BaseException;
+import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -34,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -52,6 +54,7 @@ public class BoxOfficeService {
     private final WeeklyBoxOfficeRepository weeklyRepo;
     private final MovieRepository movieRepo;
     private final MovieGenreRepository movieGenreRepository;
+    private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
     private final ReviewRepository reviewRepository;
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -157,54 +160,43 @@ public class BoxOfficeService {
     // 주간 박스오피스 조회 및 저장
     @Transactional
     public void fetchAndStoreWeeklyBoxOffice(BoxOfficeRequestDTO req) {
-        // 1) 지난주 기준 날짜 & 연주차 계산
-        LocalDate lastWeekDate = LocalDate.now().minusWeeks(1);
-        String targetDt = lastWeekDate.format(FMT);
+        // 1) 지난주 날짜 & yearWeek 계산
+        LocalDate lastWeek = LocalDate.now().minusWeeks(1);
         WeekFields wf = WeekFields.ISO;
-        int weekOfYear = lastWeekDate.get(wf.weekOfWeekBasedYear());
-        int year = lastWeekDate.get(wf.weekBasedYear());
+        int weekOfYear = lastWeek.get(wf.weekOfWeekBasedYear());
+        int year       = lastWeek.get(wf.weekBasedYear());
         String yearWeek = String.format("%04dIW%02d", year, weekOfYear);
 
-        log.info("[Service] WeeklyBoxOffice for last week {} (yearWeek={})", targetDt, yearWeek);
+        // 2) API 호출
+        List<WeeklyBoxOfficeEntity> fetched = fetchWeeklyFromApi(
+            lastWeek, req.getWeekGb(), req.getItemPerPage(), yearWeek
+        );
 
-        // 2) KOFIC API 호출 (단 한 번)
-        List<WeeklyBoxOfficeEntity> fetched =
-            fetchWeeklyFromApi(lastWeekDate, req.getWeekGb(), req.getItemPerPage(), yearWeek);
+        for (WeeklyBoxOfficeEntity incoming : fetched) {
+            // 3) upsert
+            WeeklyBoxOfficeEntity entity = weeklyRepo
+                .findByYearWeekTimeAndMovieCd(yearWeek, incoming.getMovieCd())
+                .map(existing -> { existing.updateFrom(incoming); return existing; })
+                .orElse(incoming);
 
-        // 3) 업서트 루프
-        for (WeeklyBoxOfficeEntity e : fetched) {
-            // 3-1) 기존 데이터 조회
-            Optional<WeeklyBoxOfficeEntity> opt =
-                weeklyRepo.findByYearWeekTimeAndMovieCd(yearWeek, e.getMovieCd());
-
-            WeeklyBoxOfficeEntity toSave = opt
-                .map(existing -> {
-                    existing.updateFrom(e);
-                    return existing;
-                })
-                .orElse(e);
-
-            // 4) TMDB 연동: movieId가 없으면 한 번만 저장
+            // 4) ← 여기를 추가 (일간과 동일하게 TMDB → Movie 매핑)
             movieService.searchMovieByTitleAndYear(
-                    toSave.getMovieNm(),
-                    LocalDate.parse(toSave.getOpenDt(), ISO_FMT).getYear()
+                    entity.getMovieNm(),
+                    extractYearSafe(entity.getOpenDt())
                 )
                 .ifPresent(dto -> {
-                    Optional<Movie> existingMovie = movieRepo.findByTmdbMovieId(dto.getId());
-                    if (existingMovie.isEmpty()) {
-                        movieService.fetchAndSaveMovieById(dto.getId());
-                    }
-                    log.info("[연동완료] {} ({}) → TMDB ID={}",
-                        toSave.getMovieNm(), toSave.getMovieCd(), dto.getId());
+                    movieRepo.findByTmdbMovieId(dto.getId())
+                        .or(() -> {
+                            movieService.fetchAndSaveMovieById(dto.getId());
+                            return movieRepo.findByTmdbMovieId(dto.getId());
+                        })
+                        .ifPresent(entity::setMovie);
                 });
 
-            // 5) 저장 (insert 또는 update)
-            weeklyRepo.save(toSave);
+            // 5) 저장
+            weeklyRepo.save(entity);
         }
-
-        log.info("[Service] Completed upsert of {} weekly box office records", fetched.size());
     }
-
     // 외부 API 호출하여 주간 엔티티 목록 생성
     private List<WeeklyBoxOfficeEntity> fetchWeeklyFromApi(
         LocalDate date,
@@ -256,25 +248,27 @@ public class BoxOfficeService {
      * 저장된 일간 박스오피스 조회
      */
     @Transactional
-    public BoxOfficeListDTO<DailyBoxOfficeResponseDTO> getSavedDailyBoxOffice(String targetDt, int itemPerPage) {
-
+    public BoxOfficeListDTO<DailyBoxOfficeResponseDTO> getSavedDailyBoxOffice(
+            String targetDt,
+            int itemPerPage
+    ) {
+        // 0) 요청일 파싱 (없으면 어제)
         LocalDate requestDate = (targetDt == null || targetDt.isBlank())
-                ? LocalDate.now().minusDays(1)
-                : LocalDate.parse(targetDt, FMT);
-
+            ? LocalDate.now().minusDays(1)
+            : LocalDate.parse(targetDt, FMT);
         String resolvedTargetDt = requestDate.format(FMT);
 
-        // 1) 요청 날짜로 시도
+        // 1) 해당일 데이터 조회
         List<DailyBoxOfficeEntity> rows = dailyRepo.findAllSortedByTargetDate(requestDate);
 
-        // 2) fallback: 없으면 최신
+        // 2) 없으면 최신으로 대체
         if (rows.isEmpty()) {
             List<DailyBoxOfficeEntity> latestRows = dailyRepo.findLatestSorted();
             if (!latestRows.isEmpty()) {
                 LocalDate latestDate = latestRows.get(0).getTargetDate();
                 if (!latestDate.equals(requestDate)) {
                     log.warn("[Daily][Fallback] 요청일 {} 데이터 없음 → 최신 {} 로 대체",
-                            requestDate, latestDate);
+                             requestDate, latestDate);
                     rows = latestRows;
                     resolvedTargetDt = latestDate.format(FMT);
                 }
@@ -283,22 +277,76 @@ public class BoxOfficeService {
 
         if (rows.isEmpty()) {
             throw new BaseException(
-                    ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
-                    ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
+                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getHttpStatus(),
+                ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
             );
         }
 
-
+        // 3) DTO 변환: TMDB ID → Movie 조회 → 메타 + 평점 평균 + 감정 통계 추가
         List<DailyBoxOfficeResponseDTO> items = rows.stream()
-                .limit(itemPerPage)
-                .map(DailyBoxOfficeResponseDTO::fromEntity)
-                .toList();
+            .limit(itemPerPage)
+            .map(e -> {
+                // — TMDB ID → Movie → movieId 추출 (기존 코드 유지) —
+                Long tmdbId = e.getMovie() != null
+                    ? e.getMovie().getTmdbMovieId()
+                    : null;
+                Movie movie = tmdbId != null
+                    ? movieRepo.findByTmdbMovieId(tmdbId)
+                        .orElseThrow(() -> new NotFoundException("TMDB ID=" + tmdbId + " 에 해당하는 Movie가 없습니다."))
+                    : null;
+                Long movieId = (movie != null) ? movie.getId() : null;
 
+                // — 영화 메타정보 —
+                String title       = (movie != null) ? movie.getTitle()      : e.getMovieName();
+                String posterPath  = (movie != null) ? movie.getPosterPath() : null;
+                Double voteAverage = (movie != null) ? movie.getVoteAverage(): 0.0;
+
+                // — 평점 평균 조회 & 반올림 (기존 코드 그대로) —
+                Double rawRatingAvg = (movieId != null)
+                    ? reviewRepository.findAverageByMovieId(movieId)
+                    : null;
+                BigDecimal rounded = (rawRatingAvg == null)
+                    ? BigDecimal.ZERO.setScale(2)
+                    : BigDecimal.valueOf(rawRatingAvg).setScale(2, RoundingMode.HALF_UP);
+                double ratingValue = rounded.doubleValue();
+
+                // — 감정 통계: movie_emotion_summary 에서 가져오기 —
+                MovieEmotionSummary summary = (movieId != null)
+                    ? movieEmotionSummaryRepository.findByMovieId(movieId).orElse(null)
+                    : null;
+
+                EmotionType mainEmotion = (summary != null)
+                    ? summary.getDominantEmotion()
+                    : EmotionType.NONE;
+
+                double mainValue = switch (mainEmotion) {
+                    case JOY     -> (summary != null ? summary.getJoy()     : 0f);
+                    case SADNESS -> (summary != null ? summary.getSadness() : 0f);
+                    case ANGER   -> (summary != null ? summary.getAnger()   : 0f);
+                    case FEAR    -> (summary != null ? summary.getFear()    : 0f);
+                    case DISGUST -> (summary != null ? summary.getDisgust() : 0f);
+                    default      -> 0f;
+                };
+
+                // — 최종 DTO 생성 —
+                return DailyBoxOfficeResponseDTO.fromEntity(
+                    e,
+                    title,
+                    posterPath,
+                    voteAverage,
+                    ratingValue,
+                    mainEmotion,
+                    mainValue
+                );
+            })
+            .toList();
+
+        // 4) BoxOfficeListDTO 반환
         return BoxOfficeListDTO.<DailyBoxOfficeResponseDTO>builder()
-                .boxofficeType("일별")
-                .targetDt(resolvedTargetDt)
-                .items(items)
-                .build();
+            .boxofficeType("일별")
+            .targetDt(resolvedTargetDt)
+            .items(items)
+            .build();
     }
 
     /**
@@ -335,15 +383,66 @@ public class BoxOfficeService {
         }
 
         List<WeeklyBoxOfficeResponseDTO> items = rows.stream()
-                .limit(itemPerPage)
-                .map(WeeklyBoxOfficeResponseDTO::fromEntity)
-                .toList();
+            .limit(itemPerPage)
+            .map(e -> {
+                // --- TMDB ID → Movie → movieId 추출
+                Long tmdbId = e.getMovie() != null
+                    ? e.getMovie().getTmdbMovieId()
+                    : null;
+                Movie movie = (tmdbId != null)
+                    ? movieRepo.findByTmdbMovieId(tmdbId)
+                        .orElseThrow(() -> new NotFoundException("TMDB ID=" + tmdbId + " 에 해당하는 Movie가 없습니다."))
+                    : null;
+                Long movieId = (movie != null) ? movie.getId() : null;
+
+                // --- 영화 메타정보
+                String title       = movie != null ? movie.getTitle()       : e.getMovieNm();
+                String posterPath  = movie != null ? movie.getPosterPath()  : null;
+                Double voteAverage = movie != null ? movie.getVoteAverage() : 0.0;
+
+                // --- 사용자 평점 평균 조회 & 반올림
+                Double rawRatingAvg = movieId != null
+                    ? reviewRepository.findAverageByMovieId(movieId)
+                    : null;
+                BigDecimal rounded = rawRatingAvg == null
+                    ? BigDecimal.ZERO.setScale(2)
+                    : BigDecimal.valueOf(rawRatingAvg).setScale(2, RoundingMode.HALF_UP);
+                double ratingAvg = rounded.doubleValue();
+
+                // --- 감정 통계(movie_emotion_summary) 조회
+                MovieEmotionSummary summary = movieId != null
+                    ? movieEmotionSummaryRepository.findByMovieId(movieId).orElse(null)
+                    : null;
+                EmotionType mainEmotion = summary != null
+                    ? summary.getDominantEmotion()
+                    : EmotionType.NONE;
+                double mainValue = switch (mainEmotion) {
+                    case JOY     -> summary.getJoy();
+                    case SADNESS -> summary.getSadness();
+                    case ANGER   -> summary.getAnger();
+                    case FEAR    -> summary.getFear();
+                    case DISGUST -> summary.getDisgust();
+                    default      -> 0.0;
+                };
+
+                // --- 최종 DTO 생성
+                return WeeklyBoxOfficeResponseDTO.fromEntity(
+                    e,
+                    title,
+                    posterPath,
+                    voteAverage,
+                    ratingAvg,
+                    mainEmotion,
+                    mainValue
+                );
+            })
+            .toList();
 
         return BoxOfficeListDTO.<WeeklyBoxOfficeResponseDTO>builder()
-                .boxofficeType("주간")
-                .targetDt(yearWeek)
-                .items(items)
-                .build();
+            .boxofficeType("주간")
+            .targetDt(yearWeek)
+            .items(items)
+            .build();
     }
 
 
@@ -610,5 +709,19 @@ public class BoxOfficeService {
         } catch (Exception ignored) { }
         return LocalDate.now().getYear();
     }
+
+    private EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
+    Map<EmotionType, Double> scores = Map.of(
+        EmotionType.JOY,     dto.getJoy(),
+        EmotionType.SADNESS, dto.getSadness(),
+        EmotionType.ANGER,   dto.getAnger(),
+        EmotionType.FEAR,    dto.getFear(),
+        EmotionType.DISGUST, dto.getDisgust()
+    );
+    return scores.entrySet().stream()
+        .max(Map.Entry.comparingByValue())
+        .map(Map.Entry::getKey)
+        .orElse(EmotionType.NONE);
+}
 
 }

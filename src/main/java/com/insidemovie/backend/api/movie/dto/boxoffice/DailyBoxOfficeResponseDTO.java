@@ -14,6 +14,7 @@ public class DailyBoxOfficeResponseDTO {
 
     public static DailyBoxOfficeResponseDTO fromEntity(DailyBoxOfficeEntity e) {
         return DailyBoxOfficeResponseDTO.builder()
+            .movieId(e.getMovie() != null ? e.getMovie().getId() : null)
             .base(BaseBoxOfficeItemDTO.builder()
                 .id(e.getId())
                 .rnum(e.getRnum())

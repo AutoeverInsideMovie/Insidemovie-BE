@@ -188,7 +188,7 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.SEND_INITIAL_EMOTION_SUMMARY_SUCCESS, response);
     }
 
-    @Operation(summary = "감정 상태 수정", description = "기존 감정 상태와 새 값 평균을 저장.")
+    @Operation(summary = "감정 상태 수정", description = "새로운 감정 상태로 업데이트 합니다.")
     @PatchMapping("/emotion/update")
     public ResponseEntity<ApiResponse<MemberEmotionSummaryResponseDTO>> patchEmotionSummary(
             Authentication authentication,

@@ -21,12 +21,14 @@ import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.exception.UnAuthorizedException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -371,44 +373,57 @@ public class MemberService {
         }
 
     @Transactional
-    public MemberEmotionSummaryResponseDTO updateEmotionSummary(MemberEmotionSummaryRequestDTO dto) {
-        MemberEmotionSummary summary = memberEmotionSummaryRepository
-                .findById(dto.getMemberId())
-                .orElseThrow(() -> new EntityNotFoundException("MemberEmotionSummary not found for id=" + dto.getMemberId()));
+    public MemberEmotionSummaryResponseDTO updateEmotionSummary(
+            MemberEmotionSummaryRequestDTO dto
+    ) {
+        // 1) 시큐리티 컨텍스트에서 인증 정보 꺼내기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
 
-        double avgJoy = avg(summary.getJoy(), dto.getJoy());
-        double avgSadness = avg(summary.getSadness(), dto.getSadness());
-        double avgAnger   = avg(summary.getAnger(),   dto.getAnger());
-        double avgFear    = avg(summary.getFear(),    dto.getFear());
-        double avgDisgust = avg(summary.getDisgust(), dto.getDisgust());
+        // 2) 이메일로 Member 조회
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() ->
+                    new EntityNotFoundException("Member not found for email=" + email)
+                );
+        Long memberId = member.getId();
+
+        // 3) 기존 로직 그대로
+        MemberEmotionSummary summary = memberEmotionSummaryRepository.findById(memberId)
+            .orElseThrow(() ->
+                new EntityNotFoundException(
+                    "MemberEmotionSummary not found for id=" + memberId
+                )
+            );
+
+        double joy     = dto.getJoy();
+        double sadness = dto.getSadness();
+        double anger   = dto.getAnger();
+        double fear    = dto.getFear();
+        double disgust = dto.getDisgust();
 
         EmotionType repType = Stream.of(
-                new AbstractMap.SimpleEntry<>(EmotionType.JOY,     avgJoy),
-                new AbstractMap.SimpleEntry<>(EmotionType.SADNESS, avgSadness),
-                new AbstractMap.SimpleEntry<>(EmotionType.ANGER,   avgAnger),
-                new AbstractMap.SimpleEntry<>(EmotionType.FEAR,    avgFear),
-                new AbstractMap.SimpleEntry<>(EmotionType.DISGUST, avgDisgust)
+                Map.entry(EmotionType.JOY,     joy),
+                Map.entry(EmotionType.SADNESS, sadness),
+                Map.entry(EmotionType.ANGER,   anger),
+                Map.entry(EmotionType.FEAR,    fear),
+                Map.entry(EmotionType.DISGUST, disgust)
             )
             .max(Comparator.comparingDouble(Map.Entry::getValue))
             .map(Map.Entry::getKey)
-            .orElse(EmotionType.DISGUST);
+            .orElse(EmotionType.JOY);
 
-        EmotionAvgDTO avgDto = EmotionAvgDTO.builder()
-            .joy(avgJoy)
-            .sadness(avgSadness)
-            .anger(avgAnger)
-            .fear(avgFear)
-            .disgust(avgDisgust)
-            .repEmotionType(repType)
-            .build();
+        summary.updateFromDTO(
+            EmotionAvgDTO.builder()
+                .joy(joy)
+                .sadness(sadness)
+                .anger(anger)
+                .fear(fear)
+                .disgust(disgust)
+                .repEmotionType(repType)
+                .build()
+        );
 
-        // 엔티티에 한 번에 반영
-        summary.updateFromDTO(avgDto);
-
-        // 저장
         MemberEmotionSummary updated = memberEmotionSummaryRepository.save(summary);
-
-        // DTO 변환 후 반환
         return MemberEmotionSummaryResponseDTO.fromEntity(updated);
     }
 

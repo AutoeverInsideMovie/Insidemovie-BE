@@ -4,6 +4,7 @@ import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.movie.dto.MyMovieResponseDTO;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
@@ -37,6 +38,7 @@ public class MovieLikeService {
     private final MovieRepository movieRepository;
     private final MovieService movieService;
     private final ReviewRepository reviewRepository;
+    private final MemberService memberService;
 
     // 좋아요 한 영화 목록 조회
     public PageResDto<MyMovieResponseDTO> getMyMovies(String memberEmail, Integer page, Integer pageSize) {
@@ -88,24 +90,21 @@ public class MovieLikeService {
 
     @Transactional
     public void toggleMovieLike(Long movieId, String memberEmail) {
-        // 사용자 조회
         Member member = memberRepository.findByEmail(memberEmail)
-                .orElseThrow(() -> new NotFoundException((ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage())));
-
-        // 영화 조회
+            .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
         Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+            .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Optional<MovieLike> existing = movieLikeRepository.findByMovie_IdAndMember_Id(movieId, member.getId());
-
         if (existing.isPresent()) {
             movieLikeRepository.delete(existing.get());
         } else {
-            MovieLike movieLike = MovieLike.builder()
-                    .movie(movie)
-                    .member(member)
-                    .build();
-            movieLikeRepository.save(movieLike);
+            movieLikeRepository.save(MovieLike.builder()
+                .movie(movie)
+                .member(member)
+                .build());
         }
+
+        memberService.updateEmotionSummaryByLikedMovies(member.getId());
     }
 }

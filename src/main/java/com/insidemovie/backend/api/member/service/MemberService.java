@@ -283,34 +283,28 @@ public class MemberService {
         member.updateRefreshtoken(null);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public EmotionAvgDTO getMyEmotionSummary(String email) {
+        // 1) 사용자 조회
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+            .orElseThrow(() -> new NotFoundException(
+                ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
-        Long memberId = member.getId();
-
-        EmotionAvgDTO avg = emotionRepository
-                .findAverageEmotionsByMemberId(memberId)
-                .orElseGet(() -> EmotionAvgDTO.builder()
-                        .joy(0.0).sadness(0.0).anger(0.0).fear(0.0).disgust(0.0)
-                        .repEmotionType(EmotionType.NONE)
-                        .build()
-                );
-
-        EmotionType rep = calculateRepEmotion(avg);
-        avg.setRepEmotionType(rep);
-
+        // 2) 저장된 감정 요약 조회
         MemberEmotionSummary summary = memberEmotionSummaryRepository
-                .findById(memberId)
-                .orElseGet(() -> MemberEmotionSummary.builder()
-                        .member(member)
-                        .build()
-                );
+            .findById(member.getId())
+            .orElseThrow(() -> new NotFoundException(
+                "감정 요약 정보가 없습니다."));
 
-        summary.updateFromDTO(avg);
-        memberEmotionSummaryRepository.save(summary);
-        return avg;
+        // 3) 엔티티 값을 DTO로 변환하여 반환
+        return EmotionAvgDTO.builder()
+            .joy(Double.valueOf(summary.getJoy()))
+            .sadness(Double.valueOf(summary.getSadness()))
+            .fear(Double.valueOf(summary.getFear()))
+            .anger(Double.valueOf(summary.getAnger()))
+            .disgust(Double.valueOf(summary.getDisgust()))
+            .repEmotionType(summary.getRepEmotionType())
+            .build();
     }
 
     private EmotionType calculateRepEmotion(EmotionAvgDTO dto) {
@@ -436,5 +430,49 @@ public class MemberService {
     // 두 값의 평균 (소수점 유지)
     private double avg(double a, double b) {
         return (a + b) / 2.0;
+    }
+
+    /**
+     * 사용자가 좋아요 누른 영화들의 감정 데이터를 집계하여
+     * MemberEmotionSummary를 갱신하고 그 DTO를 반환한다.
+     */
+    @Transactional
+    public MemberEmotionSummaryResponseDTO updateEmotionSummaryByLikedMovies(Long memberId) {
+        // 1) 좋아요 누른 영화 ID 목록 조회
+        List<Long> likedMovieIds = movieLikeRepository
+            .findByMember_Id(memberId)
+            .stream()
+            .map(ml -> ml.getMovie().getId())
+            .toList();
+
+        // 2) 해당 영화들의 감정 평균 집계 (없으면 0.0 기본)
+        EmotionAvgDTO avg = emotionRepository
+            .findAverageEmotionsByMovieIds(likedMovieIds)
+            .orElseGet(() -> EmotionAvgDTO.builder()
+                .joy(0.0).sadness(0.0).anger(0.0)
+                .fear(0.0).disgust(0.0)
+                .repEmotionType(EmotionType.NONE)
+                .build()
+            );
+
+        // 3) 대표 감정 계산
+        EmotionType rep = calculateRepEmotion(avg);
+        avg.setRepEmotionType(rep);
+
+        // 4) MemberEmotionSummary 엔티티 조회 또는 생성
+        MemberEmotionSummary summary = memberEmotionSummaryRepository
+            .findById(memberId)
+            .orElseGet(() -> {
+                MemberEmotionSummary s = MemberEmotionSummary.builder()
+                    .member(Member.builder().id(memberId).build()) // member만 식별자로 설정
+                    .build();
+                return s;
+            });
+
+        // 5) DTO → 엔티티 반영 및 저장
+        summary.updateFromDTO(avg);
+        MemberEmotionSummary updated = memberEmotionSummaryRepository.save(summary);
+
+        return MemberEmotionSummaryResponseDTO.fromEntity(updated);
     }
 }

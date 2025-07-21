@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,5 +28,5 @@ public interface MovieLikeRepository extends JpaRepository<MovieLike, Long> {
 
     Page<MovieLike> findByMovie(Member member, Pageable pageable);
 
-
+    List<MovieLike> findByMember_Id(Long memberId);
 }

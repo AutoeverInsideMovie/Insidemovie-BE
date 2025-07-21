@@ -62,6 +62,7 @@ public class ReviewService {
             throw new BadRequestException(ErrorStatus.DUPLICATE_REVIEW_EXCEPTION.getMessage());
         }
 
+        // 리뷰 저장
         Review review = Review.builder()
                 .content(reviewCreateDTO.getContent())
                 .rating(reviewCreateDTO.getRating())
@@ -75,6 +76,7 @@ public class ReviewService {
 
         Review savedReview = reviewRepository.save(review);
 
+        // 감정 분석
         try {
             PredictRequestDTO request = new PredictRequestDTO(savedReview.getContent());
             PredictResponseDTO response = fastApiRestTemplate.postForObject(
@@ -97,9 +99,6 @@ public class ReviewService {
                     .review(savedReview)
                     .build();
             emotionRepository.save(emotion);
-
-            // 리뷰 등록 후 사용자 감정 요약 업데이트
-            memberService.getMyEmotionSummary(memberEmail);
 
             // 리뷰 등록 후 영화 감정 요약 업데이트
             movieService.getMovieEmotionSummary(movieId);
@@ -170,12 +169,49 @@ public class ReviewService {
             throw new UnAuthorizedException(ErrorStatus.USER_UNAUTHORIZED.getMessage());
         }
 
+        // 리뷰 수정
         review.modify(
                 reviewUpdateDTO.getContent(),
                 reviewUpdateDTO.getRating(),
                 reviewUpdateDTO.isSpoiler(),
                 reviewUpdateDTO.getWatchedAt()
         );
+
+        // 기존 감정 삭제 (Emotion 테이블에서)
+        emotionRepository.deleteByReview(review);
+
+        // 새로운 감정 분석 요청
+        try {
+            PredictRequestDTO request = new PredictRequestDTO(reviewUpdateDTO.getContent());
+            PredictResponseDTO response = fastApiRestTemplate.postForObject(
+                    "/predict/overall_avg",
+                    request,
+                    PredictResponseDTO.class
+            );
+
+            if (response == null || response.getProbabilities() == null) {
+                throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
+            }
+
+            Map<String, Double> probabilities = response.getProbabilities();
+
+            Emotion newEmotion = Emotion.builder()
+                    .anger(probabilities.getOrDefault("anger", 0.0))
+                    .fear(probabilities.getOrDefault("fear", 0.0))
+                    .joy(probabilities.getOrDefault("joy", 0.0))
+                    .disgust(probabilities.getOrDefault("disgust", 0.0))
+                    .sadness(probabilities.getOrDefault("sadness", 0.0))
+                    .review(review)
+                    .build();
+
+            emotionRepository.save(newEmotion);
+
+            // 영화 감정 요약 갱신
+            movieService.getMovieEmotionSummary(review.getMovie().getId());
+
+        } catch (RestClientException e) {
+            throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
+        }
     }
 
     // 리뷰 삭제
@@ -192,8 +228,9 @@ public class ReviewService {
             throw new UnAuthorizedException(ErrorStatus.USER_UNAUTHORIZED.getMessage());
         }
 
-        reviewLikeRepository.deleteByReviewId(reviewId);
-        reviewRepository.delete(review);
+        reviewLikeRepository.deleteByReviewId(reviewId);  // 좋아요 삭제
+        reviewRepository.delete(review);  // 리뷰 삭제
+        movieService.getMovieEmotionSummary(review.getMovie().getId());
     }
 
     // 좋아요 토글

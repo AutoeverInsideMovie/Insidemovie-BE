@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.review.repository;
 
+import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.review.entity.Review;
@@ -79,4 +80,28 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.movie.id =:movieId")
     Double findAverageByMovieId(@Param("movieId") Long movieId);
+
+    /**
+     * 특정 영화에 달린 모든 리뷰의 감정 점수를 평균 내고,
+     * 평균값이 가장 높은 감정 타입을 repEmotionType으로 삼아 DTO로 반환
+     */
+    @Query("""
+    SELECT new com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO(
+        AVG(e.joy), 
+        AVG(e.sadness), 
+        AVG(e.anger), 
+        AVG(e.fear), 
+        AVG(e.disgust),
+        CASE
+            WHEN AVG(e.joy)     >= AVG(e.sadness) AND AVG(e.joy)     >= AVG(e.anger) AND AVG(e.joy)     >= AVG(e.fear)    AND AVG(e.joy)     >= AVG(e.disgust) THEN com.insidemovie.backend.api.constant.EmotionType.JOY
+            WHEN AVG(e.sadness) >= AVG(e.anger)   AND AVG(e.sadness) >= AVG(e.fear)    AND AVG(e.sadness) >= AVG(e.disgust)                    THEN com.insidemovie.backend.api.constant.EmotionType.SADNESS
+            WHEN AVG(e.anger)   >= AVG(e.fear)    AND AVG(e.anger)   >= AVG(e.disgust)                                          THEN com.insidemovie.backend.api.constant.EmotionType.ANGER
+            WHEN AVG(e.fear)    >= AVG(e.disgust)                                                                     THEN com.insidemovie.backend.api.constant.EmotionType.FEAR
+            ELSE                                                                                                         com.insidemovie.backend.api.constant.EmotionType.DISGUST
+        END
+    )
+    FROM Emotion e
+    WHERE e.review.movie.id = :movieId
+    """)
+    EmotionAvgDTO aggregateEmotionsByMovie(@Param("movieId") Long movieId);
 }

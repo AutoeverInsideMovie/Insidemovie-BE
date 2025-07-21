@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.insidemovie.backend.api.constant.EmotionType;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 
 @Getter
 @Builder
@@ -17,4 +19,5 @@ public class MyMovieResponseDTO {
     private Double voteAverage;
     private EmotionType mainEmotion;
     private Double mainEmotionValue;
+    private BigDecimal ratingAvg;
 }

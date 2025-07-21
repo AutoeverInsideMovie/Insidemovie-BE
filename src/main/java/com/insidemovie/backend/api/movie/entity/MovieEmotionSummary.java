@@ -16,7 +16,7 @@ public class MovieEmotionSummary {
     @Id
     private Long movieId;  // Movie의 PK와 일치
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "movie_id")
     private Movie movie;

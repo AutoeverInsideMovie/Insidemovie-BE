@@ -1,27 +1,25 @@
 package com.insidemovie.backend.api.movie.service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.insidemovie.backend.api.constant.GenreType;
-import com.insidemovie.backend.api.member.entity.Member;
-import com.insidemovie.backend.api.member.repository.MemberRepository;
-import com.insidemovie.backend.api.movie.dto.*;
 import com.insidemovie.backend.api.constant.EmotionType;
+import com.insidemovie.backend.api.constant.GenreType;
 import com.insidemovie.backend.api.constant.MovieLanguage;
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
-
+import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.movie.dto.MovieSearchResDto;
+import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.dto.TmdbGenreResponseDto;
 import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.dto.tmdb.*;
 import com.insidemovie.backend.api.movie.entity.Movie;
-import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
-
+import com.insidemovie.backend.api.movie.entity.MovieGenre;
 import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepository;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
-
 import com.insidemovie.backend.api.review.entity.Review;
 import com.insidemovie.backend.api.review.repository.EmotionRepository;
-
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
@@ -77,7 +75,7 @@ public class MovieService {
      * 각 영화의 상세정보(fetchAndSaveMovieById)로 저장합니다.
      */
     @Transactional
-    public void fetchAndSaveMoviesByPage(String type, int page, boolean isInitial) {
+    public boolean fetchAndSaveMoviesByPage(String type, int page, boolean isInitial) {
         String url = String.format(
             "%s/movie/%s?api_key=%s&language=%s&page=%d",
             baseUrl, type, apiKey, language, page
@@ -87,25 +85,31 @@ public class MovieService {
             restTemplate.getForEntity(url, SearchMovieWrapperDTO.class);
 
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            return;
+            log.warn("[페이지 실패] type={} page={} status={}", type, page, response.getStatusCode());
+            return false;
         }
 
-        for (SearchMovieResponseDTO dto : response.getBody().getResults()) {
-            // 지원 언어 필터링
+        SearchMovieWrapperDTO body = response.getBody();
+        List<SearchMovieResponseDTO> results = body.getResults();
+        if (results == null || results.isEmpty()) {
+            log.info("[빈 페이지] type={} page={}", type, page);
+            return false; // 조기 종료 근거
+        }
+
+        for (SearchMovieResponseDTO dto : results) {
             if (!MovieLanguage.isAllowed(dto.getOriginalLanguage())) {
-                log.info("[필터링] 지원하지 않는 언어({}) 영화(ID={}) 건너뜀",
-                    dto.getOriginalLanguage(), dto.getId());
+                log.debug("[필터링] 언어({}) skip id={}", dto.getOriginalLanguage(), dto.getId());
                 continue;
             }
-            // 성인 영화 스킵
             if (Boolean.TRUE.equals(dto.getAdult())) {
-                log.info("성인 영화 스킵: ID={} / {}", dto.getId(), dto.getTitle());
+                log.debug("[필터링] 성인 skip id={}", dto.getId());
                 continue;
             }
-            // 상세 저장
             fetchAndSaveMovieById(dto.getId());
         }
+        return true;
     }
+
 
     /**
      * TMDB에서 단일 영화 ID로 상세정보를 가져와 DB에 저장합니다.
@@ -334,6 +338,16 @@ public class MovieService {
             case NONE -> 0.0;
         };
 
+        Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+        BigDecimal rounded;
+        if(ratingAvg==null || ratingAvg==0.00){
+            rounded=BigDecimal.ZERO.setScale(2);
+        }else{
+            rounded= BigDecimal.valueOf(ratingAvg)
+            .setScale(2, RoundingMode.HALF_UP);
+        }
+
+
         MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
         movieSearchResDto.setId(movie.getId());
         movieSearchResDto.setTitle(movie.getTitle());
@@ -341,6 +355,7 @@ public class MovieService {
         movieSearchResDto.setVoteAverage(movie.getVoteAverage());
         movieSearchResDto.setMainEmotion(mainEmotion);
         movieSearchResDto.setMainEmotionValue(mainEmotionValue);
+        movieSearchResDto.setRatingAvg(rounded);
         return movieSearchResDto;
     }
 
@@ -482,6 +497,7 @@ public class MovieService {
             throw new NotFoundException("해당 장르의 영화가 없습니다: " + genreType.name());
         }
 
+
         return new PageResDto<MovieSearchResDto> (moviePage.map(movie -> {
             MovieSearchResDto dto = new MovieSearchResDto();
             EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
@@ -495,6 +511,14 @@ public class MovieService {
                 case DISGUST -> avg.getDisgust();
                 case NONE -> 0.0;
             };
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
 
             dto.setId(movie.getId());
             dto.setTitle(movie.getTitle());
@@ -503,6 +527,7 @@ public class MovieService {
             dto.setReleaseDate(movie.getReleaseDate());
             dto.setMainEmotion(mainEmotion);
             dto.setMainEmotionValue(mainEmotionValue);
+            dto.setRatingAvg(rounded);
             return dto;
         }));
     }
@@ -528,7 +553,14 @@ public class MovieService {
                 case DISGUST -> avg.getDisgust();
                 case NONE -> 0.0;
             };
-
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
             resDto.setId(movie.getId());
             resDto.setTitle(movie.getTitle());
             resDto.setPosterPath(movie.getPosterPath());
@@ -536,6 +568,7 @@ public class MovieService {
             resDto.setReleaseDate(movie.getReleaseDate());
             resDto.setMainEmotion(mainEmotion);
             resDto.setMainEmotionValue(mainEmotionValue);
+            resDto.setRatingAvg(rounded);
             return resDto;
         });
 
@@ -554,6 +587,15 @@ public class MovieService {
             Movie movie = movielike.getMovie();
             EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
 
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+
             EmotionType mainEmotion = avg.getRepEmotionType();
             Double mainEmotionValue = switch (mainEmotion) {
                 case JOY     -> avg.getJoy();
@@ -571,9 +613,34 @@ public class MovieService {
                     .voteAverage(movie.getVoteAverage())
                     .mainEmotion(mainEmotion)
                     .mainEmotionValue(mainEmotionValue)
+                    .ratingAvg(rounded)
                     .build();
         });
         return new PageResDto<>(dto);
 
+    }
+    @Transactional
+    public int fetchTotalPages(String type) {
+        String url = String.format("%s/movie/%s?api_key=%s&language=%s&page=1",
+                baseUrl, type, apiKey, language);
+
+        ResponseEntity<SearchMovieWrapperDTO> response =
+                restTemplate.getForEntity(url, SearchMovieWrapperDTO.class);
+
+        if (!response.getStatusCode().is2xxSuccessful()
+                || response.getBody() == null) {
+            log.warn("[totalPages] 응답 실패 type={}", type);
+            return 0;
+        }
+
+        int totalPages = response.getBody().getTotalPages();
+        if (totalPages <= 0) {
+            log.warn("[totalPages] 비정상 totalPages={} type={}", totalPages, type);
+            return 0;
+        }
+        if (totalPages > 499) {
+            totalPages = 499;
+        }
+        return totalPages;
     }
 }

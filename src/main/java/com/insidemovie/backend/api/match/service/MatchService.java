@@ -1,6 +1,7 @@
 package com.insidemovie.backend.api.match.service;
 
 import com.insidemovie.backend.api.constant.EmotionType;
+import com.insidemovie.backend.api.match.dto.WinnerHistoryDto;
 import com.insidemovie.backend.api.match.entity.Match;
 import com.insidemovie.backend.api.match.entity.MovieMatch;
 import com.insidemovie.backend.api.match.entity.Vote;
@@ -10,8 +11,11 @@ import com.insidemovie.backend.api.match.repository.VoteRepository;
 import com.insidemovie.backend.api.member.entity.Member;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
 import com.insidemovie.backend.api.movie.dto.MovieDetailSimpleResDto;
+import com.insidemovie.backend.api.movie.dto.emotion.MovieEmotionResDTO;
 import com.insidemovie.backend.api.movie.entity.Movie;
+import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.InternalServerException;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
@@ -20,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,6 +44,7 @@ public class MatchService {
     private final VoteRepository voteRepository;
     private final MemberRepository memberRepository;
     private final Random random = new Random();
+    private final ReviewRepository reviewRepository;
 
     // 대결 생성
     @Transactional
@@ -154,13 +161,33 @@ public class MatchService {
 
         for (MovieMatch mm : movieMatch) {
             Movie movie = mm.getMovie();
+            MovieEmotionSummary movieEmotion = movie.getEmotions();
+
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+
+            MovieEmotionResDTO emotionDto = MovieEmotionResDTO.builder()
+                    .joy(movieEmotion.getJoy())
+                    .anger(movieEmotion.getAnger())
+                    .sadness(movieEmotion.getSadness())
+                    .fear(movieEmotion.getFear())
+                    .disgust(movieEmotion.getDisgust())
+                    .dominantEmotion(movieEmotion.getDominantEmotion())
+                    .build();
 
             MovieDetailSimpleResDto dto = MovieDetailSimpleResDto.builder()
                     .id(movie.getId())
                     .title(movie.getTitle())
                     .posterPath(movie.getPosterPath())
                     .voteAverage(movie.getVoteAverage())
-//                    .emotion(movie.getEmotions())
+                //     .emotion(emotionDto)
+                    .ratingAvg(rounded)
                     .build();
             response.add(dto);
         }
@@ -168,23 +195,49 @@ public class MatchService {
     }
 
     // 역대 우승 영화 조회
-    public List<MovieDetailSimpleResDto> getWinnerHistory() {
+    public List<WinnerHistoryDto> getWinnerHistory() {
         List<Match> matches = matchRepository.findAll();
-        List<MovieDetailSimpleResDto> response = new ArrayList<>();
+        List<WinnerHistoryDto> response = new ArrayList<>();
 
         for (Match match : matches) {
             if (match.getWinnerId() == null) continue;
             Movie movie = movieRepository.findById(match.getWinnerId())
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
-            MovieDetailSimpleResDto dto = MovieDetailSimpleResDto.builder()
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+
+            MovieEmotionSummary movieEmotion = movie.getEmotions();
+            MovieEmotionResDTO emotionDto = MovieEmotionResDTO.builder()
+                    .joy(movieEmotion.getJoy())
+                    .anger(movieEmotion.getAnger())
+                    .sadness(movieEmotion.getSadness())
+                    .fear(movieEmotion.getFear())
+                    .disgust(movieEmotion.getDisgust())
+                    .dominantEmotion(movieEmotion.getDominantEmotion())
+                    .build();
+
+            MovieDetailSimpleResDto movieDto = MovieDetailSimpleResDto.builder()
                     .id(movie.getId())
                     .title(movie.getTitle())
                     .posterPath(movie.getPosterPath())
                     .voteAverage(movie.getVoteAverage())
-//                    .emotion(movie.getEmotions())
+                    .ratingAvg(rounded)
+                //     .emotion(emotionDto)
                     .build();
-            response.add(dto);
+
+            WinnerHistoryDto winnerHistoryDto = WinnerHistoryDto.builder()
+                    .matchNumber(match.getMatchNumber())
+                    .matchDate(match.getMatchDate())
+                    .movie(movieDto)
+                    .build();
+            response.add(winnerHistoryDto);
         }
         return response;
     }

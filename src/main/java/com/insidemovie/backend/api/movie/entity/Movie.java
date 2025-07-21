@@ -26,7 +26,8 @@ public class Movie {
     @Column(name = "tmdb_id", unique = true)
     private Long tmdbMovieId;            // tmdb 영화 코드
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+//    @Column(columnDefinition = "TEXT")
     private String overview;            // 영화 개요
 
     @Column(name = "popularity")
@@ -35,7 +36,7 @@ public class Movie {
     @Column(name = "original_language")
     private String originalLanguage;     // 국가
 
-    @Column(length = 10000)
+    @Lob
     private String actors;              // 출연진
 
 //    @Column(name = "genre_ids")
@@ -46,6 +47,7 @@ public class Movie {
     private Integer runtime;             // 러닝 타임
     private String nation;               // 제작 국가
     private String status;               // 제작 상태 (개봉, 기타 등)
+    @Lob
     private String directors;            // 감독
     private String ottProviders;         // OTT 제공
     private String posterPath;           // 포스터 이미지 경로
@@ -58,11 +60,11 @@ public class Movie {
     @Column(name = "is_matched")
     private Boolean isMatched;
 
-    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<MovieLike> movieLikes = new ArrayList<>();
 
-    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "movie", cascade = CascadeType.ALL, orphanRemoval = true)
     private MovieEmotionSummary emotions;
 
     // 제목 수정

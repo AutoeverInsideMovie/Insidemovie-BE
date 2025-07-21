@@ -7,6 +7,7 @@ import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.constant.ReportStatus;
+import com.insidemovie.backend.api.movie.service.MovieEmotionSummaryService;
 import com.insidemovie.backend.api.movie.service.MovieService;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.entity.Emotion;
@@ -47,6 +48,7 @@ public class ReviewService {
     private final EmotionRepository emotionRepository;
     private final MemberService memberService;
     private final MovieService movieService;
+    private final MovieEmotionSummaryService movieEmotionSummaryService;
 
     // 리뷰 작성
     @Transactional
@@ -102,6 +104,8 @@ public class ReviewService {
 
             // 리뷰 등록 후 영화 감정 요약 업데이트
             movieService.getMovieEmotionSummary(movieId);
+            // 영화 감정 요약 재계산 호출
+            movieEmotionSummaryService.recalcMovieSummary(movieId);
 
 
         } catch (RestClientException e) {
@@ -205,6 +209,7 @@ public class ReviewService {
                     .build();
 
             emotionRepository.save(newEmotion);
+            movieEmotionSummaryService.recalcMovieSummary(review.getMovie().getId());
 
             // 영화 감정 요약 갱신
             movieService.getMovieEmotionSummary(review.getMovie().getId());
@@ -231,6 +236,7 @@ public class ReviewService {
         reviewLikeRepository.deleteByReviewId(reviewId);  // 좋아요 삭제
         reviewRepository.delete(review);  // 리뷰 삭제
         movieService.getMovieEmotionSummary(review.getMovie().getId());
+        movieEmotionSummaryService.recalcMovieSummary(review.getMovie().getId());
     }
 
     // 좋아요 토글

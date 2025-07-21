@@ -46,6 +46,7 @@ public class Movie {
     private Integer runtime;             // 러닝 타임
     private String nation;               // 제작 국가
     private String status;               // 제작 상태 (개봉, 기타 등)
+    @Column(length = 10000)
     private String directors;            // 감독
     private String ottProviders;         // OTT 제공
     private String posterPath;           // 포스터 이미지 경로

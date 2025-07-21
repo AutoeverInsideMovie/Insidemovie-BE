@@ -13,6 +13,8 @@ import com.insidemovie.backend.api.movie.entity.MovieLike;
 import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepository;
 import com.insidemovie.backend.api.movie.repository.MovieLikeRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
+import com.insidemovie.backend.api.review.service.ReviewService;
 import com.insidemovie.backend.common.exception.NotFoundException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
@@ -23,6 +25,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 @Slf4j
@@ -32,8 +36,8 @@ public class MovieLikeService {
     private final MemberRepository memberRepository;
     private final MovieLikeRepository movieLikeRepository;
     private final MovieRepository movieRepository;
-    private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
     private final MovieService movieService;
+    private final ReviewRepository reviewRepository;
     private final MemberService memberService;
 
     // 좋아요 한 영화 목록 조회
@@ -50,6 +54,15 @@ public class MovieLikeService {
             Movie movie = movielike.getMovie();
             EmotionAvgDTO avg = movieService.getMovieEmotionSummary(movie.getId());
             EmotionType mainEmotion = avg.getRepEmotionType();
+
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getId());
+            BigDecimal rounded;
+            if(ratingAvg==null || ratingAvg==0.00){
+                rounded=BigDecimal.ZERO.setScale(2);
+            }else{
+                rounded= BigDecimal.valueOf(ratingAvg)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
 
             // mainEmotion에 해당하는 수치 꺼내기
             double emainEmotionValue = switch (mainEmotion) {
@@ -69,6 +82,7 @@ public class MovieLikeService {
                     .voteAverage(movie.getVoteAverage())
                     .mainEmotion(mainEmotion)
                     .mainEmotionValue(emainEmotionValue)
+                    .ratingAvg(rounded)
                     .build();
         });
         return new PageResDto<>(dto);

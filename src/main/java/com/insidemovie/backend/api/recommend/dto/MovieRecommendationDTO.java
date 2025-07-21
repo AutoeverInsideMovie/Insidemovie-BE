@@ -5,6 +5,8 @@ import com.insidemovie.backend.api.constant.EmotionType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 public class MovieRecommendationDTO {
@@ -19,4 +21,6 @@ public class MovieRecommendationDTO {
 
     @JsonIgnore
     private double similarity;  // 유사도
+
+    private BigDecimal ratingAvg;
 }

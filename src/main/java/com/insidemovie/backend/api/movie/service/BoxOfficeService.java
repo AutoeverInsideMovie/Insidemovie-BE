@@ -16,6 +16,7 @@ import com.insidemovie.backend.api.movie.repository.DailyBoxOfficeRepository;
 import com.insidemovie.backend.api.movie.repository.MovieGenreRepository;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.movie.repository.WeeklyBoxOfficeRepository;
+import com.insidemovie.backend.api.review.repository.ReviewRepository;
 import com.insidemovie.backend.common.exception.BaseException;
 import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
@@ -25,6 +26,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
@@ -48,6 +52,7 @@ public class BoxOfficeService {
     private final WeeklyBoxOfficeRepository weeklyRepo;
     private final MovieRepository movieRepo;
     private final MovieGenreRepository movieGenreRepository;
+    private final ReviewRepository reviewRepository;
 
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -282,6 +287,7 @@ public class BoxOfficeService {
                     ErrorStatus.NOT_FOUND_DAILY_BOXOFFICE.getMessage()
             );
         }
+
 
         List<DailyBoxOfficeResponseDTO> items = rows.stream()
                 .limit(itemPerPage)

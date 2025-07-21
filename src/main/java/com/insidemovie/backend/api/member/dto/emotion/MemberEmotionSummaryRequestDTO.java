@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.member.dto.emotion;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -7,6 +8,7 @@ import lombok.Data;
 
 @Data
 public class MemberEmotionSummaryRequestDTO {
+    @JsonProperty("memberId")
     private Long memberId;
 
     @NotNull @Min(0) @Max(1)

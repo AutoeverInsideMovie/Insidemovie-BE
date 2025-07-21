@@ -51,7 +51,7 @@ tmdb:
     language: ko-KR
   image:
     base-url: https://image.tmdb.org/t/p/
-    poster-size: w500
+    poster-size: original
 
 kobis:
   api:

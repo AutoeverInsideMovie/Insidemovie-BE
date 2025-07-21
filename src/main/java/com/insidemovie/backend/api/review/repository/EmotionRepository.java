@@ -2,13 +2,17 @@ package com.insidemovie.backend.api.review.repository;
 
 import com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO;
 import com.insidemovie.backend.api.review.entity.Emotion;
+import com.insidemovie.backend.api.review.entity.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 public interface EmotionRepository extends JpaRepository<Emotion, Long> {
+
     Optional<Emotion> findByReviewId(Long reviewId);
 
     // 멤버가 작성한 모든 리뷰 감정의 평균값 계산
@@ -25,6 +29,7 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     """)
     Optional<EmotionAvgDTO> findAverageEmotionsByMemberId(@Param("memberId") Long memberId);
 
+    // 영화의 모든 리뷰 감정의 평균값 계산
     @Query("""
         SELECT new com.insidemovie.backend.api.member.dto.emotion.EmotionAvgDTO(
             COALESCE(AVG(e.joy), 0.0),
@@ -38,5 +43,7 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     """)
     Optional<EmotionAvgDTO> findAverageEmotionsByMovieId(@Param("movieId") Long movieId);
 
-
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM Emotion e WHERE e.review = :review")
+    void deleteByReview(@Param("review") Review review);
 }

@@ -11,18 +11,18 @@ public class MemberEmotionSummaryRequestDTO {
     @JsonProperty("memberId")
     private Long memberId;
 
-    @NotNull @Min(0) @Max(1)
+    @NotNull @Min(0) @Max(100)
     private Float joy;
 
-    @NotNull @Min(0) @Max(1)
+    @NotNull @Min(0) @Max(100)
     private Float sadness;
 
-    @NotNull @Min(0) @Max(1)
+    @NotNull @Min(0) @Max(100)
     private Float fear;
 
-    @NotNull @Min(0) @Max(1)
+    @NotNull @Min(0) @Max(100)
     private Float anger;
 
-    @NotNull @Min(0) @Max(1)
+    @NotNull @Min(0) @Max(100)
     private Float disgust;
 }

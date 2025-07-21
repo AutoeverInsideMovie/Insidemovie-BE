@@ -60,10 +60,6 @@ public class Member extends BaseTimeEntity {
     @Builder.Default
     private Boolean isBanned = false;  // 정지
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "profile_emotion")
-    private EmotionType profileEmotion;  // 프로필 이미지
-
     @Builder
     public Member(String email, String password, String nickname, Authority authority) {
         this.email = email;
@@ -80,11 +76,6 @@ public class Member extends BaseTimeEntity {
     // 닉네임 변경
     public void updateNickname(String nickname) {
         this.nickname = nickname;
-    }
-
-    // 프로필 이미지 변경
-    public void updateProfileEmotion(EmotionType emotionType) {
-        this.profileEmotion = emotionType;
     }
 
     // 비밀번호 변경

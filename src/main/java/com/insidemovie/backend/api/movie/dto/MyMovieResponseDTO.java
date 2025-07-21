@@ -16,4 +16,5 @@ public class MyMovieResponseDTO {
     private String title;
     private Double voteAverage;
     private EmotionType mainEmotion;
+    private Double mainEmotionValue;
 }

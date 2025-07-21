@@ -48,6 +48,17 @@ public class MovieLikeService {
             Movie movie = movielike.getMovie();
             EmotionAvgDTO avg = movieService.getMovieEmotionSummary(movie.getId());
             EmotionType mainEmotion = avg.getRepEmotionType();
+
+            // mainEmotion에 해당하는 수치 꺼내기
+            double emainEmotionValue = switch (mainEmotion) {
+                case JOY -> avg.getJoy();
+                case SADNESS -> avg.getSadness();
+                case ANGER -> avg.getAnger();
+                case FEAR -> avg.getFear();
+                case DISGUST -> avg.getDisgust();
+                case NONE -> 0.0;
+            };
+
             return MyMovieResponseDTO.builder()
                     .movieReactionId(movielike.getId())
                     .movieId(movie.getId())
@@ -55,6 +66,7 @@ public class MovieLikeService {
                     .title(movie.getTitle())
                     .voteAverage(movie.getVoteAverage())
                     .mainEmotion(mainEmotion)
+                    .mainEmotionValue(emainEmotionValue)
                     .build();
         });
         return new PageResDto<>(dto);

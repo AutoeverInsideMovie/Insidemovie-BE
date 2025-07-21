@@ -292,6 +292,7 @@ public class MovieService {
         Page<MovieSearchResDto> movieSearchResDtos = movies.map(this::convertEntityToDto);
         return new PageResDto<>(movieSearchResDtos);
     }
+
     /*
      * TODO: 영화 장르와, 타이틀로 검색했을때 검색되도록
      *   - "액"이 포함된 영화 타이틀을 검색하고 싶어도 액션으로 인식되어 액션 영화 나옴
@@ -323,14 +324,26 @@ public class MovieService {
         EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
         EmotionType mainEmotion = avg.getRepEmotionType();
 
+        // 감정 수치 계산
+        double mainEmotionValue = switch (mainEmotion) {
+            case JOY -> avg.getJoy();
+            case SADNESS -> avg.getSadness();
+            case ANGER -> avg.getAnger();
+            case FEAR -> avg.getFear();
+            case DISGUST -> avg.getDisgust();
+            case NONE -> 0.0;
+        };
+
         MovieSearchResDto movieSearchResDto = new MovieSearchResDto();
         movieSearchResDto.setId(movie.getId());
         movieSearchResDto.setTitle(movie.getTitle());
         movieSearchResDto.setPosterPath(movie.getPosterPath());
         movieSearchResDto.setVoteAverage(movie.getVoteAverage());
         movieSearchResDto.setMainEmotion(mainEmotion);
+        movieSearchResDto.setMainEmotionValue(mainEmotionValue);
         return movieSearchResDto;
     }
+
     // 영화에 달린 리뷰들의 감정 평균 조회
     @Transactional
     public EmotionAvgDTO getMovieEmotionSummary(Long movieId) {
@@ -475,12 +488,23 @@ public class MovieService {
             MovieSearchResDto dto = new MovieSearchResDto();
             EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
             EmotionType mainEmotion = avg.getRepEmotionType();
+
+            double mainEmotionValue = switch (mainEmotion) {
+                case JOY -> avg.getJoy();
+                case SADNESS -> avg.getSadness();
+                case ANGER -> avg.getAnger();
+                case FEAR -> avg.getFear();
+                case DISGUST -> avg.getDisgust();
+                case NONE -> 0.0;
+            };
+
             dto.setId(movie.getId());
             dto.setTitle(movie.getTitle());
             dto.setPosterPath(movie.getPosterPath());
             dto.setVoteAverage(movie.getVoteAverage());
             dto.setReleaseDate(movie.getReleaseDate());
             dto.setMainEmotion(mainEmotion);
+            dto.setMainEmotionValue(mainEmotionValue);
             return dto;
         }));
     }
@@ -497,12 +521,23 @@ public class MovieService {
             MovieSearchResDto resDto = new MovieSearchResDto();
             EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
             EmotionType mainEmotion = avg.getRepEmotionType();
+
+            double mainEmotionValue = switch (mainEmotion) {
+                case JOY -> avg.getJoy();
+                case SADNESS -> avg.getSadness();
+                case ANGER -> avg.getAnger();
+                case FEAR -> avg.getFear();
+                case DISGUST -> avg.getDisgust();
+                case NONE -> 0.0;
+            };
+
             resDto.setId(movie.getId());
             resDto.setTitle(movie.getTitle());
             resDto.setPosterPath(movie.getPosterPath());
             resDto.setVoteAverage(movie.getVoteAverage());
             resDto.setReleaseDate(movie.getReleaseDate());
             resDto.setMainEmotion(mainEmotion);
+            resDto.setMainEmotionValue(mainEmotionValue);
             return resDto;
         });
 
@@ -520,13 +555,24 @@ public class MovieService {
         Page<MovieSearchResDto> dto = moviePage.map(movielike ->{
             Movie movie = movielike.getMovie();
             EmotionAvgDTO avg = getMovieEmotionSummary(movie.getId());
+
             EmotionType mainEmotion = avg.getRepEmotionType();
+            Double mainEmotionValue = switch (mainEmotion) {
+                case JOY     -> avg.getJoy();
+                case SADNESS -> avg.getSadness();
+                case ANGER   -> avg.getAnger();
+                case FEAR    -> avg.getFear();
+                case DISGUST -> avg.getDisgust();
+                default      -> 0.0;
+            };
+
             return MovieSearchResDto.builder()
                     .id(movie.getId())
                     .posterPath(movie.getPosterPath())
                     .title(movie.getTitle())
                     .voteAverage(movie.getVoteAverage())
                     .mainEmotion(mainEmotion)
+                    .mainEmotionValue(mainEmotionValue)
                     .build();
         });
         return new PageResDto<>(dto);

@@ -36,16 +36,16 @@ public class Member extends BaseTimeEntity {
 
     // 사용자가 신고한 내역
     @Builder.Default
-    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Report> reportsFiled = new ArrayList<>();
 
     // 사용자가 신고당한 내역
     @Builder.Default
-    @OneToMany(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Report> reportsReceived = new ArrayList<>();
 
     // 감정 요약
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private MemberEmotionSummary emotionSummary;
 
     @Column(name="refresh_token")

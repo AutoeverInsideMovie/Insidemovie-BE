@@ -4,7 +4,7 @@ spring:
   config:
     import:
       - optional:file:./application-key.yml
-#      - classpath:application-key.yml
+      #      - classpath:application-key.yml
       - optional:./application-key.yml
 
   security:
@@ -38,9 +38,8 @@ spring:
       mail.smtp.connectiontimeout: 5000
 mail:
   from:
-    address: admin@insidemovie.com    # @Value("${mail.from.address}") 와 매핑
+    address: admin@insidemovie.com # @Value("${mail.from.address}") 와 매핑
     personal: "InsideMovie 인증센터"
-
 
 jwt:
   secret: a1f7d23c8e56b9f1840f7a9b9f4c3b579a3d8f2e648cbe7398cdd249e2f4baf52c3678e1054f3e1e0aa6e1db4523e07f
@@ -89,6 +88,3 @@ movie:
 match:
   cron:
     weekly: "0 30 16 * * MON"
-
-
-

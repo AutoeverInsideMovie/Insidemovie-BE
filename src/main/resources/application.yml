@@ -3,9 +3,9 @@ spring:
     active: local
   config:
     import:
-      - classpath:application-key.yml
-      - optional:file:/home/ubuntu/application-key.yml
       - optional:file:./application-key.yml
+#      - classpath:application-key.yml
+      - optional:./application-key.yml
 
   security:
     oauth2:
@@ -26,6 +26,21 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 5000
+mail:
+  from:
+    address: admin@insidemovie.com    # @Value("${mail.from.address}") 와 매핑
+    personal: "InsideMovie 인증센터"
+
 
 jwt:
   secret: a1f7d23c8e56b9f1840f7a9b9f4c3b579a3d8f2e648cbe7398cdd249e2f4baf52c3678e1054f3e1e0aa6e1db4523e07f
@@ -51,7 +66,7 @@ tmdb:
     language: ko-KR
   image:
     base-url: https://image.tmdb.org/t/p/
-    poster-size: w500
+    poster-size: original
 
 kobis:
   api:
@@ -62,9 +77,9 @@ kobis:
 
 scheduler:
   cron:
-    daily: "0 15 7 * * *"
-    weekly: "0 35 07 * * MON"
-    request_movie: "0 32 00 * * *"
+    daily: "0 30 16 * * *"
+    weekly: "0 30 16 * * MON"
+    request_movie: "0 42 19 * * MON"
   zone: "Asia/Seoul"
 
 movie:
@@ -73,7 +88,7 @@ movie:
 
 match:
   cron:
-    weekly: "0 0 8 * * MON"
+    weekly: "0 30 16 * * MON"
 
 
 

@@ -12,34 +12,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmotionAvgDTO {
 
-    @Builder.Default
-    private Double joy     = 0.0;
-    @Builder.Default
-    private Double sadness = 0.0;
-    @Builder.Default
-    private Double anger   = 0.0;
-    @Builder.Default
-    private Double fear    = 0.0;
-    @Builder.Default
-    private Double disgust = 0.0;
+    private Double anger;
+    private Double fear;
+    private Double joy;
+    private Double disgust;
+    private Double sadness;
+    private EmotionType repEmotionType;
 
-    @Builder.Default
-    private EmotionType repEmotionType = EmotionType.DISGUST;
+    public void setRepEmotionType(EmotionType repEmotionType) {
+        this.repEmotionType = repEmotionType;
+    }
 
     public EmotionAvgDTO(Double joy,
                          Double sadness,
                          Double anger,
                          Double fear,
                          Double disgust) {
-        this.joy             = joy != null ? joy : 0.0;
-        this.sadness         = sadness != null ? sadness : 0.0;
-        this.anger           = anger != null ? anger : 0.0;
-        this.fear            = fear != null ? fear : 0.0;
-        this.disgust         = disgust != null ? disgust : 0.0;
-        this.repEmotionType  = EmotionType.DISGUST;
-    }
-
-    public void setRepEmotionType(EmotionType repEmotionType) {
-        this.repEmotionType = repEmotionType;
+        this.joy = joy;
+        this.sadness = sadness;
+        this.anger = anger;
+        this.fear = fear;
+        this.disgust = disgust;
+        this.repEmotionType = EmotionType.NONE; // 혹은 null
     }
 }

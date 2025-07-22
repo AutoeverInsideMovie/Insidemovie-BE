@@ -109,6 +109,10 @@ public class SecurityConfig {
                         HttpMethod.PATCH,
                         "/api/v1/member/emotion/**"
                 ).permitAll()
+                .requestMatchers(
+                        "/api/v1/mail/send/**",
+                        "/api/v1/mail/check/**"
+                ).permitAll()
 
                 // All other requests require authentication
                 .anyRequest().authenticated()

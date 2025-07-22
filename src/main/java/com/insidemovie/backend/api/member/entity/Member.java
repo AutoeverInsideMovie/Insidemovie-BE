@@ -36,16 +36,16 @@ public class Member extends BaseTimeEntity {
 
     // 사용자가 신고한 내역
     @Builder.Default
-    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Report> reportsFiled = new ArrayList<>();
 
     // 사용자가 신고당한 내역
     @Builder.Default
-    @OneToMany(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "reportedMember", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Report> reportsReceived = new ArrayList<>();
 
     // 감정 요약
-    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private MemberEmotionSummary emotionSummary;
 
     @Column(name="refresh_token")
@@ -59,10 +59,6 @@ public class Member extends BaseTimeEntity {
     @Column(nullable = true)
     @Builder.Default
     private Boolean isBanned = false;  // 정지
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "profile_emotion")
-    private EmotionType profileEmotion;  // 프로필 이미지
 
     @Builder
     public Member(String email, String password, String nickname, Authority authority) {
@@ -80,11 +76,6 @@ public class Member extends BaseTimeEntity {
     // 닉네임 변경
     public void updateNickname(String nickname) {
         this.nickname = nickname;
-    }
-
-    // 프로필 이미지 변경
-    public void updateProfileEmotion(EmotionType emotionType) {
-        this.profileEmotion = emotionType;
     }
 
     // 비밀번호 변경

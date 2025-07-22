@@ -30,7 +30,6 @@ public class Review extends BaseTimeEntity {
     private String content;
 
     private long likeCount;
-    private boolean modify;
 
     private LocalDateTime watchedAt;
     private boolean spoiler;
@@ -55,11 +54,11 @@ public class Review extends BaseTimeEntity {
     private Emotion emotion;
 
     @Builder.Default
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ReviewLike> likes = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Report> reports = new ArrayList<>();
 
     public void modify(String content, double rating, boolean spoiler, LocalDateTime watchedAt) {
@@ -67,7 +66,6 @@ public class Review extends BaseTimeEntity {
         this.rating = rating;
         this.spoiler = spoiler;
         this.watchedAt = watchedAt;
-        this.modify = true;  // 수정됨
     }
 
     // 신고가 등록되면 호출

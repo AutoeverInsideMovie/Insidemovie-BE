@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.match.controller;
 
+import com.insidemovie.backend.api.match.dto.WinnerHistoryDto;
 import com.insidemovie.backend.api.match.service.MatchService;
 import com.insidemovie.backend.api.movie.dto.MovieDetailSimpleResDto;
 import com.insidemovie.backend.common.response.ApiResponse;
@@ -43,8 +44,8 @@ public class MatchController {
     // 역대 우승 영화 조회
     @Operation(summary = "역대 우승 영화 조회", description = "영화 대결에서 우승한 영화 내역을 조회합니다.")
     @GetMapping("/winners")
-    public ResponseEntity<ApiResponse<List<MovieDetailSimpleResDto>>> winnerHistory() {
-        List<MovieDetailSimpleResDto> response = matchService.getWinnerHistory();
+    public ResponseEntity<ApiResponse<List<WinnerHistoryDto>>> winnerHistory() {
+        List<WinnerHistoryDto> response = matchService.getWinnerHistory();
         return ApiResponse.success(SuccessStatus.GET_WINNER_SUCCESS, response);
     }
 }

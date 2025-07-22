@@ -1,11 +1,17 @@
 package com.insidemovie.backend.api.review.service;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.member.entity.Member;
+import com.insidemovie.backend.api.member.entity.MemberEmotionSummary;
+import com.insidemovie.backend.api.member.repository.MemberEmotionSummaryRepository;
 import com.insidemovie.backend.api.member.repository.MemberRepository;
+import com.insidemovie.backend.api.member.service.MemberService;
 import com.insidemovie.backend.api.movie.dto.PageResDto;
 import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.constant.ReportStatus;
+import com.insidemovie.backend.api.movie.service.MovieEmotionSummaryService;
+import com.insidemovie.backend.api.movie.service.MovieService;
 import com.insidemovie.backend.api.review.dto.*;
 import com.insidemovie.backend.api.review.entity.Emotion;
 import com.insidemovie.backend.api.review.entity.Review;
@@ -43,6 +49,10 @@ public class ReviewService {
     private final MovieRepository movieRepository;
     private final RestTemplate fastApiRestTemplate;
     private final EmotionRepository emotionRepository;
+    private final MemberService memberService;
+    private final MovieService movieService;
+    private final MemberEmotionSummaryRepository memberEmotionSummaryRepository;
+    private final MovieEmotionSummaryService movieEmotionSummaryService;
 
     // 리뷰 작성
     @Transactional
@@ -58,19 +68,20 @@ public class ReviewService {
             throw new BadRequestException(ErrorStatus.DUPLICATE_REVIEW_EXCEPTION.getMessage());
         }
 
+        // 리뷰 저장
         Review review = Review.builder()
                 .content(reviewCreateDTO.getContent())
                 .rating(reviewCreateDTO.getRating())
                 .spoiler(reviewCreateDTO.isSpoiler())
                 .watchedAt(reviewCreateDTO.getWatchedAt())
                 .likeCount(0)
-                .modify(false)
                 .member(member)
                 .movie(movie)
                 .build();
 
         Review savedReview = reviewRepository.save(review);
 
+        // 감정 분석
         try {
             PredictRequestDTO request = new PredictRequestDTO(savedReview.getContent());
             PredictResponseDTO response = fastApiRestTemplate.postForObject(
@@ -85,14 +96,20 @@ public class ReviewService {
 
             Map<String, Double> probabilities = response.getProbabilities();
             Emotion emotion = Emotion.builder()
-                    .anger(probabilities.get("anger"))
-                    .fear(probabilities.get("fear"))
-                    .joy(probabilities.get("joy"))
-                    .disgust(probabilities.get("disgust"))
-                    .sadness(probabilities.get("sadness"))
+                    .anger(probabilities.getOrDefault("anger", 0.0))
+                    .fear(probabilities.getOrDefault("fear", 0.0))
+                    .joy(probabilities.getOrDefault("joy", 0.0))
+                    .disgust(probabilities.getOrDefault("disgust", 0.0))
+                    .sadness(probabilities.getOrDefault("sadness", 0.0))
                     .review(savedReview)
                     .build();
             emotionRepository.save(emotion);
+
+            // 리뷰 등록 후 영화 감정 요약 업데이트
+            movieService.getMovieEmotionSummary(movieId);
+            // 영화 감정 요약 재계산 호출
+            movieEmotionSummaryService.recalcMovieSummary(movieId);
+
 
         } catch (RestClientException e) {
             throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
@@ -112,23 +129,14 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Long currentUserId = null;
-        Long myReviewId = null;
 
         if (memberEmail != null && !memberEmail.isBlank()) {
             Member member = memberRepository.findByEmail(memberEmail.trim())
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
             currentUserId = member.getId();
-
-            myReviewId = reviewRepository.findByMemberAndMovie(member, movie)
-                    .map(Review::getId)
-                    .orElse(null);
         }
 
-        log.info("로그인 사용자 ID: {}, 내 리뷰 ID: {}", currentUserId, myReviewId);
-
-        Page<Review> reviewPage = (myReviewId != null)
-                ? reviewRepository.findByMovieAndIdNotAndIsConcealedFalse(movie, myReviewId, pageable)
-                : reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
+        Page<Review> reviewPage = reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 
         final Long uid = currentUserId;
         Page<ReviewResponseDTO> dtoPage = reviewPage.map(r -> toResponseDTO(r, uid));
@@ -168,12 +176,50 @@ public class ReviewService {
             throw new UnAuthorizedException(ErrorStatus.USER_UNAUTHORIZED.getMessage());
         }
 
+        // 리뷰 수정
         review.modify(
                 reviewUpdateDTO.getContent(),
                 reviewUpdateDTO.getRating(),
                 reviewUpdateDTO.isSpoiler(),
                 reviewUpdateDTO.getWatchedAt()
         );
+
+        // 기존 감정 삭제 (Emotion 테이블에서)
+        emotionRepository.deleteByReview(review);
+
+        // 새로운 감정 분석 요청
+        try {
+            PredictRequestDTO request = new PredictRequestDTO(reviewUpdateDTO.getContent());
+            PredictResponseDTO response = fastApiRestTemplate.postForObject(
+                    "/predict/overall_avg",
+                    request,
+                    PredictResponseDTO.class
+            );
+
+            if (response == null || response.getProbabilities() == null) {
+                throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
+            }
+
+            Map<String, Double> probabilities = response.getProbabilities();
+
+            Emotion newEmotion = Emotion.builder()
+                    .anger(probabilities.getOrDefault("anger", 0.0))
+                    .fear(probabilities.getOrDefault("fear", 0.0))
+                    .joy(probabilities.getOrDefault("joy", 0.0))
+                    .disgust(probabilities.getOrDefault("disgust", 0.0))
+                    .sadness(probabilities.getOrDefault("sadness", 0.0))
+                    .review(review)
+                    .build();
+
+            emotionRepository.save(newEmotion);
+            movieEmotionSummaryService.recalcMovieSummary(review.getMovie().getId());
+
+            // 영화 감정 요약 갱신
+            movieService.getMovieEmotionSummary(review.getMovie().getId());
+
+        } catch (RestClientException e) {
+            throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
+        }
     }
 
     // 리뷰 삭제
@@ -190,8 +236,10 @@ public class ReviewService {
             throw new UnAuthorizedException(ErrorStatus.USER_UNAUTHORIZED.getMessage());
         }
 
-        reviewLikeRepository.deleteByReviewId(reviewId);
-        reviewRepository.delete(review);
+        reviewLikeRepository.deleteByReviewId(reviewId);  // 좋아요 삭제
+        reviewRepository.delete(review);  // 리뷰 삭제
+        movieService.getMovieEmotionSummary(review.getMovie().getId());
+        movieEmotionSummaryService.recalcMovieSummary(review.getMovie().getId());
     }
 
     // 좋아요 토글
@@ -245,6 +293,7 @@ public class ReviewService {
                 .findFirst()
                 .orElse(null);
 
+        // 리뷰 자체 감정
         EmotionDTO emotionDTO = emotionRepository.findByReviewId(review.getId())
                 .map(e -> {
                     Map<String, Double> probs = Map.of(
@@ -269,18 +318,25 @@ public class ReviewService {
                 })
                 .orElse(null);
 
+        EmotionType memberEmotionType = memberEmotionSummaryRepository
+                .findByMemberId(review.getMember().getId())
+                .map(MemberEmotionSummary::getRepEmotionType)
+                .orElse(EmotionType.NONE);
+
+
         return ReviewResponseDTO.builder()
                 .reviewId(review.getId())
                 .content(review.getContent())
                 .rating(review.getRating())
                 .spoiler(review.isSpoiler())
+                .watchedAt(review.getWatchedAt())
                 .createdAt(review.getCreatedAt())
                 .likeCount(review.getLikeCount())
                 .nickname(review.getMember().getNickname())
                 .memberId(review.getMember().getId())
+                .memberEmotion(memberEmotionType.name())
                 .movieId(review.getMovie().getId())
                 .myReview(myReview)
-                .modify(review.isModify())
                 .myLike(myLike)
                 .emotion(emotionDTO)
                 .isReported(review.isReported())

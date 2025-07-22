@@ -8,7 +8,6 @@ import lombok.Data;
 @Data
 @Builder
 public class MemberEmotionSummaryResponseDTO {
-    private Long memberId;
     private Double joy;
     private Double sadness;
     private Double anger;
@@ -21,7 +20,6 @@ public class MemberEmotionSummaryResponseDTO {
      */
     public static MemberEmotionSummaryResponseDTO fromEntity(MemberEmotionSummary e) {
         return MemberEmotionSummaryResponseDTO.builder()
-            .memberId(e.getMemberId())
             .joy(e.getJoy().doubleValue())
             .sadness(e.getSadness().doubleValue())
             .anger(e.getAnger().doubleValue())

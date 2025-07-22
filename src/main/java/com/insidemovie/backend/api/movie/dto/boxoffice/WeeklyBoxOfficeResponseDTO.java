@@ -1,5 +1,6 @@
 package com.insidemovie.backend.api.movie.dto.boxoffice;
 
+import com.insidemovie.backend.api.constant.EmotionType;
 import com.insidemovie.backend.api.movie.entity.boxoffice.WeeklyBoxOfficeEntity;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,11 +9,26 @@ import lombok.Getter;
 @Getter
 @Builder
 public class WeeklyBoxOfficeResponseDTO {
-    private BaseBoxOfficeItemDTO base;
     private Long movieId;
+    private String title;
+    private String posterPath;
+    private Double voteAverage;
+    private Double ratingAvg;
+    private EmotionType mainEmotion;
+    private Double mainEmotionValue;
+    private BaseBoxOfficeItemDTO base;
 
-    public static WeeklyBoxOfficeResponseDTO fromEntity(WeeklyBoxOfficeEntity e) {
+    public static WeeklyBoxOfficeResponseDTO fromEntity(
+            WeeklyBoxOfficeEntity e,
+            String title,
+            String posterPath,
+            Double voteAverage,
+            Double ratingAvg,
+            EmotionType mainEmotion,
+            Double mainEmotionValue
+    ) {
         return WeeklyBoxOfficeResponseDTO.builder()
+            .movieId(e.getMovie() != null ? e.getMovie().getId() : null)
             .base(BaseBoxOfficeItemDTO.builder()
                 .id(e.getId())
                 .rnum(e.getRnum())
@@ -34,6 +50,12 @@ public class WeeklyBoxOfficeResponseDTO {
                 .scrnCnt(e.getScrnCnt())
                 .showCnt(e.getShowCnt())
                 .build())
+            .title(title)
+            .posterPath(posterPath)
+            .voteAverage(voteAverage)
+            .ratingAvg(ratingAvg)
+            .mainEmotion(mainEmotion)
+            .mainEmotionValue(mainEmotionValue)
             .build();
     }
 }

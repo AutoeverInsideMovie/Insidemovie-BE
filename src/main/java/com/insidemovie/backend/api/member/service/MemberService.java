@@ -23,6 +23,7 @@ import com.insidemovie.backend.common.response.ErrorStatus;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -332,28 +333,21 @@ public class MemberService {
         Member member = memberRepository.findById(dto.getMemberId())
                 .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
 
-        if (memberEmotionSummaryRepository.existsByMemberId(member.getId())) {
-            throw new BadRequestException("이미 감정 상태가 등록되어 있습니다.");
-        }
-
         EmotionType rep = findMaxEmotion(
             dto.getJoy(), dto.getSadness(), dto.getFear(),
             dto.getAnger(), dto.getDisgust()
             );
 
-        // 엔티티 생성 및 저장
-        MemberEmotionSummary summary = MemberEmotionSummary.builder()
-            .member(member)
-            .joy(dto.getJoy())
-            .sadness(dto.getSadness())
-            .fear(dto.getFear())
-            .anger(dto.getAnger())
-            .disgust(dto.getDisgust())
-            .repEmotionType(rep)
-            .build();
+        // 기존 감정 상태가 있는 경우 → 수정
+        MemberEmotionSummary summary = memberEmotionSummaryRepository.findByMember(member)
+                .orElseGet(() -> MemberEmotionSummary.builder()
+                        .member(member)
+                        .build()
+                );
 
-        MemberEmotionSummary saved = memberEmotionSummaryRepository.save(summary);
-        return MemberEmotionSummaryResponseDTO.fromEntity(saved);
+        summary.updateFromRequest(dto, rep);
+        memberEmotionSummaryRepository.save(summary);
+        return MemberEmotionSummaryResponseDTO.fromEntity(summary);
     }
 
     public static EmotionType findMaxEmotion(

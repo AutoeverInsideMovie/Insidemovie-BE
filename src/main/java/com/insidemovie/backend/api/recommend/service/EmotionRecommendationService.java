@@ -1,122 +1,92 @@
 package com.insidemovie.backend.api.recommend.service;
 
+import com.insidemovie.backend.api.movie.entity.Movie;
 import com.insidemovie.backend.api.movie.entity.MovieEmotionSummary;
 import com.insidemovie.backend.api.movie.repository.MovieEmotionSummaryRepository;
+import com.insidemovie.backend.api.movie.repository.MovieRepository;
 import com.insidemovie.backend.api.recommend.dto.EmotionRequestDTO;
 import com.insidemovie.backend.api.recommend.dto.MovieRecommendationDTO;
-
-import com.insidemovie.backend.api.review.entity.Review;
+import com.insidemovie.backend.api.recommend.dto.MovieSimilarityResDto;
 import com.insidemovie.backend.api.review.repository.ReviewRepository;
+import com.insidemovie.backend.common.exception.ExternalServiceException;
+import com.insidemovie.backend.common.exception.NotFoundException;
+import com.insidemovie.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmotionRecommendationService {
 
     private final MovieEmotionSummaryRepository movieEmotionSummaryRepository;
     private final ReviewRepository reviewRepository;
+    private final RestTemplate fastApiRestTemplate;
+    private final MovieRepository movieRepository;
 
     // 사용자의 감정 벡터를 기반으로 영화 추천 리스트 반환
     public List<MovieRecommendationDTO> recommendByEmotion(EmotionRequestDTO userEmotion) {
+        MovieSimilarityResDto[] responseArray = fastApiRestTemplate.postForObject(
+                "http://localhost:8000/recommend/emotion",
+                userEmotion,
+                MovieSimilarityResDto[].class
+        );
 
-        // 사용자 감정 벡터 정규화 (총합이 100이 아니여서)
-        Map<String, Double> userVector = normalize(Map.of(
-                "joy", userEmotion.getJoy(),
-                "anger", userEmotion.getAnger(),
-                "fear", userEmotion.getFear(),
-                "disgust", userEmotion.getDisgust(),
-                "sadness", userEmotion.getSadness()
-        ));
-
-        // DB에서 영화 전체 감정 벡터 불러오기
-        List<MovieEmotionSummary> allMovies = movieEmotionSummaryRepository.findAll();
-
-        // 각 영화의 감정 벡터와 유사도 계산
-        return allMovies.stream()
-                .map(movie -> {
-
-                    // 영화 감정 벡터도 정규화
-                    Map<String, Double> movieVector = normalize(Map.of(
-                            "joy", movie.getJoy().doubleValue(),
-                            "sadness", movie.getSadness().doubleValue(),
-                            "anger", movie.getAnger().doubleValue(),
-                            "fear", movie.getFear().doubleValue(),
-                            "disgust", movie.getDisgust().doubleValue()
-                    ));
-
-                    // 유사도 계산
-                    double similarity = cosineSimilarity(userVector, movieVector);
-
-                    // 대표 감정 비율 가져오기
-                    double dominantRatio = switch (movie.getDominantEmotion()) {
-                        case JOY -> movie.getJoy().doubleValue();
-                        case SADNESS -> movie.getSadness().doubleValue();
-                        case ANGER -> movie.getAnger().doubleValue();
-                        case FEAR -> movie.getFear().doubleValue();
-                        case DISGUST -> movie.getDisgust().doubleValue();
-                        case NONE -> 0.0;
-                        default -> 0;
-                    };
-
-                    Double ratingAvg = reviewRepository.findAverageByMovieId(movie.getMovieId());
-                    BigDecimal rounded;
-                    if(ratingAvg==null || ratingAvg==0.00){
-                        rounded=BigDecimal.ZERO.setScale(2);
-                    }else{
-                        rounded= BigDecimal.valueOf(ratingAvg)
-                                .setScale(2, RoundingMode.HALF_UP);
-                    }
-
-                    return new MovieRecommendationDTO(
-                            movie.getMovieId(),
-                            movie.getMovie().getTitle(),
-                            movie.getMovie().getPosterPath(),
-                            movie.getMovie().getVoteAverage(),
-                            movie.getDominantEmotion(),
-                            dominantRatio,
-                            similarity,
-                            rounded
-                    );
-                })
-
-                // 유사도 높은 순으로 정렬
-                .sorted(Comparator.comparingDouble(MovieRecommendationDTO::getSimilarity).reversed()) // 유사도 높은 순
-                .limit(5) // 상위 5개만 추천
-                .collect(Collectors.toList());
-    }
-
-    // 벡터 정규화
-    private Map<String, Double> normalize(Map<String, Double> vector) {
-        double sum = vector.values().stream().mapToDouble(Double::doubleValue).sum();
-        return vector.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        e -> sum == 0 ? 0.0 : e.getValue() / sum
-                ));
-    }
-
-    // 코사인 유사도 계산
-    private double cosineSimilarity(Map<String, Double> v1, Map<String, Double> v2) {
-        double dot = 0.0;
-        double norm1 = 0.0;
-        double norm2 = 0.0;
-
-        for (String key : v1.keySet()) {
-            double a = v1.get(key);
-            double b = v2.getOrDefault(key, 0.0);
-            dot += a * b;
-            norm1 += a * a;
-            norm2 += b * b;
+        if (responseArray == null) {
+            throw new ExternalServiceException(ErrorStatus.EXTERNAL_SERVICE_ERROR.getMessage());
         }
 
-        return (norm1 == 0 || norm2 == 0) ? 0.0 : dot / (Math.sqrt(norm1) * Math.sqrt(norm2));
+        log.error(Arrays.toString(Arrays.stream(responseArray).toArray()));
+        List<MovieSimilarityResDto> response = Arrays.asList(responseArray);
+        List<MovieRecommendationDTO> recommends = new ArrayList<>();
+
+        for (MovieSimilarityResDto recommendMovie : response) {
+            log.error(String.valueOf(recommendMovie.getMovieId()));
+            Movie movie = movieRepository.findById(recommendMovie.getMovieId())
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
+            MovieEmotionSummary movieEmotion = movieEmotionSummaryRepository.findByMovieId(movie.getId())
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EMOTION.getMessage()));
+
+            double dominantRatio = switch (movieEmotion.getDominantEmotion()) {
+                case JOY -> movieEmotion.getJoy().doubleValue();
+                case SADNESS -> movieEmotion.getSadness().doubleValue();
+                case ANGER -> movieEmotion.getAnger().doubleValue();
+                case FEAR -> movieEmotion.getFear().doubleValue();
+                case DISGUST -> movieEmotion.getDisgust().doubleValue();
+                case NONE -> 0.0;
+                default -> 0;
+            };
+
+            Double ratingAvg = reviewRepository.findAverageByMovieId(movieEmotion.getMovieId());
+            BigDecimal rounded;
+            if (ratingAvg == null || ratingAvg == 0.00) {
+                rounded = BigDecimal.ZERO.setScale(2);
+            } else {
+                rounded = BigDecimal.valueOf(ratingAvg).setScale(2, RoundingMode.HALF_UP);
+            }
+
+            MovieRecommendationDTO dto = MovieRecommendationDTO.builder()
+                    .movieId(movie.getId())
+                    .title(movie.getTitle())
+                    .posterPath(movie.getPosterPath())
+                    .voteAverage(movie.getVoteAverage())
+                    .dominantEmotion(movieEmotion.getDominantEmotion())
+                    .dominantEmotionRatio(dominantRatio)
+                    .similarity(recommendMovie.getSimilarity())
+                    .ratingAvg(rounded)
+                    .build();
+
+            recommends.add(dto);
+        }
+
+        return recommends;
     }
 }

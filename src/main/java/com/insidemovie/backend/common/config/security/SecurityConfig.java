@@ -1,8 +1,8 @@
 package com.insidemovie.backend.common.config.security;
 
-import com.insidemovie.backend.api.jwt.JwtFilter;
-import com.insidemovie.backend.api.jwt.JwtProvider;
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,8 +19,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.Collections;
+import com.insidemovie.backend.api.jwt.JwtFilter;
+import com.insidemovie.backend.api.jwt.JwtProvider;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -141,7 +143,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList(
             "http://localhost:5173",
-            "http://localhost:8000"
+            "http://localhost:8000",
+            "http://52.79.175.149:5173",
+            "http://52.79.175.149:8000"
         ));
         config.setAllowedMethods(Collections.singletonList("*"));
         config.setAllowedHeaders(Collections.singletonList("*"));

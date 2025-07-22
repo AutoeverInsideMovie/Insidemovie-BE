@@ -4,7 +4,6 @@ spring:
   config:
     import:
       - optional:file:./application-key.yml
-      #      - classpath:application-key.yml
       - optional:./application-key.yml
 
   security:
@@ -16,7 +15,7 @@ spring:
             client-secret: ${kakao.client.secret}
             client-name: kakao
             authorization-grant-type: authorization_code
-            redirect-uri: http://localhost:5173/login/oauth2/code/kakao
+            redirect-uri: http://52.79.175.149:5173/login/oauth2/code/kakao
             scope:
               - profile_nickname
               - account_email
@@ -38,7 +37,7 @@ spring:
       mail.smtp.connectiontimeout: 5000
 mail:
   from:
-    address: admin@insidemovie.com # @Value("${mail.from.address}") 와 매핑
+    address: admin@insidemovie.com
     personal: "InsideMovie 인증센터"
 
 jwt:

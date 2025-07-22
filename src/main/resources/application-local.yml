@@ -22,3 +22,6 @@ spring:
     hibernate:
       ddl-auto: update # 개발 환경: update
 
+  fastapi:
+    url: "http://localhost:8000/recommend/emotion"
+

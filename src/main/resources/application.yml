@@ -26,6 +26,21 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 5000
+mail:
+  from:
+    address: admin@insidemovie.com    # @Value("${mail.from.address}") 와 매핑
+    personal: "InsideMovie 인증센터"
+
 
 jwt:
   secret: a1f7d23c8e56b9f1840f7a9b9f4c3b579a3d8f2e648cbe7398cdd249e2f4baf52c3678e1054f3e1e0aa6e1db4523e07f
@@ -64,7 +79,7 @@ scheduler:
   cron:
     daily: "0 30 16 * * *"
     weekly: "0 30 16 * * MON"
-    request_movie: "0 0 7 * * MON"
+    request_movie: "0 42 19 * * MON"
   zone: "Asia/Seoul"
 
 movie:

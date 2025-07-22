@@ -54,6 +54,8 @@ public enum SuccessStatus {
     SEND_VOTE_SUCCESS(HttpStatus.OK, "영화 투표 성공"),
     GET_MATCH_DETAIL_SUCCESS(HttpStatus.OK, "대결 영화 조회 성공"),
     GET_WINNER_SUCCESS(HttpStatus.OK, "우승 내역 조회 성공"),
+    SEND_EMAIL_SUCCESS(HttpStatus.OK, "이메일 인증코드 전송 성공"),
+    VERIFY_CODE_SUCCESS(HttpStatus.OK, "인증번호 검증 성공"),
 
 
     /** 201 CREATED */

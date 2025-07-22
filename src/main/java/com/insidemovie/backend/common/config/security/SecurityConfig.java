@@ -94,7 +94,7 @@ public class SecurityConfig {
                         "/api/v1/movies/*/reviews",
                         "/api/v1/movies/**",
                         "/api/v1/boxoffice/**",
-                        "/api/v1/movies/*/reviews"
+                        "/api/v1/movies/**/reviews"
                 ).permitAll()
 
                 // Public POST

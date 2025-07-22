@@ -71,11 +71,10 @@ public class ReviewController {
             @PathVariable Long movieId,
             @RequestParam(defaultValue = "LATEST") ReviewSort sort,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @AuthenticationPrincipal UserDetails userDetails
+            @RequestParam(defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, sort.toSort());
-        PageResDto<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageable, userDetails.getUsername());
+        PageResDto<ReviewResponseDTO> reviewPage = reviewService.getReviewsByMovie(movieId, pageable);
         return ApiResponse.success(SuccessStatus.SEND_REVIEW_SUCCESS, reviewPage);
     }
 

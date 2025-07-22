@@ -91,10 +91,15 @@ public class SecurityConfig {
                 // Public GET
                 .requestMatchers(
                         HttpMethod.GET,
-                        "/api/v1/movies/*/reviews",
-                        "/api/v1/movies/**",
-                        "/api/v1/boxoffice/**",
-                        "/api/v1/movies/**/reviews"
+                        "/api/v1/movies",
+                        "/api/v1/movies/search",
+                        "/api/v1/movies/search/**",
+                        "/api/v1/movies/recommend/**",
+                        "/api/v1/movies/popular",
+                        "/api/v1/movies/detail/*",
+                        "/api/v1/movies/*/emotion-summary",
+                        "/api/v1/movies/emotions/*",
+                        "/api/v1/movies/*/reviews"
                 ).permitAll()
 
                 // Public POST

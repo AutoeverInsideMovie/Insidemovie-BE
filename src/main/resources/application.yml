@@ -88,7 +88,7 @@ movie:
 
 match:
   cron:
-    weekly: "0 30 16 * * MON"
+    weekly: "0 52 14 * * TUE"
 
 
 

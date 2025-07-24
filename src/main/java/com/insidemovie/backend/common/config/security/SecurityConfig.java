@@ -91,10 +91,16 @@ public class SecurityConfig {
                 // Public GET
                 .requestMatchers(
                         HttpMethod.GET,
+                        "/api/v1/movies",
+                        "/api/v1/movies/search",
+                        "/api/v1/movies/search/**",
+                        "/api/v1/movies/recommend/**",
+                        "/api/v1/movies/popular",
+                        "/api/v1/movies/detail/*",
+                        "/api/v1/movies/*/emotion-summary",
+                        "/api/v1/movies/emotions/*",
                         "/api/v1/movies/*/reviews",
-                        "/api/v1/movies/**",
-                        "/api/v1/boxoffice/**",
-                        "/api/v1/movies/**/reviews"
+                        "/api/v1/boxoffice/**"
                 ).permitAll()
 
                 // Public POST
@@ -136,7 +142,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(Arrays.asList(
             "http://localhost:5173",
-            "http://localhost:8000"
+            "http://localhost:8000",
+            "http://52.79.175.149:5173",
+            "http://52.79.175.149:8000"
         ));
         config.setAllowedMethods(Collections.singletonList("*"));
         config.setAllowedHeaders(Collections.singletonList("*"));

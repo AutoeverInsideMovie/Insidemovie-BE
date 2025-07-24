@@ -10,7 +10,11 @@ import org.springframework.web.client.RestTemplate;
 public class WebClientConfig {
     @Bean
     public RestTemplate fastApiRestTemplate(RestTemplateBuilder builder) {
+        // 배포
+        // return builder.rootUri("http://52.79.175.149:8000").build();
+        // 로컬
         return builder.rootUri("http://localhost:8000").build();
+
     }
 
     @Bean

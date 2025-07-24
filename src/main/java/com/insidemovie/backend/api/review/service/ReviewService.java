@@ -121,20 +121,13 @@ public class ReviewService {
     @Transactional
     public PageResDto<ReviewResponseDTO> getReviewsByMovie(
             Long movieId,
-            Pageable pageable,
-            String memberEmail
+            Pageable pageable
     ) {
 
         Movie movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MOVIE_EXCEPTION.getMessage()));
 
         Long currentUserId = null;
-
-        if (memberEmail != null && !memberEmail.isBlank()) {
-            Member member = memberRepository.findByEmail(memberEmail.trim())
-                    .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
-            currentUserId = member.getId();
-        }
 
         Page<Review> reviewPage = reviewRepository.findByMovieAndIsConcealedFalse(movie, pageable);
 

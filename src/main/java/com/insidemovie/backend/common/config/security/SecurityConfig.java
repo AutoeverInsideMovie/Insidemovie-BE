@@ -1,8 +1,8 @@
 package com.insidemovie.backend.common.config.security;
 
-import java.util.Arrays;
-import java.util.Collections;
-
+import com.insidemovie.backend.api.jwt.JwtFilter;
+import com.insidemovie.backend.api.jwt.JwtProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,10 +19,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import com.insidemovie.backend.api.jwt.JwtFilter;
-import com.insidemovie.backend.api.jwt.JwtProvider;
-
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @RequiredArgsConstructor
